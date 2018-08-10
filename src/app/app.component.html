@@ -3,15 +3,14 @@
     <mat-icon>more_vert</mat-icon>
   </button>
   <mat-menu #menu="matMenu">
-    <a mat-menu-item (click)="boccali.hidden = 'true';">
+    <a mat-menu-item routerLink="text-adventure">
       <mat-icon>create</mat-icon>
       <span>text-adventure</span>
     </a>
-    <a mat-menu-item (click)="adventure.hidden = 'true';">
+    <a mat-menu-item routerLink="boccali-carte">
       <mat-icon>local_pizza</mat-icon>
       <span>boccali-carte</span>
     </a>
   </mat-menu>
 </div>
-<app-boccali-carte #boccali></app-boccali-carte>
-<app-text-adventure #adventure></app-text-adventure>
+<router-outlet></router-outlet>

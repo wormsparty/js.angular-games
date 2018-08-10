@@ -25,6 +25,7 @@
     "@angular/material": "^6.4.3",
     "@angular/platform-browser": "^6.0.0",
     "@angular/platform-browser-dynamic": "^6.0.0",
+    "@angular/router": "^6.1.2",
     "@angular/upgrade": "^6.0.0",
     "angular-in-memory-web-api": "^0.6.0",
     "codelyzer": "^4.4.3",
@@ -51,7 +52,7 @@
     "karma-phantomjs-launcher": "^1.0.2",
     "lodash": "^4.16.2",
     "phantomjs-prebuilt": "^2.1.7",
-    "protractor": "~5.3.0",
+    "protractor": "^5.4.0",
     "ts-node": "^5.0.1",
     "tslint": "^5.9.1",
     "typescript": "2.7.2"

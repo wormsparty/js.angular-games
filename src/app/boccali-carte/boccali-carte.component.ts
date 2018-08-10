@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-// import { MatMenuModule, MatIconModule } from '@angular/material';
 import * as $ from 'jquery';
 
 const carte_data = `
