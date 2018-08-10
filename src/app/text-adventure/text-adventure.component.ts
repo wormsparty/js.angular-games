@@ -1,23 +1,25 @@
-import { Component } from '@angular/core';
+import { Component, OnInit} from '@angular/core';
 import * as $ from 'jquery';
 import { Labyrinth } from './labyrinth';
+import * as FontFaceObserver from 'fontfaceobserver';
 
-let labyrinth;
+@Component({
+  selector: 'app-text-adventure',
+  templateUrl: './text-adventure.component.html',
+  styleUrls: ['./text-adventure.component.css'],
+})
+export class TextAdventureComponent implements OnInit {
+  private labyrinth;
 
-function step() {
-  labyrinth.do_update();
-  labyrinth.draw();
-}
-
-$(document).ready(function() {
-  // document.fonts.ready.then(function () {
-    labyrinth = new Labyrinth();
+  ngOnInit() {
+    const labyrinth = new Labyrinth();
+    this.labyrinth = labyrinth;
 
     $(window).resize(function () {
       labyrinth.resize($(window).width(), $(window).height());
     });
 
-    labyrinth.resize($(window).width(), $(window).height());
+    this.labyrinth.resize($(window).width(), $(window).height());
 
     $(document).on('keydown', function (event) {
       let update = false;
@@ -58,7 +60,8 @@ $(document).ready(function() {
       }
 
       if (update) {
-        step();
+        labyrinth.do_update();
+        labyrinth.draw();
       }
     });
 
@@ -80,14 +83,11 @@ $(document).ready(function() {
       }
     });
 
-    step();
-  // });
-});
+    const font = new FontFaceObserver('Inconsolata');
 
-@Component({
-  selector: 'app-text-adventure',
-  templateUrl: './text-adventure.component.html',
-  styleUrls: ['./text-adventure.component.css'],
-})
-export class TextAdventureComponent {
+    font.load().then(function () {
+      console.log('Inconsolata is ready');
+      labyrinth.draw();
+    });
+  }
 }

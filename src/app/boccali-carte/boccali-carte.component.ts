@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import * as $ from 'jquery';
 
 const carte_data = `
@@ -104,166 +104,168 @@ const carte_data = `
   302, poulet, oignons, lard(ons), rucola, (copeaux de) parmesan
 `;
 
-function onresize() {
-  const thediv = document.getElementById('thediv');
-  const width = $(window).width();
-  thediv.style.left = ((width - $('#thediv').width()) / 2 - parseInt($('#thediv').css('padding-left'), 10)) + 'px';
-  thediv.style.height = (Math.max($(document).height(), $(window).height())) + 'px';
-}
-
-function buildIngredientLists() {
-  // Now process it!
-  const ingDv = $('#ingredientsDiv')[0];
-  ingDv.innerHTML = '';
-
-  let len = 0;
-
-  for (let i = 0; i < allIngredients.length; i++) {
-    const newHtml = '<div style="white-space:nowrap; display: inline">' + allIngredients[i]
-      + '&nbsp;<input class="' + allIngredients[i].replace(' ', '_').replace('\'', '_').replace(' ', '_').replace(' ', '_')
-      + '" type="checkbox" /><div id="' + allIngredients[i].replace(' ', '_').replace('\'', '_').replace(' ', '_').replace(' ', '_')
-      + '" style="display: none;">' + ingredientsToNo[allIngredients[i]] + '</div>&nbsp;&nbsp;';
-
-    $('#testdiv').html(newHtml);
-    len += $('#testdiv').width() + 15;
-
-    if (len > $('#thediv').width()) {
-      ingDv.innerHTML += '<br/>';
-      len = 0;
-    }
-
-    ingDv.innerHTML += newHtml;
-  }
-
-  function onchange() {
-    const r = $('#recommendation')[0];
-    r.innerHTML = '';
-
-    const allInput = $(':input');
-    let i = 0;
-
-    while (i < allInput.length && !allInput[i].checked) {
-      i++;
-    }
-
-    if (i === allInput.length) {
-      r.innerHTML += '<div style="white-space:nowrap; display: inline">Choisissez vos ingrédients ci-dessus</div>';
-      return;
-    }
-
-    const ids = $('#' + allInput[i].classList[0])[0].innerText.split(',');
-    let nbChecked = 1;
-
-    i++;
-    for (; i < allInput.length; i++) {
-      if (!allInput[i].checked) {
-        continue;
-      }
-
-      nbChecked++;
-      const dv = $('#' + allInput[i].classList[0]).text().split(',');
-
-      for (let j = 0; j < ids.length; j++) {
-        if (!dv.includes(ids[j])) {
-          ids.splice(j, 1);
-          j--;
-        }
-      }
-    }
-
-    if (ids.length === 0 && nbChecked <= 6) {
-      r.innerHTML += '<div style="white-space:nowrap; display: inline">203, 6 ingrédients à choix</div>';
-    } else {
-      for (i = 0; i < ids.length; i++) {
-        r.innerHTML += '<div style="white-space:nowrap; display: inline">' + ids[i] + ', ' + noToIngredients[ids[i]] + '</div><br/>';
-      }
-    }
-
-    onresize();
-  }
-
-  onchange();
-  $(':input').change(onchange);
-}
-
-const allIngredients = [];
-const ingredientsToNo = {};
-const noToIngredients = {};
-const allNb = [];
-
-function sortByName() {
-  allIngredients.sort();
-  buildIngredientLists();
-}
-
-function sortByFrequency() {
-  allIngredients.sort(function(a, b) {
-    const diff = ingredientsToNo[b].length - ingredientsToNo[a].length;
-
-    if (diff !== 0) {
-      return diff;
-    }
-
-    return a.localeCompare(b);
-  });
-
-  buildIngredientLists();
-}
-
-function random() {
-  const r = $('#recommendation')[0];
-  const randomNb = allNb[Math.floor(Math.random() * allNb.length)];
-  r.innerHTML = '<div style="white-space:nowrap; display: inline">' + randomNb + ', ' + noToIngredients[randomNb] + '</div><br/>';
-}
-
-$('#sortByName').click(sortByName);
-$('#sortByFrequency').click(sortByFrequency);
-$('#random').click(random);
-
-$(document).ready(function() {
-  onresize();
-  $(window).resize(onresize);
-
-  const lines = carte_data.split('\n');
-
-  // First parse the data
-  for (let i = 0 ; i < lines.length; i++) {
-    if (lines[i].trim().length === 0
-      || lines[i].trim()[0] === '-') {
-      continue;
-    }
-
-    const elements = lines[i].trim().split(',');
-    const nb = elements[0].trim();
-    elements.splice(0, 1);
-    // elements now contains the ingredients
-
-    for (let j = 0; j < elements.length; j++) {
-      const ingredient = elements[j].replace(/\(.*?\)/g, '').trim();
-
-      if (!allIngredients.includes(ingredient)) {
-        allIngredients.push(ingredient);
-      }
-
-      if (ingredientsToNo[ingredient] === undefined) {
-        ingredientsToNo[ingredient] = [];
-      }
-
-      if (!ingredientsToNo[ingredient].includes(nb)) {
-        ingredientsToNo[ingredient].push(nb);
-      }
-    }
-
-    noToIngredients[nb] = elements.join();
-    allNb.push(nb);
-  }
-
-  sortByName();
-});
-
 @Component({
   selector: 'app-boccali-carte',
   templateUrl: './boccali-carte.component.html',
   styleUrls: ['./boccali-carte.component.css'],
 })
-export class BoccaliCarteComponent { }
+export class BoccaliCarteComponent implements OnInit {
+  private allIngredients;
+  private ingredientsToNo;
+  private noToIngredients;
+  private allNb;
+
+  on_resize() {
+    const thediv = document.getElementById('thediv');
+    const width = $(window).width();
+    thediv.style.left = ((width - $('#thediv').width()) / 2 - parseInt($('#thediv').css('padding-left'), 10)) + 'px';
+    thediv.style.height = (Math.max($(document).height(), $(window).height())) + 'px';
+  }
+  buildIngredientLists() {
+    // Now process it!
+    const ingDv = $('#ingredientsDiv')[0];
+    ingDv.innerHTML = '';
+
+    let len = 0;
+
+    for (let i = 0; i < this.allIngredients.length; i++) {
+      const newHtml = '<div style="white-space:nowrap; display: inline">' + this.allIngredients[i]
+        + '&nbsp;<input class="' + this.allIngredients[i].replace(' ', '_').replace('\'', '_').replace(' ', '_').replace(' ', '_')
+        + '" type="checkbox" /><div id="' + this.allIngredients[i].replace(' ', '_').replace('\'', '_').replace(' ', '_').replace(' ', '_')
+        + '" style="display: none;">' + this.ingredientsToNo[this.allIngredients[i]] + '</div>&nbsp;&nbsp;';
+
+      $('#testdiv').html(newHtml);
+      len += $('#testdiv').width() + 15;
+
+      if (len > $('#thediv').width()) {
+        ingDv.innerHTML += '<br/>';
+        len = 0;
+      }
+
+      ingDv.innerHTML += newHtml;
+    }
+
+    function onchange() {
+      const r = $('#recommendation')[0];
+      r.innerHTML = '';
+
+      const allInput = $(':input');
+      let i = 0;
+
+      while (i < allInput.length && !allInput[i].checked) {
+        i++;
+      }
+
+      if (i === allInput.length) {
+        r.innerHTML += '<div style="white-space:nowrap; display: inline">Choisissez vos ingrédients ci-dessus</div>';
+        return;
+      }
+
+      const ids = $('#' + allInput[i].classList[0])[0].innerText.split(',');
+      let nbChecked = 1;
+
+      i++;
+      for (; i < allInput.length; i++) {
+        if (!allInput[i].checked) {
+          continue;
+        }
+
+        nbChecked++;
+        const dv = $('#' + allInput[i].classList[0]).text().split(',');
+
+        for (let j = 0; j < ids.length; j++) {
+          if (!dv.includes(ids[j])) {
+            ids.splice(j, 1);
+            j--;
+          }
+        }
+      }
+
+      if (ids.length === 0 && nbChecked <= 6) {
+        r.innerHTML += '<div style="white-space:nowrap; display: inline">203, 6 ingrédients à choix</div>';
+      } else {
+        for (i = 0; i < ids.length; i++) {
+          r.innerHTML += '<div style="white-space:nowrap; display: inline">' + ids[i] + ', ' + this.noToIngredients[ids[i]] + '</div><br/>';
+        }
+      }
+
+      this.on_resize();
+    }
+
+    onchange();
+    $(':input').change(onchange);
+  }
+  sortByName() {
+    this.allIngredients.sort();
+    this.buildIngredientLists();
+  }
+  sortByFrequency() {
+    const ingredientsToNo = this.ingredientsToNo;
+
+    this.allIngredients.sort(function(a, b) {
+      const diff = ingredientsToNo[b].length - ingredientsToNo[a].length;
+
+      if (diff !== 0) {
+        return diff;
+      }
+
+      return a.localeCompare(b);
+    });
+
+    this.buildIngredientLists();
+  }
+  random() {
+    const r = $('#recommendation')[0];
+    const randomNb = this.allNb[Math.floor(Math.random() * this.allNb.length)];
+    r.innerHTML = '<div style="white-space:nowrap; display: inline">' + randomNb + ', ' + this.noToIngredients[randomNb] + '</div><br/>';
+  }
+  ngOnInit() {
+    this.allIngredients = [];
+    this.ingredientsToNo = {};
+    this.noToIngredients = {};
+    this.allNb = [];
+
+    $('#sortByName').click(this.sortByName);
+    $('#sortByFrequency').click(this.sortByFrequency);
+    $('#random').click(this.random);
+
+    this.on_resize();
+    $(window).resize(this.on_resize);
+
+    const lines = carte_data.split('\n');
+
+    // First parse the data
+    for (let i = 0 ; i < lines.length; i++) {
+      if (lines[i].trim().length === 0
+        || lines[i].trim()[0] === '-') {
+        continue;
+      }
+
+      const elements = lines[i].trim().split(',');
+      const nb = elements[0].trim();
+      elements.splice(0, 1);
+      // elements now contains the ingredients
+
+      for (let j = 0; j < elements.length; j++) {
+        const ingredient = elements[j].replace(/\(.*?\)/g, '').trim();
+
+        if (!this.allIngredients.includes(ingredient)) {
+          this.allIngredients.push(ingredient);
+        }
+
+        if (this.ingredientsToNo[ingredient] === undefined) {
+          this.ingredientsToNo[ingredient] = [];
+        }
+
+        if (!this.ingredientsToNo[ingredient].includes(nb)) {
+          this.ingredientsToNo[ingredient].push(nb);
+        }
+      }
+
+      this.noToIngredients[nb] = elements.join();
+      this.allNb.push(nb);
+    }
+
+    this.sortByName();
+  }
+}

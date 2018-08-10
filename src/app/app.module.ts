@@ -26,6 +26,6 @@ import { BoccaliCarteComponent } from './boccali-carte/boccali-carte.component';
     MatIconModule
   ],
   providers: [],
-  bootstrap: [AppComponent, BoccaliCarteComponent, TextAdventureComponent]
+  bootstrap: [AppComponent]
 })
 export class AppModule { }
