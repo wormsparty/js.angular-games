@@ -1,0 +1,17 @@
+<div style="position: absolute; top: 10px; left: 10px">
+  <button mat-icon-button [matMenuTriggerFor]="menu">
+    <mat-icon>more_vert</mat-icon>
+  </button>
+  <mat-menu #menu="matMenu">
+    <a mat-menu-item (click)="boccali.hidden = 'true';">
+      <mat-icon>create</mat-icon>
+      <span>text-adventure</span>
+    </a>
+    <a mat-menu-item (click)="adventure.hidden = 'true';">
+      <mat-icon>local_pizza</mat-icon>
+      <span>boccali-carte</span>
+    </a>
+  </mat-menu>
+</div>
+<app-boccali-carte #boccali></app-boccali-carte>
+<app-text-adventure #adventure></app-text-adventure>
