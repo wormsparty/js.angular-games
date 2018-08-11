@@ -115,11 +115,49 @@ export class BoccaliCarteComponent implements OnInit {
   private noToIngredients;
   private allNb;
 
-  on_resize() {
-    const thediv = document.getElementById('thediv');
-    const width = $(window).width();
-    thediv.style.left = ((width - $('#thediv').width()) / 2 - parseInt($('#thediv').css('padding-left'), 10)) + 'px';
-    thediv.style.height = (Math.max($(document).height(), $(window).height())) + 'px';
+  on_change(that) {
+    const r = $('#recommendation')[0];
+    r.innerHTML = '';
+
+    const allInput = $(':input');
+    let i = 0;
+
+    while (i < allInput.length && !allInput[i].checked) {
+      i++;
+    }
+
+    if (i === allInput.length) {
+      r.innerHTML += '<div style="white-space:nowrap; display: inline">Choisissez vos ingrédients ci-dessus</div>';
+      return;
+    }
+
+    const ids = $('#' + allInput[i].classList[0])[0].innerText.split(',');
+    let nbChecked = 1;
+
+    i++;
+    for (; i < allInput.length; i++) {
+      if (!allInput[i].checked) {
+        continue;
+      }
+
+      nbChecked++;
+      const dv = $('#' + allInput[i].classList[0]).text().split(',');
+
+      for (let j = 0; j < ids.length; j++) {
+        if (!dv.includes(ids[j])) {
+          ids.splice(j, 1);
+          j--;
+        }
+      }
+    }
+
+    if (ids.length === 0 && nbChecked <= 6) {
+      r.innerHTML += '<div style="white-space:nowrap; display: inline">203, 6 ingrédients à choix</div>';
+    } else {
+      for (i = 0; i < ids.length; i++) {
+        r.innerHTML += '<div style="white-space:nowrap; display: inline">' + ids[i] + ', ' + that.noToIngredients[ids[i]] + '</div><br/>';
+      }
+    }
   }
   buildIngredientLists() {
     // Now process it!
@@ -129,13 +167,10 @@ export class BoccaliCarteComponent implements OnInit {
     let len = 0;
 
     for (let i = 0; i < this.allIngredients.length; i++) {
-      const newHtml = '<div style="white-space:nowrap; display: inline">' + this.allIngredients[i]
+      const newHtml = '<div style="white-space:nowrap; display: inline-block">' + this.allIngredients[i]
         + '&nbsp;<input class="' + this.allIngredients[i].replace(' ', '_').replace('\'', '_').replace(' ', '_').replace(' ', '_')
         + '" type="checkbox" /><div id="' + this.allIngredients[i].replace(' ', '_').replace('\'', '_').replace(' ', '_').replace(' ', '_')
         + '" style="display: none;">' + this.ingredientsToNo[this.allIngredients[i]] + '</div>&nbsp;&nbsp;';
-
-      $('#testdiv').html(newHtml);
-      len += $('#testdiv').width() + 15;
 
       if (len > $('#thediv').width()) {
         ingDv.innerHTML += '<br/>';
@@ -145,62 +180,15 @@ export class BoccaliCarteComponent implements OnInit {
       ingDv.innerHTML += newHtml;
     }
 
-    function onchange() {
-      const r = $('#recommendation')[0];
-      r.innerHTML = '';
-
-      const allInput = $(':input');
-      let i = 0;
-
-      while (i < allInput.length && !allInput[i].checked) {
-        i++;
-      }
-
-      if (i === allInput.length) {
-        r.innerHTML += '<div style="white-space:nowrap; display: inline">Choisissez vos ingrédients ci-dessus</div>';
-        return;
-      }
-
-      const ids = $('#' + allInput[i].classList[0])[0].innerText.split(',');
-      let nbChecked = 1;
-
-      i++;
-      for (; i < allInput.length; i++) {
-        if (!allInput[i].checked) {
-          continue;
-        }
-
-        nbChecked++;
-        const dv = $('#' + allInput[i].classList[0]).text().split(',');
-
-        for (let j = 0; j < ids.length; j++) {
-          if (!dv.includes(ids[j])) {
-            ids.splice(j, 1);
-            j--;
-          }
-        }
-      }
-
-      if (ids.length === 0 && nbChecked <= 6) {
-        r.innerHTML += '<div style="white-space:nowrap; display: inline">203, 6 ingrédients à choix</div>';
-      } else {
-        for (i = 0; i < ids.length; i++) {
-          r.innerHTML += '<div style="white-space:nowrap; display: inline">' + ids[i] + ', ' + this.noToIngredients[ids[i]] + '</div><br/>';
-        }
-      }
-
-      this.on_resize();
-    }
-
-    onchange();
-    $(':input').change(onchange);
+    this.on_change(this);
+    $(':input').change(() => this.on_change(this));
   }
-  sortByName() {
-    this.allIngredients.sort();
-    this.buildIngredientLists();
+  sortByName(that) {
+    that.allIngredients.sort();
+    that.buildIngredientLists();
   }
-  sortByFrequency() {
-    const ingredientsToNo = this.ingredientsToNo;
+  sortByFrequency(that) {
+    const ingredientsToNo = that.ingredientsToNo;
 
     this.allIngredients.sort(function(a, b) {
       const diff = ingredientsToNo[b].length - ingredientsToNo[a].length;
@@ -214,10 +202,10 @@ export class BoccaliCarteComponent implements OnInit {
 
     this.buildIngredientLists();
   }
-  random() {
+  random(that) {
     const r = $('#recommendation')[0];
-    const randomNb = this.allNb[Math.floor(Math.random() * this.allNb.length)];
-    r.innerHTML = '<div style="white-space:nowrap; display: inline">' + randomNb + ', ' + this.noToIngredients[randomNb] + '</div><br/>';
+    const randomNb = that.allNb[Math.floor(Math.random() * that.allNb.length)];
+    r.innerHTML = '<div style="white-space:nowrap; display: inline">' + randomNb + ', ' + that.noToIngredients[randomNb] + '</div><br/>';
   }
   ngOnInit() {
     this.allIngredients = [];
@@ -225,12 +213,9 @@ export class BoccaliCarteComponent implements OnInit {
     this.noToIngredients = {};
     this.allNb = [];
 
-    $('#sortByName').click(this.sortByName);
-    $('#sortByFrequency').click(this.sortByFrequency);
-    $('#random').click(this.random);
-
-    this.on_resize();
-    $(window).resize(this.on_resize);
+    $('#sortByName').click(() => this.sortByName(this));
+    $('#sortByFrequency').click(() => this.sortByFrequency(this));
+    $('#random').click(() => this.random(this));
 
     const lines = carte_data.split('\n');
 
@@ -266,6 +251,6 @@ export class BoccaliCarteComponent implements OnInit {
       this.allNb.push(nb);
     }
 
-    this.sortByName();
+    this.sortByName(this);
   }
 }
