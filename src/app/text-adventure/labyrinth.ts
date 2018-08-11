@@ -1089,8 +1089,7 @@ export class Labyrinth {
       640,
       480,
       16,
-      'Inconsolata, monospace',
-      '0');
+      'Inconsolata, monospace');
 
     this.up = 0;
     this.down = 0;

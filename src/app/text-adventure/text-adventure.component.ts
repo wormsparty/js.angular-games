@@ -12,6 +12,8 @@ export class TextAdventureComponent implements OnInit {
   private labyrinth;
 
   ngOnInit() {
+    document.body.style.overflow = 'hidden';
+
     const labyrinth = new Labyrinth();
     this.labyrinth = labyrinth;
 

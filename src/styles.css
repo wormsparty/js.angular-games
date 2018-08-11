@@ -1,9 +1,5 @@
 @import '~@angular/material/prebuilt-themes/deeppurple-amber.css';
 
-body {
-  overflow: hidden;
-}
-
 body, input[text], button {
   color: #888;
   font-family: Cambria, Georgia;
@@ -63,8 +59,6 @@ nav a.active {
 
 app-root {
   display: block;
-  position: fixed;
-  height: 100%;
   width: 100%;
   left: 0;
   top: 0;

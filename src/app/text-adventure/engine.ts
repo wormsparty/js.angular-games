@@ -20,7 +20,6 @@ export class Engine {
 
   readonly reference_width: number;
   readonly reference_height: number;
-  readonly margin_top: number;
 
   clear(color) {
     this.graphics.clear(color);
@@ -41,8 +40,6 @@ export class Engine {
     this.audio.play(filename);
   }*/
   resize(width, height) {
-    height -= this.margin_top;
-
     const zoom = get_zoom(width, height, this.reference_width, this.reference_height);
 
     const borderx = Math.floor((width - this.reference_width * zoom) / 2);
@@ -52,7 +49,6 @@ export class Engine {
 
     this.canvas.width = width;
     this.canvas.height = height;
-    this.canvas.style.marginTop = this.margin_top + 'px';
 
     this.graphics.resize(zoom, borderx + ajustementx, borderx, bordery + ajustementy, bordery, width, height);
   }
@@ -97,7 +93,7 @@ export class Engine {
 
     return sprite;
   }*/
-  constructor(canvasId, width, height, font_size, font_family, margin_top) {
+  constructor(canvasId, width, height, font_size, font_family) {
     this.canvas = document.getElementById(canvasId);
     this.graphics = new Canvas2D(this.canvas, width, height, font_size, font_family);
     /*this.audio = new WebAudio();
@@ -114,7 +110,6 @@ export class Engine {
 
     this.reference_width = width;
     this.reference_height = height;
-    this.margin_top = margin_top;
 
     this.canvas.focus();
   }

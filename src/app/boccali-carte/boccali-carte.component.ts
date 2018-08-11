@@ -155,7 +155,7 @@ export class BoccaliCarteComponent implements OnInit {
       r.innerHTML += '<div style="white-space:nowrap; display: inline">203, 6 ingrédients à choix</div>';
     } else {
       for (i = 0; i < ids.length; i++) {
-        r.innerHTML += '<div style="white-space:nowrap; display: inline">' + ids[i] + ', ' + that.noToIngredients[ids[i]] + '</div><br/>';
+        r.innerHTML += '<div style="display: inline">' + ids[i] + ', ' + that.noToIngredients[ids[i]] + '</div><br/>';
       }
     }
   }
@@ -208,6 +208,8 @@ export class BoccaliCarteComponent implements OnInit {
     r.innerHTML = '<div style="white-space:nowrap; display: inline">' + randomNb + ', ' + that.noToIngredients[randomNb] + '</div><br/>';
   }
   ngOnInit() {
+    document.body.style.overflow = 'inherit';
+
     this.allIngredients = [];
     this.ingredientsToNo = {};
     this.noToIngredients = {};
