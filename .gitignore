@@ -1,2 +1,4 @@
 node_modules
 dist
+/.idea/vcs.xml
+/.idea/workspace.xml
