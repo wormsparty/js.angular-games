@@ -88,7 +88,6 @@ export class TextAdventureComponent implements OnInit {
     const font = new FontFaceObserver('Inconsolata');
 
     font.load().then(function () {
-      console.log('Inconsolata is ready');
       labyrinth.draw();
     });
   }
