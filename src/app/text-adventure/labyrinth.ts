@@ -36,6 +36,8 @@ export class Labyrinth {
   open_inventory: boolean;
   open_help: boolean;
   pickup: boolean;
+  enter: boolean;
+  exit: boolean;
 
   static parse_all_maps(): void {
     for (const [key, map] of AllMaps) {
@@ -156,6 +158,28 @@ export class Labyrinth {
 
     return false;
   }
+  try_enter_or_exit(hero_pos): [boolean, Pos, string] {
+    if (this.enter)  {
+      if (this.current_map.get_symbol_at(hero_pos.x, hero_pos.y) !== '>') {
+        this.current_status = 'Il n\'y a pas d\'entrée ici.';
+        this.enter = false;
+        return [ false, undefined, undefined ];
+      }
+
+      this.enter = false;
+      return this.do_teleport('>', hero_pos, hero_pos, hero_pos);
+    } else if (this.exit) {
+      if (this.current_map.get_symbol_at(hero_pos.x, hero_pos.y) !== '<') {
+        this.current_status = 'Il n\'y a pas de sortie ici.';
+        this.exit = false;
+        return [ false, undefined, undefined ];
+      }
+
+      this.exit = false;
+      return this.do_teleport('<', hero_pos, hero_pos, hero_pos);
+    }
+
+  }
   try_talk(future_pos: Pos): boolean {
     for (const [pnj, pnj_pos] of this.pnjs) {
       if (pnj === '@') {
@@ -178,7 +202,8 @@ export class Labyrinth {
 
       const new_pnj = get_random_mouvement(pnj);
 
-      if (!new_pnj.equals(future_pos) && this.current_map.get_symbol_at(new_pnj.x, new_pnj.y) === '.') {
+      if (!new_pnj.equals(future_pos)
+        && consts.walkable_symbols.indexOf(this.current_map.get_symbol_at(new_pnj.x, new_pnj.y)) > -1) {
         this.pnjs.set(p, new_pnj);
       }
     }
@@ -203,12 +228,11 @@ export class Labyrinth {
   }
   get_future_position(hero_pos): [Pos, string] {
     const future_pos: Pos = new Pos(hero_pos.x + this.right - this.left, hero_pos.y + this.down - this.up);
-    let allowed_walking_symbols;
+    const allowed_walking_symbols = consts.walkable_symbols;
 
     if (this.inventory.indexOf('%') > -1) {
-      allowed_walking_symbols = [ '.', '~' ];
-    } else {
-      allowed_walking_symbols = [ '.' ];
+      allowed_walking_symbols.push('~');
+      console.log(allowed_walking_symbols.length);
     }
 
     let symbol = this.current_map.get_symbol_at(future_pos.x, future_pos.y);
@@ -276,33 +300,15 @@ export class Labyrinth {
   }
   try_teleport(hero_pos, future_pos): [boolean, Pos, string] {
     for (const [chr, teleports_for_char] of this.current_map.teleports) {
+      if (chr === '<' || chr === '>') { // These are treated separately
+        continue;
+      }
+
       for (let j = 0; j < teleports_for_char.length; j++) {
         const pos = teleports_for_char[j];
 
         if (pos.equals(future_pos)) {
-          const new_map_name = this.current_map.teleport_map.get(chr);
-          const new_map = AllMaps.get(new_map_name);
-          const teleports_of_other_map = new_map.teleports.get(chr);
-
-          const tp = teleports_of_other_map[pos.id];
-
-          let new_x = tp.x + (future_pos.x - hero_pos.x);
-          let new_y = tp.y + (future_pos.y - hero_pos.y);
-
-          // Fix the case where teleport + mouvement ends up in a wall!
-          if (new_map.get_symbol_at(new_x, new_y) === '#') {
-            if (new_map.get_symbol_at(tp.x, new_y) === '#') {
-              new_y = tp.y;
-            } else {
-              new_x = tp.x;
-            }
-          }
-
-          return [
-            true,
-            new Pos(new_x, new_y),
-            new_map_name,
-          ];
+          return this.do_teleport(chr, pos, hero_pos, future_pos);
         }
       }
     }
@@ -311,6 +317,43 @@ export class Labyrinth {
       false,
       undefined,
       undefined,
+    ];
+  }
+  do_teleport(chr, pos, hero_pos, future_pos): [boolean, Pos, string] {
+    const new_map_name = this.current_map.teleport_map.get(chr);
+    const new_map = AllMaps.get(new_map_name);
+    let teleports_of_other_map;
+    let id;
+
+    if (chr === '>') {
+      teleports_of_other_map = new_map.teleports.get('<');
+      id = 0;
+    } else if (chr === '<') {
+      teleports_of_other_map = new_map.teleports.get('>');
+      id = 0;
+    } else {
+      teleports_of_other_map = new_map.teleports.get(chr);
+      id = pos.id;
+    }
+
+    const tp = teleports_of_other_map[id];
+
+    let new_x = tp.x + (future_pos.x - hero_pos.x);
+    let new_y = tp.y + (future_pos.y - hero_pos.y);
+
+    // Fix the case where teleport + mouvement ends up in a wall!
+    if (new_map.get_symbol_at(new_x, new_y) === '#') {
+      if (new_map.get_symbol_at(tp.x, new_y) === '#') {
+        new_y = tp.y;
+      } else {
+        new_x = tp.x;
+      }
+    }
+
+    return [
+      true,
+      new Pos(new_x, new_y),
+      new_map_name,
     ];
   }
   update_on_map() {
@@ -323,6 +366,17 @@ export class Labyrinth {
     }
 
     if (this.try_pick_item(hero_pos)) {
+      return;
+    }
+
+    const ret = this.try_enter_or_exit(hero_pos);
+
+    if (ret !== undefined) {
+      if (ret[0]) {
+        this.change_map(ret[2]);
+        this.pnjs.set('@', ret[1]);
+      }
+
       return;
     }
 
@@ -376,6 +430,7 @@ export class Labyrinth {
           color = consts.TextColor;
         }
 
+        this.engine.rect(coord, str.length * this.char_width, 16, consts.TileBackgroundColor);
         this.engine.text(str, coord, color);
         x += length;
       }
@@ -392,7 +447,7 @@ export class Labyrinth {
       const coord = this.to_screen_coord(pnj.x, pnj.y);
       const color = consts.pnj2color[p];
 
-      this.engine.rect(coord, this.char_width, 16, consts.BackgroundColor);
+      this.engine.rect(coord, this.char_width, 16, consts.TileBackgroundColor);
       this.engine.text(p, coord, color);
     }
   }
@@ -403,7 +458,7 @@ export class Labyrinth {
         const coord = this.to_screen_coord(positions[i].x, positions[i].y);
         const color = consts.item2color[item];
 
-        this.engine.rect(coord, this.char_width, 16, consts.BackgroundColor);
+        this.engine.rect(coord, this.char_width, 16, consts.TileBackgroundColor);
         this.engine.text(item, coord, color);
       }
     }

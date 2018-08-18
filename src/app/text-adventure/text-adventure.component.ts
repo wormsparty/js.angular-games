@@ -35,6 +35,12 @@ export class TextAdventureComponent implements OnInit {
       } else if (event.key === 'p') {
         labyrinth.pickup = true;
         update = true;
+      } else if (event.key === '>') {
+        labyrinth.enter = true;
+        update = true;
+      } else if (event.key === '<') {
+        labyrinth.exit = true;
+        update = true;
       } else {
         if (event.key === 'ArrowLeft' || event.key === '4' || event.key === '7' || event.key === '1') {
           labyrinth.left = 1;

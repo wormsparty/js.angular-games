@@ -2,6 +2,7 @@ export const char_per_line = 80;
 export const map_lines = 30;
 
 export const BackgroundColor = '#000000';
+export const TileBackgroundColor = '#000000';
 export const TextColor =  '#FFFF00';
 export const White =  '#FFFFFF';
 
@@ -94,3 +95,7 @@ export const achete = {
   'M': ' acheté',
   'F': ' achetée'
 };
+
+export const teleport_symbols: Array<string> = [ '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '>', '<' ];
+export const item_symbols: Array<string> = [ '{', '}', '[', ']', '(', ')', '&', '%', '!', '?', '*', '$'];
+export const walkable_symbols: Array<string> = [ '.', '<', '>' ];

@@ -31,9 +31,6 @@ export class TeleportPos {
 }
 
 export class LevelMap {
-  private static teleport_symbols: Array<string> = [ '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
-  private static item_symbols: Array<string> = [ '{', '}', '[', ']', '(', ')', '&', '%', '!', '?', '*', '$'];
-
   map: string;
   meta: string;
   teleport_map: Map<string, string>;
@@ -88,7 +85,7 @@ export class LevelMap {
           if (visual_map[y][x] !== '#') {
             console.log('Les murs ne marchent pas en (' + x + ', ' + y + '), carte = ' + name);
           }
-        }  else if (LevelMap.teleport_symbols.indexOf(chr) > -1) {
+        }  else if (consts.teleport_symbols.indexOf(chr) > -1) {
           if (!this.teleports.has(chr)) {
             this.teleports.set(chr, []);
             this.teleport_count.set(chr, 0);
@@ -96,7 +93,7 @@ export class LevelMap {
 
           this.teleports.get(chr).push(new TeleportPos(x, y, this.teleport_count.get(chr)));
           this.teleport_count.set(chr, this.teleport_count.get(chr) + 1);
-        } else if (LevelMap.item_symbols.indexOf(chr) > -1) {
+        } else if (consts.item_symbols.indexOf(chr) > -1) {
           if (!this.item_positions.has(chr)) {
             this.item_positions.set(chr, []);
           }
