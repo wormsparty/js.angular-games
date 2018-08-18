@@ -3,7 +3,7 @@ import {AllMaps, AllScreens} from './map_content';
 import * as consts from './const';
 import {LevelMap, Pos} from './map_logic';
 
-const initial_map = 'tutorial_1';
+const initial_map = 'mission';
 
 function get_random_mouvement(pnj): Pos {
   const new_pnj = new Pos(pnj.x, pnj.y);
