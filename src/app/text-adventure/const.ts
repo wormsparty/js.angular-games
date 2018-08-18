@@ -35,6 +35,7 @@ export const item2color = {
   '%': '#114400',
   '!': '#555555',
   '?': '#FFFFFF',
+  '/': '#222222',
 };
 
 export const item2price = {
@@ -49,6 +50,7 @@ export const item2price = {
   '*': 1,
   '?': 4,
   '!': 2,
+  '/': 50,
 };
 
 export const mouvementMap = {
@@ -74,7 +76,8 @@ export const item2description = {
   '}': { text: 'Arc droit', genre: 'M' },
   '*': { text: 'Caillou', genre: 'M' },
   '?': { text: 'Potion mystère', genre: 'F' },
-  '!': {text: 'Sort mystère', genre: 'M' },
+  '!': { text: 'Sort mystère', genre: 'M' },
+  '/': { text: 'Épée', genre: 'F'}
 };
 
 export const symbol2description = {
@@ -103,5 +106,5 @@ export const achete = {
 };
 
 export const teleport_symbols: Array<string> = [ '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '>', '<' ];
-export const item_symbols: Array<string> = [ '{', '}', '[', ']', '(', ')', '&', '%', '!', '?', '*', '$'];
+export const item_symbols: Array<string> = [ '{', '}', '[', ']', '(', ')', '&', '%', '!', '?', '*', '$', '/'];
 export const walkable_symbols: Array<string> = [ '.', '<', '>' ];
