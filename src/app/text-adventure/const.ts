@@ -77,6 +77,12 @@ export const item2description = {
   '!': {text: 'Sort mystère', genre: 'M' },
 };
 
+export const symbol2description = {
+  '>': { text: 'Une entrée' },
+  '<': { text: 'Une sortie' },
+  '.': { text: ''}
+};
+
 export const pnj2dialog = {
   'J': 'La machine à café est cassée!',
   'r': 'Bonjour!',

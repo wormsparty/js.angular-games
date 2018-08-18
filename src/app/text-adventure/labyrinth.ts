@@ -76,29 +76,40 @@ export class Labyrinth {
     return new Pos(this.char_width * x, 16 * y);
   }
   update_current_status(hero_pos): void {
-    let item_found = false;
+    let status_set = false;
     let current_status = this.current_status;
 
-    for (const [item, positions] of this.current_map.item_positions) {
-      for (let i = 0 ; i < positions.length; i++) {
-        if (positions[i].equals(hero_pos)) {
-          current_status = consts.item2description[item].text;
+    const current_symbol = this.current_map.get_symbol_at(hero_pos.x, hero_pos.y);
+    if (consts.walkable_symbols.indexOf(current_symbol) > -1) {
+      current_status = consts.symbol2description[current_symbol].text;
 
-          if (item !== '$' && this.current_map_name === 'coop') {
-            current_status += ' (' + consts.item2price[item] + '.-)';
-          }
-
-          item_found = true;
-          break;
-        }
-      }
-
-      if (item_found) {
-        break;
+      if (current_status !== '') {
+        status_set = true;
       }
     }
 
-    if (!item_found) {
+    if (!status_set) {
+      for (const [item, positions] of this.current_map.item_positions) {
+        for (let i = 0 ; i < positions.length; i++) {
+          if (positions[i].equals(hero_pos)) {
+            current_status = consts.item2description[item].text;
+
+            if (item !== '$' && this.current_map_name === 'coop') {
+              current_status += ' (' + consts.item2price[item] + '.-)';
+            }
+
+            status_set = true;
+            break;
+          }
+        }
+
+        if (status_set) {
+          break;
+        }
+      }
+    }
+
+    if (!status_set) {
       this.current_status = '';
     } else {
       this.current_status = current_status;
