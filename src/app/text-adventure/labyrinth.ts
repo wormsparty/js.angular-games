@@ -475,8 +475,8 @@ export class Labyrinth {
     }
   }
   draw_overlay() {
-    this.engine.text('  > ' + this.current_status, {x: 0, y: this.engine.reference_height - 48}, consts.White);
-    this.engine.text('  PV: 20/20', {x: 0, y: this.engine.reference_height - 32}, consts.White);
+    this.engine.text('  > ' + this.current_status, {x: 0, y: this.engine.reference_height - 32}, consts.White);
+    // this.engine.text('  PV: 20/20', {x: 0, y: this.engine.reference_height - 32}, consts.White);
   }
   draw_all(): void {
     this.draw_map();
