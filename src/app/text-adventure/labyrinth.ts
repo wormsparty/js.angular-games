@@ -3,7 +3,7 @@ import {AllMaps, AllScreens} from './map_content';
 import * as consts from './const';
 import {LevelMap, Pos} from './map_logic';
 
-const initial_map = 'training';
+const initial_map = 'guet';
 const initial_inventory = [ '/' ];
 
 function get_random_mouvement(pnj): Pos {
@@ -52,7 +52,7 @@ export class Labyrinth {
   }
   draw(): void {
 
-    this.engine.clear(this.current_map.background);
+    this.engine.clear(this.current_map.background_color);
 
     if (this.open_inventory) {
       this.draw_screen( 'inventory');
@@ -439,10 +439,10 @@ export class Labyrinth {
         }
 
         if (color === undefined) {
-          color = consts.DefaultTextColor;
+          color = this.current_map.text_color;
         }
 
-        this.engine.rect(coord, str.length * this.char_width, 16, this.current_map.background);
+        this.engine.rect(coord, str.length * this.char_width, 16, this.current_map.background_color);
         this.engine.text(str, coord, color);
         x += length;
       }
@@ -450,7 +450,7 @@ export class Labyrinth {
 
     if (this.current_map.texts !== undefined) {
       for (const [text, pos] of this.current_map.texts) {
-        this.engine.text(text, this.to_screen_coord(pos.x, pos.y), consts.DefaultTextColor);
+        this.engine.text(text, this.to_screen_coord(pos.x, pos.y), this.current_map.text_color);
       }
     }
   }
@@ -459,7 +459,7 @@ export class Labyrinth {
       const coord = this.to_screen_coord(pnj.x, pnj.y);
       const color = consts.pnj2color[p];
 
-      this.engine.rect(coord, this.char_width, 16, this.current_map.background);
+      this.engine.rect(coord, this.char_width, 16, this.current_map.background_color);
       this.engine.text(p, coord, color);
     }
   }
@@ -470,14 +470,14 @@ export class Labyrinth {
         const coord = this.to_screen_coord(positions[i].x, positions[i].y);
         const color = consts.item2color[item];
 
-        this.engine.rect(coord, this.char_width, 16, this.current_map.background);
+        this.engine.rect(coord, this.char_width, 16, this.current_map.background_color);
         this.engine.text(item, coord, color);
       }
     }
   }
   draw_overlay() {
     this.engine.rect({x: 0, y: this.engine.reference_height - 48},
-      this.char_width * (this.current_status.length + 6), 48, this.current_map.background);
+      this.char_width * (this.current_status.length + 6), 48, this.current_map.background_color);
 
     this.engine.text('  > ' + this.current_status, {x: 0, y: this.engine.reference_height - 32}, consts.White);
   }

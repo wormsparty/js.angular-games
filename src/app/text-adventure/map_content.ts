@@ -86,6 +86,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
   ]),
    '#000005',
    undefined,
+   undefined,
   )],
   [ 'dans-bateau', new LevelMap('' +
     '                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n' +
@@ -160,6 +161,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     ]),
     undefined,
     '#000005',
+    undefined,
     undefined,
   )],  [ 'mission', new LevelMap('' +
     '                                                                                \n' +
@@ -236,6 +238,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     undefined,
     '#000005',
     undefined,
+    undefined,
   )],
   ['outside', new LevelMap('' +
   '      #.......#       """"""              #..............#                      \n' +
@@ -269,41 +272,42 @@ export const AllMaps: Map<string, LevelMap> = new Map([
   '                     #...........#   """     ###############                    \n' +
   '                     #..........#    """"                                       ',
   '' +
-    '      #3333333#                           #44444444444444#                      \n' +
-    '      #       #                         ##               #                      \n' +
-    '       #       #                   #####                  ##                    \n' +
-    '      #       #                  ##                         ##                  \n' +
-    '      #       #                 #                             #######           \n' +
-    '       #       #               #                                     #####      \n' +
-    '       #       #               #                                          ######\n' +
-    '      #       #                 #                                              5\n' +
-    '     #       #                   #                                       @     5\n' +
-    '     #       #                  #                                              5\n' +
-    '      #      #                 #            &         &                        5\n' +
-    '     #        #             ###             %  mmmmm  &                      ###\n' +
-    '   ##          ##      #####                %  mmmmm  %                     #   \n' +
-    '###              ######                     &  mmmmm  %                     #   \n' +
-    '2                                           &         &                     #   \n' +
-    '2                                                                         ##    \n' +
-    '2                                                                      ###      \n' +
-    '############                                                        ###         \n' +
-    '            #######                                                #            \n' +
-    '                   ##                                             #             \n' +
-    '                     #              #####                        #              \n' +
-    '                      #            #     #                      #               \n' +
-    '                       #          #       #                    #                \n' +
-    '                       #          #      #                    #                 \n' +
-    '                        #          #     #          >         #                 \n' +
-    '                        #          #     #                    #                 \n' +
-    '                       #          #       #                   #                 \n' +
-    '                      #           #        ##               ##                  \n' +
-    '                     #           #           ###############                    \n' +
-    '                     #          #                                               ',
+  '      #3333333#                           #44444444444444#                      \n' +
+  '      #       #                         ##               #                      \n' +
+  '       #       #                    ####                  ##                    \n' +
+  '      #       #                   ##                        ##                  \n' +
+  '      #       #                  #                            #######           \n' +
+  '       #       #                #                                    #####      \n' +
+  '       #       #               #     <                                    ######\n' +
+  '      #       #                 #                                              5\n' +
+  '     #       #                   #                                       @     5\n' +
+  '     #       #                  #                                              5\n' +
+  '      #      #                 #            &         &                        5\n' +
+  '     #        #             ###             %  mmmmm  &                      ###\n' +
+  '   ##          ##      #####                %  mmmmm  %                     #   \n' +
+  '###              ######                     &  mmmmm  %                     #   \n' +
+  '2                                           &         &                     #   \n' +
+  '2                                                                         ##    \n' +
+  '2                                                                      ###      \n' +
+  '############                                                        ###         \n' +
+  '            #######                                                #            \n' +
+  '                   ##                                             #             \n' +
+  '                     #              #####                        #              \n' +
+  '                      #            #     #                      #               \n' +
+  '                       #          #       #                    #                \n' +
+  '                       #          #      #                    #                 \n' +
+  '                        #          #     #          >         #                 \n' +
+  '                        #          #     #                    #                 \n' +
+  '                       #          #       #                   #                 \n' +
+  '                      #           #        ##               ##                  \n' +
+  '                     #           #           ###############                    \n' +
+  '                     #          #                                               ',
   new Map([
     [ '2', 'mission' ],
     [ '3', 'cathedrale' ],
     [ '4', 'cathedrale' ],
     [ '5', 'training' ],
+    [ '<', 'guet' ],
   ]),
   new Map([
     ['$', '#FF00AA'],
@@ -316,7 +320,8 @@ export const AllMaps: Map<string, LevelMap> = new Map([
   ]),
   undefined,
   '#050505',
-    undefined,
+  undefined,
+  undefined,
   )],
   [ 'cathedrale', new LevelMap('' +
     '                                                                                \n' +
@@ -384,6 +389,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
       [ '3', 'outside' ],
       [ '4', 'outside' ],
     ]),
+    undefined,
     undefined,
     undefined,
     undefined,
@@ -462,6 +468,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     undefined,
     undefined,
     undefined,
+    undefined,
     new Map([
       [ 'g', function(l: Labyrinth, pnj: Pos, hero_pos: Pos): Pos {
         if (l.inventory.indexOf('/') > -1) {
@@ -472,57 +479,52 @@ export const AllMaps: Map<string, LevelMap> = new Map([
       }],
     ]),
   )],
-  [ 'rez', new LevelMap('' +
+  [ 'guet', new LevelMap('' +
+  '                                                                                \n' +
+  '                            #                                                   \n' +
+  '                           ###                                                  \n' +
+  '                          # # #      Entre maudite                              \n' +
+  '                            #                                                   \n' +
+  '                            #                                                   \n' +
+  '                                                                                \n' +
+  '                       ..................................                       \n' +
+  '                      ....................................                      \n' +
+  '                      ....................................            #         \n' +
+  '                      ....................................             #        \n' +
+  '                      ....................................       ########       \n' +
+  '                      .......>............................             #        \n' +
+  '                      ....................................            #         \n' +
+  '                      ....................................                      \n' +
+  '                      ....................................   Forêt enchantée    \n' +
+  '                      ....................................                      \n' +
+  '                      ....................................                      \n' +
+  '                       ..................................                       \n' +
   '                                                                                \n' +
   '                                                                                \n' +
   '                                                                                \n' +
-  '                                                                                \n' +
-  '                                                                                \n' +
-  '                                                                                \n' +
-  '                                                                                \n' +
-  '                       ####...###########################                       \n' +
-  '                      #..................................#                      \n' +
-  '                      #..................................#                      \n' +
-  '                      #..................................#                      \n' +
-  '                      #..................................#                      \n' +
-  '                      #..................................#                      \n' +
-  '                      #.....########.....................#                      \n' +
-  '                      #............#.....................#                      \n' +
-  '                      #............#.....................#                      \n' +
-  '                      #............#.....................#                      \n' +
-  '                      #............#.....................#                      \n' +
-  '                       ##################################                       \n' +
-  '                                                                                \n' +
-  '                                                                                \n' +
-  '                                                                                \n' +
-  '                                                                                \n' +
-  '                                                                                \n' +
-  '                                                                                \n' +
-  '                                                                                \n' +
-  '                                                                                \n' +
+  '                           #                                                    \n' +
+  '                           #                                                    \n' +
+  '                         # # #      Montagnes arides                            \n' +
+  '                          ###                                                   \n' +
+  '                           #                                                    \n' +
   '                                                                                \n' +
   '                                                                                \n' +
   '                                                                                ',
   '' +
   '                                                                                \n' +
+  '                            #                                                   \n' +
+  '                           ###                                                  \n' +
+  '                          # # #                                                 \n' +
+  '                            #                                                   \n' +
+  '                            #                                                   \n' +
   '                                                                                \n' +
   '                                                                                \n' +
   '                                                                                \n' +
-  '                                                                                \n' +
-  '                                                                                \n' +
-  '                                                                                \n' +
-  '                       ####222###########################                       \n' +
-  '                      #                                  #                      \n' +
-  '                      #     @                  <         #                      \n' +
-  '                      #                                  #                      \n' +
-  '                      #                                  #                      \n' +
-  '                      #                        %         #                      \n' +
-  '                      #      #######                     #                      \n' +
-  '                      #      rrrrrr#                     #                      \n' +
-  '                      #      rrrrrr#                     #                      \n' +
-  '                      #      rrrrrr#                     #                      \n' +
-  '                      #      rrrrrr#                     #                      \n' +
-  '                       ##################################                       \n' +
+  '                                                                      #         \n' +
+  '                                                                       #        \n' +
+  '                                                                 ########       \n' +
+  '                         @   >                                         #        \n' +
+  '                                                                      #         \n' +
   '                                                                                \n' +
   '                                                                                \n' +
   '                                                                                \n' +
@@ -531,15 +533,29 @@ export const AllMaps: Map<string, LevelMap> = new Map([
   '                                                                                \n' +
   '                                                                                \n' +
   '                                                                                \n' +
+  '                           #                                                    \n' +
+  '                           #                                                    \n' +
+  '                         # # #                                                  \n' +
+  '                          ###                                                   \n' +
+  '                           #                                                    \n' +
   '                                                                                \n' +
   '                                                                                \n' +
   '                                                                                ',
   new Map([
-    ['2', 'outside' ],
+    ['>', 'outside' ],
   ]),
+  new Map([
+    [ '>', '#FFFFFF' ],
+  ]),
+    new Map([
+      [ 'Depuis la tour ', new Pos(2, 10) ],
+      [ 'de guet, il ', new Pos(2, 11) ],
+      [ 'aperçoit les lieux', new Pos(2, 12) ],
+      [ 'dignes d\'intérêt', new Pos(2, 13) ],
+      [ 'pour sa quête.', new Pos(2, 14) ],
+    ]),
   undefined,
-  undefined,
-  undefined,
+  '#FFFFFF',
   undefined,
   )],
   [ 'premier', new LevelMap('' +
@@ -607,6 +623,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
   new Map([
     [ '1', 'outside' ],
   ]),
+  undefined,
   undefined,
   undefined,
   undefined,
@@ -681,6 +698,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
   undefined,
   undefined,
   undefined,
+  undefined,
   )],
   [ 'lac', new LevelMap('' +
   '                                                                                \n' +
@@ -751,6 +769,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
   undefined,
   undefined,
   undefined,
+  undefined,
   )],
   [ 'palace', new LevelMap('' +
     '                                                                                \n' +
@@ -817,6 +836,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     new Map([
       [ '6', 'outside' ],
     ]),
+    undefined,
     undefined,
     undefined,
     undefined,

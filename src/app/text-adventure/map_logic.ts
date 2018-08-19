@@ -42,12 +42,13 @@ export class LevelMap {
   pnj_positions: Map<string, Array<Pos>>;
   item_positions: Map<string, Array<Pos>>;
   start: Pos;
-  background: string;
+  background_color: string;
+  text_color: string;
   pnj2position: Map<string, (l: Labyrinth, p1: Pos, p2: Pos) => Pos>;
 
   constructor(map: string, meta: string, teleport_map: Map<string, string>,
               tile2color: Map<string, string>, texts: Map<string, Pos>, background: string,
-              pnj2position: Map<string, (l: Labyrinth, p1: Pos, p2: Pos) => Pos>) {
+              text_color: string, pnj2position: Map<string, (l: Labyrinth, p1: Pos, p2: Pos) => Pos>) {
     this.map = map;
     this.meta = meta;
     this.teleport_map = teleport_map;
@@ -61,9 +62,15 @@ export class LevelMap {
     this.pnj2position = pnj2position;
 
     if (background !== undefined) {
-      this.background = background;
+      this.background_color = background;
     } else {
-      this.background = consts.DefaultBackgroundColor;
+      this.background_color = consts.DefaultBackgroundColor;
+    }
+
+    if (text_color !== undefined) {
+      this.text_color = text_color;
+    } else {
+      this.text_color = consts.DefaultTextColor;
     }
   }
 
