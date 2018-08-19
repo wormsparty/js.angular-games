@@ -12,6 +12,7 @@ export const globalTile2color = {
 };
 
 export const pnj2color = {
+  'g': '#0000FF',
   'm': '#6699FF',
   '@': '#FF0000',
 };
@@ -62,16 +63,16 @@ export const item2description = {
   '$': { text: 'pièce de 1.-', genre: 'F' },
   '%': { text: 'laitue', genre: 'F' },
   '&': { text: 'tomate', genre: 'F' },
-  '(': { text: 'Bout de bois gauche', genre: 'M' },
-  ')': { text: 'Bout de bois droit', genre: 'M' },
-  '[': { text: 'Crochet gauche', genre: 'M' },
-  ']': { text: 'Crochet droit', genre: 'M' },
-  '{': { text: 'Arc gauche', genre: 'M' },
-  '}': { text: 'Arc droit', genre: 'M' },
-  '*': { text: 'Caillou', genre: 'M' },
-  '?': { text: 'Potion mystère', genre: 'F' },
-  '!': { text: 'Sort mystère', genre: 'M' },
-  '/': { text: 'Épée', genre: 'F'}
+  '(': { text: 'bout de bois gauche', genre: 'M' },
+  ')': { text: 'bout de bois droit', genre: 'M' },
+  '[': { text: 'crochet gauche', genre: 'M' },
+  ']': { text: 'crochet droit', genre: 'M' },
+  '{': { text: 'arc gauche', genre: 'M' },
+  '}': { text: 'arc droit', genre: 'M' },
+  '*': { text: 'caillou', genre: 'M' },
+  '?': { text: 'potion mystère', genre: 'F' },
+  '!': { text: 'sort mystère', genre: 'M' },
+  '/': { text: 'épée', genre: 'F'}
 };
 
 export const symbol2description = {
@@ -83,11 +84,11 @@ export const symbol2description = {
 export const tile2text = {
   '#': 'Aïe! Un mur.',
   '~': 'C\'est toxique!',
-  'g': 'Je ne te laisserai pas passer sans épée'
 };
 
 export const pnj2dialog = {
   'm': 'Fuits et légumes frais!',
+  'g': 'Je ne te laisserai pas passer sans épée',
 };
 
 export const un = {

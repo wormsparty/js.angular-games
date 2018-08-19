@@ -1,4 +1,5 @@
 import {LevelMap, Pos, ScreenMap} from './map_logic';
+import {Labyrinth} from './labyrinth';
 
 export const AllMaps: Map<string, LevelMap> = new Map([
   [ 'bateau', new LevelMap('' +
@@ -83,7 +84,8 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     [ 'sur le port d\'une terre',  new Pos(4, 9) ],
     [ 'nouvelle.',  new Pos(4, 10) ],
   ]),
- undefined,
+   '#000005',
+   undefined,
   )],
   [ 'dans-bateau', new LevelMap('' +
     '                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n' +
@@ -156,8 +158,8 @@ export const AllMaps: Map<string, LevelMap> = new Map([
       ['#', '#AA3300'],
       ['<', '#FFFFFF'],
     ]),
-    new Map([
-    ]),
+    undefined,
+    '#000005',
     undefined,
   )],  [ 'mission', new LevelMap('' +
     '                                                                                \n' +
@@ -231,8 +233,8 @@ export const AllMaps: Map<string, LevelMap> = new Map([
       ['#', '#AA3300'],
       ['*', '#FFFFFF'],
     ]),
-    new Map([
-    ]),
+    undefined,
+    '#000005',
     undefined,
   )],
   ['outside', new LevelMap('' +
@@ -313,7 +315,8 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     ['<', '#FFFFFF'],
   ]),
   undefined,
-  '#222222'
+  '#050505',
+    undefined,
   )],
   [ 'cathedrale', new LevelMap('' +
     '                                                                                \n' +
@@ -384,6 +387,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     undefined,
     undefined,
     undefined,
+    undefined,
   )],
   [ 'training', new LevelMap('' +
     '                                                                                \n' +
@@ -395,9 +399,9 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     '#####                                                                           \n' +
     '.....####              ##################################                       \n' +
     '.........##############..................................#                      \n' +
-    '..........g..............................................#                      \n' +
-    '.....#################...................................#                      \n' +
-    '#####                 #..................................#                      \n' +
+    '.........................................................#                      \n' +
+    '.....######..............................................#                      \n' +
+    '#####      ###########...................................#                      \n' +
     '                      #..................................#                      \n' +
     '                      #..................................#                      \n' +
     '                      #..................................#                      \n' +
@@ -428,7 +432,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     '5                     #                                  #                      \n' +
     '5                     #                                  #                      \n' +
     '5                     #                                  #                      \n' +
-    '##                    #                                  #                      \n' +
+    '##                    #                      g           #                      \n' +
     '                      7                                  #                      \n' +
     '                      7                                  #                      \n' +
     '                      7                                  #                      \n' +
@@ -450,11 +454,18 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     new Map([
       [ '5', 'outside' ],
     ]),
+    undefined,
+    undefined,
+    undefined,
     new Map([
-      [ 'g', '#0000FF'],
+      [ 'g', function(inventory): Pos {
+        if (inventory.indexOf('/') > -1) {
+          return new Pos(11, 10);
+        } else {
+          return new Pos(10, 9);
+        }
+      }],
     ]),
-    undefined,
-    undefined,
   )],
   [ 'rez', new LevelMap('' +
   '                                                                                \n' +
@@ -521,6 +532,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
   new Map([
     ['2', 'outside' ],
   ]),
+  undefined,
   undefined,
   undefined,
   undefined,
@@ -593,6 +605,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
   undefined,
   undefined,
   undefined,
+  undefined,
   )],
   [ 'coop', new LevelMap('' +
   '                                                                                \n' +
@@ -661,7 +674,8 @@ export const AllMaps: Map<string, LevelMap> = new Map([
   ]),
   undefined,
   undefined,
-   undefined,
+  undefined,
+  undefined,
   )],
   [ 'lac', new LevelMap('' +
   '                                                                                \n' +
@@ -731,6 +745,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
   undefined,
   undefined,
   undefined,
+  undefined,
   )],
   [ 'palace', new LevelMap('' +
     '                                                                                \n' +
@@ -797,6 +812,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     new Map([
       [ '6', 'outside' ],
     ]),
+    undefined,
     undefined,
     undefined,
     undefined,

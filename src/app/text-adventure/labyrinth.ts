@@ -20,8 +20,8 @@ function get_random_mouvement(pnj): Pos {
 
 export class Labyrinth {
   private readonly engine: Engine;
-  private readonly inventory: Array<string>;
-  private readonly char_width: number;
+  readonly inventory: Array<string>;
+  readonly char_width: number;
 
   private current_map_name: string;
   private current_status: string;
@@ -215,11 +215,15 @@ export class Labyrinth {
         return;
       }
 
-      const new_pnj = get_random_mouvement(pnj);
+      if (this.current_map.pnj2position !== undefined && this.current_map.pnj2position.has(p)) {
+        this.pnjs.set(p, this.current_map.pnj2position.get(p)(this.inventory));
+      } else {
+        const new_pnj = get_random_mouvement(pnj);
 
-      if (!new_pnj.equals(future_pos)
-        && consts.walkable_symbols.indexOf(this.current_map.get_symbol_at(new_pnj.x, new_pnj.y)) > -1) {
-        this.pnjs.set(p, new_pnj);
+        if (!new_pnj.equals(future_pos)
+          && consts.walkable_symbols.indexOf(this.current_map.get_symbol_at(new_pnj.x, new_pnj.y)) > -1) {
+          this.pnjs.set(p, new_pnj);
+        }
       }
     }
   }
@@ -488,7 +492,7 @@ export class Labyrinth {
     for (let y = 0; y < consts.map_lines; y++) {
       for (let x = 0; x < consts.char_per_line; x++) {
         const start = y * (consts.char_per_line + 1);
-        this.engine.text(screen.map.substring(start, start + consts.char_per_line), {x: 0, y: y * 16}, consts.TextColor);
+        this.engine.text(screen.map.substring(start, start + consts.char_per_line), {x: 0, y: y * 16}, consts.DefaultTextColor);
       }
     }
 
@@ -499,11 +503,11 @@ export class Labyrinth {
 
       if (this.inventory.length === 0) {
         const coord = this.to_screen_coord(x, y);
-        this.engine.text('Rien', coord, consts.TextColor);
+        this.engine.text('Rien', coord, consts.DefaultTextColor);
       } else {
         for (const item of this.inventory) {
           const coord = this.to_screen_coord(x, y);
-          this.engine.text('[' + this.inventory.indexOf(item) + '] ' + consts.item2description[item].text, coord, consts.TextColor);
+          this.engine.text('[' + this.inventory.indexOf(item) + '] ' + consts.item2description[item].text, coord, consts.DefaultTextColor);
           y++;
         }
       }
