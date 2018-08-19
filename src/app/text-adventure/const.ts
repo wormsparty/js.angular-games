@@ -1,9 +1,8 @@
 export const char_per_line = 80;
 export const map_lines = 30;
 
-export const BackgroundColor = '#000000';
-export const TileBackgroundColor = '#000000';
-export const TextColor =  '#FFFF00';
+export const DefaultBackgroundColor = '#000000';
+export const DefaultTextColor =  '#FFFF00';
 export const White =  '#FFFFFF';
 
 export const globalTile2color = {
@@ -13,13 +12,8 @@ export const globalTile2color = {
 };
 
 export const pnj2color = {
-  'm': '#9B9B9B',
-  'v': '#0000FF',
-  'c': '#0055DD',
-  'J': '#00FFFF',
-  'r': '#FF00FF',
+  'm': '#6699FF',
   '@': '#FF0000',
-  't': '#FFFFFF',
 };
 
 export const item2color = {
@@ -32,7 +26,7 @@ export const item2color = {
   '{': '#00FFFF',
   ')': '#0000FF',
   '}': '#00FF00',
-  '%': '#114400',
+  '%': '#119900',
   '!': '#555555',
   '?': '#FFFFFF',
   '/': '#222222',
@@ -65,9 +59,9 @@ export const mouvementMap = {
 };
 
 export const item2description = {
-  '$': { text: 'Pièce de 1.-', genre: 'F' },
-  '%': { text: 'Masque à gaz', genre: 'M' },
-  '&': { text: 'Canette de Coca', genre: 'F' },
+  '$': { text: 'pièce de 1.-', genre: 'F' },
+  '%': { text: 'laitue', genre: 'F' },
+  '&': { text: 'tomate', genre: 'F' },
   '(': { text: 'Bout de bois gauche', genre: 'M' },
   ')': { text: 'Bout de bois droit', genre: 'M' },
   '[': { text: 'Crochet gauche', genre: 'M' },
@@ -86,13 +80,19 @@ export const symbol2description = {
   '.': { text: ''}
 };
 
+export const tile2text = {
+  '#': 'Aïe! Un mur.',
+  '~': 'C\'est toxique!',
+  'g': 'Je ne te laisserai pas passer sans épée'
+};
+
 export const pnj2dialog = {
-  'J': 'La machine à café est cassée!',
-  'r': 'Bonjour!',
-  'v': 'On ne peut pas sortir sans payer!',
-  'c': 'On n\'est pas sensé pouvoir me parler!',
-  'm': 'Une pièce?',
-  't': 'Ici, c\'est le tutoriel',
+  'm': 'Fuits et légumes frais!',
+};
+
+export const un = {
+  'M': 'Un ',
+  'F': 'Une ',
 };
 
 export const pris = {
@@ -108,3 +108,4 @@ export const achete = {
 export const teleport_symbols: Array<string> = [ '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '>', '<' ];
 export const item_symbols: Array<string> = [ '{', '}', '[', ']', '(', ')', '&', '%', '!', '?', '*', '$', '/'];
 export const walkable_symbols: Array<string> = [ '.', '<', '>' ];
+export const shop_maps: Array<string> = [ 'outside' ];

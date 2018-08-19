@@ -41,8 +41,9 @@ export class LevelMap {
   pnj_positions: Map<string, Array<Pos>>;
   item_positions: Map<string, Array<Pos>>;
   start: Pos;
+  background: string;
 
-  constructor(map: string, meta: string, teleport_map: Map<string, string>, tile2color: Map<string, string>, texts: Map<string, Pos>) {
+  constructor(map: string, meta: string, teleport_map: Map<string, string>, tile2color: Map<string, string>, texts: Map<string, Pos>, background: string) {
     this.map = map;
     this.meta = meta;
     this.teleport_map = teleport_map;
@@ -53,6 +54,12 @@ export class LevelMap {
     this.pnj_positions = new Map<string, Array<Pos>>();
     this.item_positions = new Map<string, Array<Pos>>();
     this.start = new Pos(0, 0);
+
+    if (background !== undefined) {
+      this.background = background;
+    } else {
+      this.background = consts.DefaultBackgroundColor;
+    }
   }
 
   parse(name: string): void {

@@ -50,7 +50,8 @@ export class Labyrinth {
     }
   }
   draw(): void {
-    this.engine.clear(consts.BackgroundColor);
+
+    this.engine.clear(this.current_map.background);
 
     if (this.open_inventory) {
       this.draw_screen( 'inventory');
@@ -92,9 +93,10 @@ export class Labyrinth {
       for (const [item, positions] of this.current_map.item_positions) {
         for (let i = 0 ; i < positions.length; i++) {
           if (positions[i].equals(hero_pos)) {
-            current_status = consts.item2description[item].text;
+            const description = consts.item2description[item];
+            current_status = consts.un[description.genre] + description.text;
 
-            if (item !== '$' && this.current_map_name === 'coop') {
+            if (item !== '$' && consts.shop_maps.indexOf(this.current_map_name) > -1) {
               current_status += ' (' + consts.item2price[item] + '.-)';
             }
 
@@ -120,6 +122,7 @@ export class Labyrinth {
       let item_picked = false;
       let coins = this.coins;
       let current_status = this.current_status;
+      const is_shop = consts.shop_maps.indexOf(this.current_map_name) > -1;
 
       for (const [item, positions] of this.current_map.item_positions) {
         const price = consts.item2price[item];
@@ -131,14 +134,15 @@ export class Labyrinth {
               coins++;
               positions.splice(i, 1);
               current_status = description.text + consts.pris[description.genre];
-            } else if (this.current_map_name !== 'coop' || coins >= price) {
+            } else if (!is_shop || coins >= price) {
               this.inventory.push(item);
+              const upper = description.text.charAt(0).toUpperCase() + description.text.substr(1);
 
-              if (this.current_map_name === 'coop') {
+              if (is_shop) {
                 coins -= price;
-                current_status = description.text + consts.achete[description.genre] + ' pour ' + price + '.-';
+                current_status = upper + consts.achete[description.genre] + ' pour ' + price + '.-';
               } else {
-                current_status = description.text + consts.pris[description.genre];
+                current_status = upper + consts.pris[description.genre];
               }
 
               positions.splice(i, 1);
@@ -265,14 +269,10 @@ export class Labyrinth {
         if (allowed_walking_symbols.indexOf(symbol) > -1) {
           return [new Pos(future_pos.x, hero_pos.y), ''];
         } else {
-          let status = '';
+          let status = consts.tile2text[symbol];
 
-          if (symbol === '#') {
-            status = 'Aïe! Un mur.';
-          }
-
-          if (symbol === '~') {
-            status = 'C\'est toxique!';
+          if (status === undefined) {
+            status = '';
           }
 
           return [hero_pos, status];
@@ -284,14 +284,10 @@ export class Labyrinth {
       if (allowed_walking_symbols.indexOf(symbol) > -1) {
         return [new Pos(future_pos.x, hero_pos.y), ''];
       } else {
-        let status = '';
+        let status = consts.tile2text[symbol];
 
-        if (symbol === '#') {
-          status = 'Aïe! Un mur.';
-        }
-
-        if (symbol === '~') {
-          status = 'C\'est toxique!';
+        if (status === undefined) {
+          status = '';
         }
 
         return [ hero_pos, status ];
@@ -438,10 +434,10 @@ export class Labyrinth {
         }
 
         if (color === undefined) {
-          color = consts.TextColor;
+          color = consts.DefaultTextColor;
         }
 
-        this.engine.rect(coord, str.length * this.char_width, 16, consts.TileBackgroundColor);
+        this.engine.rect(coord, str.length * this.char_width, 16, this.current_map.background);
         this.engine.text(str, coord, color);
         x += length;
       }
@@ -449,7 +445,7 @@ export class Labyrinth {
 
     if (this.current_map.texts !== undefined) {
       for (const [text, pos] of this.current_map.texts) {
-        this.engine.text(text, this.to_screen_coord(pos.x, pos.y), consts.TextColor);
+        this.engine.text(text, this.to_screen_coord(pos.x, pos.y), consts.DefaultTextColor);
       }
     }
   }
@@ -458,7 +454,7 @@ export class Labyrinth {
       const coord = this.to_screen_coord(pnj.x, pnj.y);
       const color = consts.pnj2color[p];
 
-      this.engine.rect(coord, this.char_width, 16, consts.TileBackgroundColor);
+      this.engine.rect(coord, this.char_width, 16, this.current_map.background);
       this.engine.text(p, coord, color);
     }
   }
@@ -469,14 +465,16 @@ export class Labyrinth {
         const coord = this.to_screen_coord(positions[i].x, positions[i].y);
         const color = consts.item2color[item];
 
-        this.engine.rect(coord, this.char_width, 16, consts.TileBackgroundColor);
+        this.engine.rect(coord, this.char_width, 16, this.current_map.background);
         this.engine.text(item, coord, color);
       }
     }
   }
   draw_overlay() {
+    this.engine.rect({x: 0, y: this.engine.reference_height - 48},
+      this.char_width * (this.current_status.length + 6), 48, this.current_map.background);
+
     this.engine.text('  > ' + this.current_status, {x: 0, y: this.engine.reference_height - 32}, consts.White);
-    // this.engine.text('  PV: 20/20', {x: 0, y: this.engine.reference_height - 32}, consts.White);
   }
   draw_all(): void {
     this.draw_map();
