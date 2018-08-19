@@ -3,7 +3,8 @@ import {AllMaps, AllScreens} from './map_content';
 import * as consts from './const';
 import {LevelMap, Pos} from './map_logic';
 
-const initial_map = 'outside';
+const initial_map = 'training';
+const initial_inventory = [ '/' ];
 
 function get_random_mouvement(pnj): Pos {
   const new_pnj = new Pos(pnj.x, pnj.y);
@@ -216,7 +217,7 @@ export class Labyrinth {
       }
 
       if (this.current_map.pnj2position !== undefined && this.current_map.pnj2position.has(p)) {
-        this.pnjs.set(p, this.current_map.pnj2position.get(p)(this.inventory));
+        this.pnjs.set(p, this.current_map.pnj2position.get(p)(this, pnj, future_pos));
       } else {
         const new_pnj = get_random_mouvement(pnj);
 
@@ -535,7 +536,7 @@ export class Labyrinth {
     this.current_status = '';
     this.coins = 0;
     this.char_width = this.engine.get_char_width();
-    this.inventory = [];
+    this.inventory = initial_inventory;
 
     Labyrinth.parse_all_maps();
     Labyrinth.parse_all_screens();

@@ -15,6 +15,7 @@ export const pnj2color = {
   'g': '#0000FF',
   'm': '#6699FF',
   '@': '#FF0000',
+  'O': '#FF0000',
 };
 
 export const item2color = {

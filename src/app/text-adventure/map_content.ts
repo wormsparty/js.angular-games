@@ -253,7 +253,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
   '   ##..........##      #####..............^.............^...................#   \n' +
   '###..............######...................^.............^...................#   \n' +
   '..........................................^.............^...................#   \n' +
-  '..........................................^.............^..................#    \n' +
+  '..........................................^.............^.................##    \n' +
   '.......................................................................###      \n' +
   '############........................................................###         \n' +
   '            #######................................................#            \n' +
@@ -284,7 +284,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     '   ##          ##      #####                %  mmmmm  %                     #   \n' +
     '###              ######                     &  mmmmm  %                     #   \n' +
     '2                                           &         &                     #   \n' +
-    '2                                                                          #    \n' +
+    '2                                                                         ##    \n' +
     '2                                                                      ###      \n' +
     '############                                                        ###         \n' +
     '            #######                                                #            \n' +
@@ -387,7 +387,12 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     undefined,
     undefined,
     undefined,
-    undefined,
+    new Map([
+      [ 'O', function(l: Labyrinth, pnj: Pos, hero_pos: Pos): Pos {
+        // TODO: Comment bougent les cibles?
+        return undefined;
+      }]
+    ]),
   )],
   [ 'training', new LevelMap('' +
     '                                                                                \n' +
@@ -427,19 +432,19 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     '                                                                                \n' +
     '                                                                                \n' +
     '                                                                                \n' +
-    '##                                                                              \n' +
-    '5                      ##################################                       \n' +
-    '5                     #                                  #                      \n' +
-    '5                     #                                  #                      \n' +
-    '5                     #                                  #                      \n' +
-    '##                    #                      g           #                      \n' +
-    '                      7                                  #                      \n' +
-    '                      7                                  #                      \n' +
-    '                      7                                  #                      \n' +
-    '                      7                                  #                      \n' +
+    '#####                                                                           \n' +
+    '5    ####              ##################################                       \n' +
+    '5        ##############                                  #                      \n' +
+    '5         g     @                                        #                      \n' +
+    '5    ######                                              #                      \n' +
+    '#####      ###########                                   #                      \n' +
     '                      #                                  #                      \n' +
     '                      #                                  #                      \n' +
+    '                      #                        O         #                      \n' +
+    '                      #    O                             #                      \n' +
     '                      #                                  #                      \n' +
+    '                      #                                  #                      \n' +
+    '                      #              O                   #                      \n' +
     '                      #                                  #                      \n' +
     '                       ##################################                       \n' +
     '                                                                                \n' +
@@ -458,8 +463,8 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     undefined,
     undefined,
     new Map([
-      [ 'g', function(inventory): Pos {
-        if (inventory.indexOf('/') > -1) {
+      [ 'g', function(l: Labyrinth, pnj: Pos, hero_pos: Pos): Pos {
+        if (l.inventory.indexOf('/') > -1) {
           return new Pos(11, 10);
         } else {
           return new Pos(10, 9);

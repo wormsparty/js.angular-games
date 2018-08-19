@@ -1,4 +1,5 @@
 import * as consts from './const';
+import {Labyrinth} from './labyrinth';
 
 export class Pos {
   x: number;
@@ -42,11 +43,11 @@ export class LevelMap {
   item_positions: Map<string, Array<Pos>>;
   start: Pos;
   background: string;
-  pnj2position: Map<string, (any) => Pos>;
+  pnj2position: Map<string, (l: Labyrinth, p1: Pos, p2: Pos) => Pos>;
 
   constructor(map: string, meta: string, teleport_map: Map<string, string>,
               tile2color: Map<string, string>, texts: Map<string, Pos>, background: string,
-              pnj2position: Map<string, (any) => Pos>) {
+              pnj2position: Map<string, (l: Labyrinth, p1: Pos, p2: Pos) => Pos>) {
     this.map = map;
     this.meta = meta;
     this.teleport_map = teleport_map;
