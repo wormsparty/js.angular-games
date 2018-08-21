@@ -27,17 +27,25 @@ export class TextAdventureComponent implements OnInit {
       let update = false;
 
       if (labyrinth.pressed.has(event.key)) {
-        labyrinth.pressed.set(event.key, true);
+        if (event.key === 'i') {
+          labyrinth.pressed.set(event.key, !labyrinth.pressed.get(event.key));
+        } else {
+          labyrinth.pressed.set(event.key, true);
+        }
         update = true;
       } else {
         if (event.key === 'ArrowLeft') {
           labyrinth.pressed.set('4', true);
+          update = true;
         } else if (event.key === 'ArrowRight') {
           labyrinth.pressed.set('6', true);
+          update = true;
         } else if (event.key === 'ArrowUp') {
           labyrinth.pressed.set('8', true);
+          update = true;
         } else if (event.key === 'ArrowDown') {
           labyrinth.pressed.set('2', true);
+          update = true;
         }
       }
 
@@ -48,6 +56,10 @@ export class TextAdventureComponent implements OnInit {
     });
 
     $(document).on('keyup', function (event) {
+      if (event.key === 'i') {
+        return;
+      }
+
       if (labyrinth.pressed.has(event.key)) {
         labyrinth.pressed.set(event.key, false);
       } else {

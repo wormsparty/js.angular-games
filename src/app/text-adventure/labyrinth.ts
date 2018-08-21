@@ -4,7 +4,7 @@ import * as consts from './const';
 import {LevelMap, Pos} from './map_logic';
 
 const initial_map = 'bateau';
-const initial_inventory = [ '/' ];
+const initial_inventory = [ '/' ]; // TODO: Only for debugging!
 
 function get_random_mouvement(pnj): Pos {
   const new_pnj = new Pos(pnj.x, pnj.y);
@@ -22,8 +22,6 @@ function get_random_mouvement(pnj): Pos {
 const charToCommand = new Map<string, Pos>([
   [ 'a', new Pos(2, 1) ],
   [ 's', new Pos(6, 1) ],
-  [ '<', new Pos(18, 1) ],
-  [ '>', new Pos(22, 1) ],
   [ '7', new Pos(consts.char_per_line - 10, 0) ],
   [ '8', new Pos(consts.char_per_line - 7, 0) ],
   [ '9', new Pos(consts.char_per_line - 4, 0) ],
@@ -61,13 +59,10 @@ export class Labyrinth {
     }
   }
   draw(): void {
-
     this.engine.clear(this.current_map.background_color);
 
     if (this.pressed.get('i')) {
       this.draw_screen( 'inventory');
-    } else if (this.pressed.get('h')) {
-      this.draw_screen('help');
     } else {
       this.draw_all();
     }
@@ -75,8 +70,6 @@ export class Labyrinth {
   do_update(): void {
     if (this.pressed.get('i')) {
       this.update_on_inventory();
-    } else if (this.pressed.get('h')) {
-      this.update_on_help();
     } else {
       this.update_on_map();
     }
@@ -278,6 +271,7 @@ export class Labyrinth {
     const future_pos: Pos = new Pos(x, y);
     const allowed_walking_symbols = consts.walkable_symbols;
 
+    // TODO: On garde?? Probablement pas
     if (this.inventory.indexOf('%') > -1) {
       allowed_walking_symbols.push('~');
       console.log(allowed_walking_symbols.length);
@@ -430,9 +424,6 @@ export class Labyrinth {
   update_on_inventory() {
     // TODO
   }
-  update_on_help() {
-    // Nothing?
-  }
   draw_map() {
     for (let y = 0; y < consts.map_lines; y++) {
       for (let x = 0; x < consts.char_per_line;) {
@@ -505,7 +496,7 @@ export class Labyrinth {
   }
   draw_overlay() {
     this.engine.text('  > ' + this.current_status, this.to_screen_coord(0, 1), consts.White);
-    this.engine.text('[h]', this.to_screen_coord(consts.char_per_line - 4, 1), consts.White);
+    this.engine.text('[i]', this.to_screen_coord(consts.char_per_line - 4, 1), consts.White);
 
     const h = consts.map_lines + consts.header_size + 1;
 
@@ -517,8 +508,25 @@ export class Labyrinth {
       }
     }
 
+    const hero = this.pnjs.get('@');
+    const symbol_over = this.current_map.get_symbol_at(hero.x, hero.y);
+
+    if (symbol_over === '<') {
+      this.engine.text('[<]', this.to_screen_coord(46, h + 1), consts.OverlayHighlight);
+    } else {
+      this.engine.text('[<]', this.to_screen_coord(46, h + 1), consts.OverlayNormal);
+    }
+
+    if (symbol_over === '>') {
+      this.engine.text('[>]', this.to_screen_coord(50, h + 1), consts.OverlayHighlight);
+    } else {
+      this.engine.text('[>]', this.to_screen_coord(50, h + 1), consts.OverlayNormal);
+    }
+
     if (this.is_hero_over_item) {
-      this.engine.text('[p]', this.to_screen_coord(consts.char_per_line / 2, h + 1), consts.White);
+      this.engine.text('[p]', this.to_screen_coord(60, h + 1), consts.OverlayHighlight);
+    } else {
+      this.engine.text('[p]', this.to_screen_coord(60, h + 1), consts.OverlayNormal);
     }
   }
   draw_all(): void {
@@ -543,11 +551,11 @@ export class Labyrinth {
       const x = 18;
 
       if (this.inventory.length === 0) {
-        const coord = this.to_screen_coord(x, y + consts.header_size);
+        const coord = this.to_screen_coord(x, y - 1);
         this.engine.text('Rien', coord, consts.DefaultTextColor);
       } else {
         for (const item of this.inventory) {
-          const coord = this.to_screen_coord(x, y + consts.header_size);
+          const coord = this.to_screen_coord(x, y - 1);
           this.engine.text('[' + this.inventory.indexOf(item) + '] ' + consts.item2description[item].text, coord, consts.DefaultTextColor);
           y++;
         }
@@ -577,7 +585,6 @@ export class Labyrinth {
       [ '8', false ],
       [ '9', false ],
       [ 'i', false ],
-      [ 'h', false ],
       [ 'a', false ],
       [ 's', false ],
       [ 'p', false ],
