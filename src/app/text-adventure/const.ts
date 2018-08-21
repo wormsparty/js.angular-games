@@ -1,9 +1,12 @@
 export const char_per_line = 80;
-export const map_lines = 30;
+export const map_lines = 22;
+export const header_size = 3;
 
 export const DefaultBackgroundColor = '#000000';
 export const DefaultTextColor =  '#FFFF00';
 export const White =  '#FFFFFF';
+export const OverlayNormal =  '#555555';
+export const OverlayHighlight =  '#FFFFFF';
 
 export const globalTile2color = {
   '#': '#646464',

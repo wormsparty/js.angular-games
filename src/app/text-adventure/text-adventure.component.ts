@@ -26,44 +26,18 @@ export class TextAdventureComponent implements OnInit {
     $(document).on('keydown', function (event) {
       let update = false;
 
-      if (event.key === 'i') {
-        labyrinth.open_inventory = !labyrinth.open_inventory;
-        update = true;
-      } else if (event.key === 'h') {
-        labyrinth.open_help = !labyrinth.open_help;
-        update = true;
-      } else if (event.key === 'p') {
-        labyrinth.pickup = true;
-        update = true;
-      } else if (event.key === '>') {
-        labyrinth.enter = true;
-        update = true;
-      } else if (event.key === '<') {
-        labyrinth.exit = true;
+      if (labyrinth.pressed.has(event.key)) {
+        labyrinth.pressed.set(event.key, true);
         update = true;
       } else {
-        if (event.key === 'ArrowLeft' || event.key === '4' || event.key === '7' || event.key === '1') {
-          labyrinth.left = 1;
-          update = true;
-        }
-
-        if (event.key === 'ArrowRight' || event.key === '6' || event.key === '9' || event.key === '3') {
-          labyrinth.right = 1;
-          update = true;
-        }
-
-        if (event.key === 'ArrowUp' || event.key === '8' || event.key === '7' || event.key === '9') {
-          labyrinth.up = 1;
-          update = true;
-        }
-
-        if (event.key === 'ArrowDown' || event.key === '2' || event.key === '3' || event.key === '1') {
-          labyrinth.down = 1;
-          update = true;
-        }
-
-        if (event.key === '.' || event.key === '5') {
-          update = true;
+        if (event.key === 'ArrowLeft') {
+          labyrinth.pressed.set('4', true);
+        } else if (event.key === 'ArrowRight') {
+          labyrinth.pressed.set('6', true);
+        } else if (event.key === 'ArrowUp') {
+          labyrinth.pressed.set('8', true);
+        } else if (event.key === 'ArrowDown') {
+          labyrinth.pressed.set('2', true);
         }
       }
 
@@ -74,20 +48,18 @@ export class TextAdventureComponent implements OnInit {
     });
 
     $(document).on('keyup', function (event) {
-      if (event.key === 'ArrowLeft' || event.key === '4' || event.key === '7' || event.key === '1') {
-        labyrinth.left = 0;
-      }
-
-      if (event.key === 'ArrowRight' || event.key === '6' || event.key === '9' || event.key === '3') {
-        labyrinth.right = 0;
-      }
-
-      if (event.key === 'ArrowUp' || event.key === '8' || event.key === '7' || event.key === '9') {
-        labyrinth.up = 0;
-      }
-
-      if (event.key === 'ArrowDown' || event.key === '2' || event.key === '3' || event.key === '1') {
-        labyrinth.down = 0;
+      if (labyrinth.pressed.has(event.key)) {
+        labyrinth.pressed.set(event.key, false);
+      } else {
+        if (event.key === 'ArrowLeft') {
+          labyrinth.pressed.set('4', false);
+        } else if (event.key === 'ArrowRight') {
+          labyrinth.pressed.set('6', false);
+        } else if (event.key === 'ArrowUp') {
+          labyrinth.pressed.set('8', false);
+        } else if (event.key === 'ArrowDown') {
+          labyrinth.pressed.set('2', false);
+        }
       }
     });
 

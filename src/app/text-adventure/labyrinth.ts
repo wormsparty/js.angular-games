@@ -3,7 +3,7 @@ import {AllMaps, AllScreens} from './map_content';
 import * as consts from './const';
 import {LevelMap, Pos} from './map_logic';
 
-const initial_map = 'guet';
+const initial_map = 'bateau';
 const initial_inventory = [ '/' ];
 
 function get_random_mouvement(pnj): Pos {
@@ -19,6 +19,23 @@ function get_random_mouvement(pnj): Pos {
   return new_pnj;
 }
 
+const charToCommand = new Map<string, Pos>([
+  [ 'a', new Pos(2, 1) ],
+  [ 's', new Pos(6, 1) ],
+  [ '<', new Pos(18, 1) ],
+  [ '>', new Pos(22, 1) ],
+  [ '7', new Pos(consts.char_per_line - 10, 0) ],
+  [ '8', new Pos(consts.char_per_line - 7, 0) ],
+  [ '9', new Pos(consts.char_per_line - 4, 0) ],
+  [ '4', new Pos(consts.char_per_line - 10, 1) ],
+  [ '5', new Pos(consts.char_per_line - 7, 1) ],
+  [ '6', new Pos(consts.char_per_line - 4, 1) ],
+  [ '1', new Pos(consts.char_per_line - 10, 2) ],
+  [ '2', new Pos(consts.char_per_line - 7, 2) ],
+  [ '3', new Pos(consts.char_per_line - 4, 2) ],
+]);
+
+
 export class Labyrinth {
   private readonly engine: Engine;
   readonly inventory: Array<string>;
@@ -30,15 +47,8 @@ export class Labyrinth {
   private current_map: LevelMap;
   private pnjs: Map<string, Pos>;
 
-  up: number;
-  down: number;
-  left: number;
-  right: number;
-  open_inventory: boolean;
-  open_help: boolean;
-  pickup: boolean;
-  enter: boolean;
-  exit: boolean;
+  public pressed: Map<string, boolean>;
+  private is_hero_over_item = false;
 
   static parse_all_maps(): void {
     for (const [key, map] of AllMaps) {
@@ -54,18 +64,18 @@ export class Labyrinth {
 
     this.engine.clear(this.current_map.background_color);
 
-    if (this.open_inventory) {
+    if (this.pressed.get('i')) {
       this.draw_screen( 'inventory');
-    } else if (this.open_help) {
+    } else if (this.pressed.get('h')) {
       this.draw_screen('help');
     } else {
       this.draw_all();
     }
   }
   do_update(): void {
-    if (this.open_inventory) {
+    if (this.pressed.get('i')) {
       this.update_on_inventory();
-    } else if (this.open_help) {
+    } else if (this.pressed.get('h')) {
       this.update_on_help();
     } else {
       this.update_on_map();
@@ -91,9 +101,12 @@ export class Labyrinth {
     }
 
     if (!status_set) {
+      this.is_hero_over_item = false;
+
       for (const [item, positions] of this.current_map.item_positions) {
         for (let i = 0 ; i < positions.length; i++) {
           if (positions[i].equals(hero_pos)) {
+            this.is_hero_over_item = true;
             const description = consts.item2description[item];
             current_status = consts.un[description.genre] + description.text;
 
@@ -119,7 +132,7 @@ export class Labyrinth {
     }
   }
   try_pick_item(hero_pos): boolean {
-    if (this.pickup) {
+    if (this.pressed.get('p')) {
       let item_picked = false;
       let coins = this.coins;
       let current_status = this.current_status;
@@ -168,30 +181,26 @@ export class Labyrinth {
         this.current_status = current_status;
       }
 
-      this.pickup = false;
+      this.pressed.set('p', false);
       return true;
     }
 
     return false;
   }
   try_enter_or_exit(hero_pos): [boolean, Pos, string] {
-    if (this.enter)  {
+    if (this.pressed.get('>'))  {
       if (this.current_map.get_symbol_at(hero_pos.x, hero_pos.y) !== '>') {
         this.current_status = 'Il n\'y a pas d\'entrée ici.';
-        this.enter = false;
         return [ false, undefined, undefined ];
       }
 
-      this.enter = false;
       return this.do_teleport('>', hero_pos, hero_pos, hero_pos);
-    } else if (this.exit) {
+    } else if (this.pressed.get('<')) {
       if (this.current_map.get_symbol_at(hero_pos.x, hero_pos.y) !== '<') {
         this.current_status = 'Il n\'y a pas de sortie ici.';
-        this.exit = false;
         return [ false, undefined, undefined ];
       }
 
-      this.exit = false;
       return this.do_teleport('<', hero_pos, hero_pos, hero_pos);
     }
 
@@ -247,7 +256,26 @@ export class Labyrinth {
     return hero_pos;
   }
   get_future_position(hero_pos): [Pos, string] {
-    const future_pos: Pos = new Pos(hero_pos.x + this.right - this.left, hero_pos.y + this.down - this.up);
+    let x = hero_pos.x;
+    let y = hero_pos.y;
+
+    if (this.pressed.get('1') || this.pressed.get('2') || this.pressed.get('3')) {
+      y++;
+    }
+
+    if (this.pressed.get('7') || this.pressed.get('8') || this.pressed.get('9')) {
+      y--;
+    }
+
+    if (this.pressed.get('1') || this.pressed.get('4') || this.pressed.get('7')) {
+      x--;
+    }
+
+    if (this.pressed.get('3') || this.pressed.get('6') || this.pressed.get('9')) {
+      x++;
+    }
+
+    const future_pos: Pos = new Pos(x, y);
     const allowed_walking_symbols = consts.walkable_symbols;
 
     if (this.inventory.indexOf('%') > -1) {
@@ -426,7 +454,7 @@ export class Labyrinth {
           }
         }
 
-        const coord = this.to_screen_coord(x, y);
+        const coord = this.to_screen_coord(x, y + consts.header_size);
         const str = this.get_string_from(x, y, length);
         let color;
 
@@ -456,7 +484,7 @@ export class Labyrinth {
   }
   draw_pnjs() {
     for (const [p, pnj] of this.pnjs) {
-      const coord = this.to_screen_coord(pnj.x, pnj.y);
+      const coord = this.to_screen_coord(pnj.x, pnj.y + consts.header_size);
       const color = consts.pnj2color[p];
 
       this.engine.rect(coord, this.char_width, 16, this.current_map.background_color);
@@ -467,7 +495,7 @@ export class Labyrinth {
     for (const [item, positions] of this.current_map.item_positions) {
 
       for (let i = 0; i < positions.length; i++) {
-        const coord = this.to_screen_coord(positions[i].x, positions[i].y);
+        const coord = this.to_screen_coord(positions[i].x, positions[i].y + consts.header_size);
         const color = consts.item2color[item];
 
         this.engine.rect(coord, this.char_width, 16, this.current_map.background_color);
@@ -476,10 +504,22 @@ export class Labyrinth {
     }
   }
   draw_overlay() {
-    this.engine.rect({x: 0, y: this.engine.reference_height - 48},
-      this.char_width * (this.current_status.length + 6), 48, this.current_map.background_color);
+    this.engine.text('  > ' + this.current_status, this.to_screen_coord(0, 1), consts.White);
+    this.engine.text('[h]', this.to_screen_coord(consts.char_per_line - 4, 1), consts.White);
 
-    this.engine.text('  > ' + this.current_status, {x: 0, y: this.engine.reference_height - 32}, consts.White);
+    const h = consts.map_lines + consts.header_size + 1;
+
+    for (const [chr, pos] of charToCommand) {
+      if (this.pressed.get(chr)) {
+        this.engine.text('[' + chr + ']', this.to_screen_coord(pos.x, pos.y + h), consts.OverlayHighlight);
+      } else {
+        this.engine.text('[' + chr + ']', this.to_screen_coord(pos.x, pos.y + h), consts.OverlayNormal);
+      }
+    }
+
+    if (this.is_hero_over_item) {
+      this.engine.text('[p]', this.to_screen_coord(consts.char_per_line / 2, h + 1), consts.White);
+    }
   }
   draw_all(): void {
     this.draw_map();
@@ -503,11 +543,11 @@ export class Labyrinth {
       const x = 18;
 
       if (this.inventory.length === 0) {
-        const coord = this.to_screen_coord(x, y);
+        const coord = this.to_screen_coord(x, y + consts.header_size);
         this.engine.text('Rien', coord, consts.DefaultTextColor);
       } else {
         for (const item of this.inventory) {
-          const coord = this.to_screen_coord(x, y);
+          const coord = this.to_screen_coord(x, y + consts.header_size);
           this.engine.text('[' + this.inventory.indexOf(item) + '] ' + consts.item2description[item].text, coord, consts.DefaultTextColor);
           y++;
         }
@@ -526,13 +566,25 @@ export class Labyrinth {
       16,
       'Inconsolata, monospace');
 
-    this.up = 0;
-    this.down = 0;
-    this.left = 0;
-    this.right = 0;
-    this.open_inventory = false;
-    this.open_help = false;
-    this.pickup = false;
+    this.pressed = new Map([
+      [ '1', false ],
+      [ '2', false ],
+      [ '3', false ],
+      [ '4', false ],
+      [ '5', false ],
+      [ '6', false ],
+      [ '7', false ],
+      [ '8', false ],
+      [ '9', false ],
+      [ 'i', false ],
+      [ 'h', false ],
+      [ 'a', false ],
+      [ 's', false ],
+      [ 'p', false ],
+      [ '>', false ],
+      [ '<', false ],
+    ]);
+
     this.current_status = '';
     this.coins = 0;
     this.char_width = this.engine.get_char_width();
