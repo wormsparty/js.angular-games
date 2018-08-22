@@ -40,10 +40,18 @@ const currencyFormatter = new Intl.NumberFormat('fr-CH', {
   minimumFractionDigits: 0,
 });
 
+class Item {
+  symbol: string;
+  usage: number;
+
+  constructor(symbol, usage) {
+    this.symbol = symbol;
+    this.usage = usage;
+  }
+}
+
 export class Labyrinth {
-  public weapon: string;
-  public spell: string;
-  public spell_count: number;
+  public slots: Array<Item>;
 
   public pressed: Map<string, boolean>;
 
@@ -58,7 +66,7 @@ export class Labyrinth {
   private pnjs: Map<string, Pos>;
 
   private is_hero_over_item = false;
-  private is_weapon_selected = true;
+  private selected_slot: number;
 
   static parse_all_maps(): void {
     for (const [key, map] of AllMaps) {
@@ -122,7 +130,42 @@ export class Labyrinth {
       this.current_status = current_status;
     }
   }
-  try_pick_item(hero_pos): boolean {
+  drop_item(pos: Pos) {
+    // Drop item on the ground if any
+    const selected_slot = this.slots[this.selected_slot];
+
+    if (selected_slot.symbol !== '') {
+      if (!this.current_map.item_positions.has(selected_slot.symbol)) {
+        this.current_map.item_positions.set(selected_slot.symbol, []);
+      }
+
+      this.current_map.item_positions.get(selected_slot.symbol).push(pos);
+    }
+  }
+  try_pick_or_drop_item(hero_pos): boolean {
+    if (this.pressed.get('D')) {
+      if (this.slots[this.selected_slot].symbol === '') {
+        this.current_status = 'Il n\'y a rien à déposer';
+        return true;
+      }
+
+      for (const [item, positions] of this.current_map.item_positions) {
+        for (let i = 0; i < positions.length; i++) {
+          if (positions[i].equals(hero_pos)) {
+            this.current_status = 'Il y a déjà un objet ici';
+            return true;
+          }
+        }
+      }
+
+      this.drop_item(hero_pos);
+      this.slots[this.selected_slot].symbol = '';
+      this.slots[this.selected_slot].usage = -1;
+
+      this.pressed.set('D', false);
+      return true;
+    }
+
     if (this.pressed.get('p')) {
       let item_picked = false;
       let coins = this.coins;
@@ -140,17 +183,10 @@ export class Labyrinth {
               positions.splice(i, 1);
               current_status = description.text + consts.pris[description.genre];
             } else if (!is_shop || coins >= price) {
-              // Drop item on the ground if any
-              if (this.weapon !== '') {
-                if (!this.current_map.item_positions.has(this.weapon)) {
-                  this.current_map.item_positions.set(this.weapon, []);
-                }
-
-                this.current_map.item_positions.get(this.weapon).push(positions[i]);
-              }
+              this.drop_item(positions[i]);
 
               // Take the item to weapon slot
-              this.weapon = item;
+              this.slots[this.selected_slot].symbol = item;
 
               const upper = make_first_letter_upper(description.text);
 
@@ -395,37 +431,45 @@ export class Labyrinth {
   }
   update_on_map() {
     if (this.pressed.get('a')) {
-      this.is_weapon_selected = true;
+      this.selected_slot = 0;
       this.pressed.set('a', false);
       return;
     }
 
     if (this.pressed.get('s')) {
-      this.is_weapon_selected = false;
-      this.pressed.set('a', false);
+      this.selected_slot = 1;
+      this.pressed.set('s', false);
       return;
     }
 
-    if (!this.is_weapon_selected) {
-      if (this.spell_count > 0) {
-        console.log('Lauch fireball!!');
-      } else {
-        this.current_status = 'Sort épuisé';
-      }
-
-      this.is_weapon_selected = true;
+    if (this.pressed.get('d')) {
+      this.selected_slot = 2;
+      this.pressed.set('d', false);
       return;
     }
 
     let hero_pos = this.pnjs.get('@');
     const future_pos = this.get_future_position(hero_pos);
 
-    if (future_pos[1] !== '') {
-      this.current_status = future_pos[1];
+    if (this.try_pick_or_drop_item(hero_pos)) {
       return;
     }
 
-    if (this.try_pick_item(hero_pos)) {
+    const selected_slot = this.slots[this.selected_slot];
+
+    if (selected_slot.usage !== -1) {
+      if (selected_slot.usage > 0) {
+        console.log('Launch fireball!!');
+        selected_slot.usage--;
+      } else {
+        this.current_status = 'Sort épuisé';
+      }
+
+      return;
+    }
+
+    if (future_pos[1] !== '') {
+      this.current_status = future_pos[1];
       return;
     }
 
@@ -517,6 +561,25 @@ export class Labyrinth {
       }
     }
   }
+  print_slot(idx, chr, pos) {
+    let color;
+
+    if (idx === this.selected_slot) {
+      color = consts.OverlayHighlight;
+    } else {
+      color = consts.OverlayNormal;
+    }
+
+    const slot = this.slots[idx];
+    let text = '[' + chr + '] ' + make_first_letter_upper(consts.item2description[slot.symbol].text;
+
+    if (slot.usage !== -1) {
+      text += ' (x' + slot.usage + ')';
+    }
+
+    this.engine.text(text, pos, color);
+  }
+
   draw_overlay() {
     this.engine.text('  > ' + this.current_status, this.to_screen_coord(0, 1), consts.White);
 
@@ -526,7 +589,7 @@ export class Labyrinth {
     const h = consts.map_lines + consts.header_size + 1;
 
     for (const [chr, pos] of charToCommand) {
-      if (!this.is_weapon_selected) {
+      if (this.slots[this.selected_slot].usage !== -1) {
         this.engine.text('[' + chr + ']', this.to_screen_coord(pos.x, pos.y + h), '#FF0000');
       } else if (this.pressed.get(chr)) {
         this.engine.text('[' + chr + ']', this.to_screen_coord(pos.x, pos.y + h), consts.OverlayHighlight);
@@ -535,17 +598,9 @@ export class Labyrinth {
       }
     }
 
-    if (this.is_weapon_selected) {
-      this.engine.text('[a] ' + make_first_letter_upper(consts.item2description[this.weapon].text),
-        this.to_screen_coord(3, 1 + h), consts.OverlayHighlight);
-      this.engine.text('[s] ' + make_first_letter_upper(consts.spell2description[this.spell] + ' (x' + this.spell_count + ')'),
-        this.to_screen_coord(3, 2 + h), consts.OverlayNormal);
-    } else {
-      this.engine.text('[a] ' + make_first_letter_upper(consts.item2description[this.weapon].text),
-        this.to_screen_coord(3, 1 + h), consts.OverlayNormal);
-      this.engine.text('[s] ' + make_first_letter_upper(consts.spell2description[this.spell] + ' (x' + this.spell_count + ')'),
-        this.to_screen_coord(3, 2 + h), consts.OverlayHighlight);
-    }
+    this.print_slot(0, 'a', this.to_screen_coord(3, h));
+    this.print_slot(1, 's', this.to_screen_coord(3, h + 1));
+    this.print_slot(2, 'd', this.to_screen_coord(3, h + 2));
 
     const hero = this.pnjs.get('@');
     const symbol_over = this.current_map.get_symbol_at(hero.x, hero.y);
@@ -563,9 +618,15 @@ export class Labyrinth {
     }
 
     if (this.is_hero_over_item) {
-      this.engine.text('[p]', this.to_screen_coord(31, h + 1), consts.OverlayHighlight);
+      this.engine.text('[p]', this.to_screen_coord(33, h + 1), consts.OverlayHighlight);
     } else {
-      this.engine.text('[p]', this.to_screen_coord(31, h + 1), consts.OverlayNormal);
+      this.engine.text('[p]', this.to_screen_coord(33, h + 1), consts.OverlayNormal);
+    }
+
+    if (this.slots[this.selected_slot].symbol !== '') {
+      this.engine.text('[D]', this.to_screen_coord(29, h + 1), consts.OverlayHighlight);
+    } else {
+      this.engine.text('[D]', this.to_screen_coord(29, h + 1), consts.OverlayNormal);
     }
   }
   draw_all(): void {
@@ -598,7 +659,9 @@ export class Labyrinth {
       [ '9', false ],
       [ 'a', false ],
       [ 's', false ],
+      [ 'd', false ],
       [ 'p', false ],
+      [ 'D', false ],
       [ '>', false ],
       [ '<', false ],
     ]);
@@ -607,9 +670,12 @@ export class Labyrinth {
     this.coins = 10000;
     this.char_width = this.engine.get_char_width();
 
-    this.weapon = '/';
-    this.spell = 'f';
-    this.spell_count = 0;
+    this.slots = new Array<Item>(3);
+    this.slots[0] = new Item('/', -1);
+    this.slots[1] = new Item('f', 3);
+    this.slots[2] = new Item('', -1);
+
+    this.selected_slot = 0;
 
     Labyrinth.parse_all_maps();
 
