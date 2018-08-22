@@ -1,4 +1,4 @@
-import {LevelMap, Pos, ScreenMap} from './map_logic';
+import {LevelMap, Pos} from './map_logic';
 import {Labyrinth} from './labyrinth';
 import * as consts from './const';
 
@@ -312,7 +312,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     undefined,
     new Map([
       [ 'g', function(l: Labyrinth, pnj: Pos, hero_pos: Pos): Pos {
-        if (l.inventory.indexOf('/') > -1) {
+        if (l.weapon !== '') {
           return new Pos(11, 10 - consts.header_size);
         } else {
           return new Pos(10, 9 - consts.header_size);
@@ -540,31 +540,4 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     undefined,
     undefined,
   )]
-]);
-
-export const AllScreens: Map<string, ScreenMap> = new Map([
-  [ 'inventory', new ScreenMap('' +
-  '                                                        \n' +
-  '                                                        \n' +
-  ' .~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~.  \n' +
-  ' |                                                   |  \n' +
-  ' |                    Inventaire                     |  \n' +
-  ' |                    ~~~~~~~~~~                     |  \n' +
-  ' |                                                   |  \n' +
-  ' |                                                   |  \n' +
-  ' |                                                   |  \n' +
-  ' |                                                   |  \n' +
-  ' |                                                   |  \n' +
-  ' |                                                   |  \n' +
-  ' |                                                   |  \n' +
-  ' |                                                   |  \n' +
-  ' |                                                   |  \n' +
-  ' |                                                   |  \n' +
-  ' |                                                   |  \n' +
-  ' |                                                   |  \n' +
-  ' |                                                   |  \n' +
-  ' ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^  \n' +
-  '                                                        \n' +
-  '                                                        ',
-  )],
 ]);

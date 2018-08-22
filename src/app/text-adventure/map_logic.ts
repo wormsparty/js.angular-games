@@ -136,25 +136,3 @@ export class LevelMap {
     return this.map[y * (consts.char_per_line + 1) + x];
   }
 }
-
-export class ScreenMap {
-  map: string;
-
-  constructor(map: string) {
-    this.map = map;
-  }
-
-  parse(name: string) {
-    const splitted_map = this.map.split('\n');
-
-    if (splitted_map.length !== consts.map_lines) {
-      console.log(name + ' n\'a pas exactement ' + consts.map_lines + ' lines (' + splitted_map.length + ')');
-    }
-
-    for (let i = 0 ; i < consts.map_lines; i++) {
-      if (splitted_map[i].length !== consts.char_per_line) {
-        console.log('L.' + i + ' de ' + name + ' n\'a pas exactement ' + consts.char_per_line + ' chars (' + splitted_map[i].length + ')');
-      }
-    }
-  }
-}

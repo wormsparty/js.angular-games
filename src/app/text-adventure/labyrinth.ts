@@ -1,11 +1,10 @@
 import {Engine} from './engine';
-import {AllMaps, AllScreens} from './map_content';
+import {AllMaps} from './map_content';
 import * as consts from './const';
 import {LevelMap, Pos} from './map_logic';
 import {item2color} from './const';
 
 const initial_map = 'bateau';
-const initial_inventory = [ '/' ]; // TODO: Only for debugging!
 
 function get_random_mouvement(pnj): Pos {
   const new_pnj = new Pos(pnj.x, pnj.y);
@@ -20,18 +19,20 @@ function get_random_mouvement(pnj): Pos {
   return new_pnj;
 }
 
+function make_first_letter_upper(str): string {
+  return str.charAt(0).toUpperCase() + str.substr(1);
+}
+
 const charToCommand = new Map<string, Pos>([
-  [ 'a', new Pos(7, 1) ],
-  [ 's', new Pos(11, 1) ],
-  [ '7', new Pos(consts.char_per_line - 13, 0) ],
-  [ '8', new Pos(consts.char_per_line - 10, 0) ],
-  [ '9', new Pos(consts.char_per_line - 7, 0) ],
-  [ '4', new Pos(consts.char_per_line - 13, 1) ],
-  [ '5', new Pos(consts.char_per_line - 10, 1) ],
-  [ '6', new Pos(consts.char_per_line - 7, 1) ],
-  [ '1', new Pos(consts.char_per_line - 13, 2) ],
-  [ '2', new Pos(consts.char_per_line - 10, 2) ],
-  [ '3', new Pos(consts.char_per_line - 7, 2) ],
+  [ '7', new Pos(consts.char_per_line - 11, 0) ],
+  [ '8', new Pos(consts.char_per_line - 8, 0) ],
+  [ '9', new Pos(consts.char_per_line - 5, 0) ],
+  [ '4', new Pos(consts.char_per_line - 11, 1) ],
+  [ '5', new Pos(consts.char_per_line - 8, 1) ],
+  [ '6', new Pos(consts.char_per_line - 5, 1) ],
+  [ '1', new Pos(consts.char_per_line - 11, 2) ],
+  [ '2', new Pos(consts.char_per_line - 8, 2) ],
+  [ '3', new Pos(consts.char_per_line - 5, 2) ],
 ]);
 
 const currencyFormatter = new Intl.NumberFormat('fr-CH', {
@@ -40,8 +41,14 @@ const currencyFormatter = new Intl.NumberFormat('fr-CH', {
 });
 
 export class Labyrinth {
+  public weapon: string;
+  public spell: string;
+  public spell_count: number;
+
+  public pressed: Map<string, boolean>;
+
   private readonly engine: Engine;
-  readonly inventory: Array<string>;
+
   readonly char_width: number;
 
   private current_map_name: string;
@@ -50,34 +57,20 @@ export class Labyrinth {
   private current_map: LevelMap;
   private pnjs: Map<string, Pos>;
 
-  public pressed: Map<string, boolean>;
   private is_hero_over_item = false;
+  private is_weapon_selected = true;
 
   static parse_all_maps(): void {
     for (const [key, map] of AllMaps) {
       map.parse(key);
     }
   }
-  static parse_all_screens(): void {
-    for (const [key, map] of AllScreens) {
-      map.parse(key);
-    }
-  }
   draw(): void {
     this.engine.clear(this.current_map.background_color);
-
-    if (this.pressed.get('i')) {
-      this.draw_screen( 'inventory');
-    } else {
-      this.draw_all();
-    }
+    this.draw_all();
   }
   do_update(): void {
-    if (this.pressed.get('i')) {
-      this.update_on_inventory();
-    } else {
-      this.update_on_map();
-    }
+    this.update_on_map();
   }
   get_string_from(x, y, length): string {
     return this.current_map.map.substr(y * (consts.char_per_line + 1) + x, length);
@@ -147,8 +140,19 @@ export class Labyrinth {
               positions.splice(i, 1);
               current_status = description.text + consts.pris[description.genre];
             } else if (!is_shop || coins >= price) {
-              this.inventory.push(item);
-              const upper = description.text.charAt(0).toUpperCase() + description.text.substr(1);
+              // Drop item on the ground if any
+              if (this.weapon !== '') {
+                if (!this.current_map.item_positions.has(this.weapon)) {
+                  this.current_map.item_positions.set(this.weapon, []);
+                }
+
+                this.current_map.item_positions.get(this.weapon).push(positions[i]);
+              }
+
+              // Take the item to weapon slot
+              this.weapon = item;
+
+              const upper = make_first_letter_upper(description.text);
 
               if (is_shop) {
                 coins -= price;
@@ -276,12 +280,6 @@ export class Labyrinth {
     const future_pos: Pos = new Pos(x, y);
     const allowed_walking_symbols = consts.walkable_symbols;
 
-    // TODO: On garde?? Probablement pas
-    if (this.inventory.indexOf('%') > -1) {
-      allowed_walking_symbols.push('~');
-      console.log(allowed_walking_symbols.length);
-    }
-
     let symbol = this.current_map.get_symbol_at(future_pos.x, future_pos.y);
 
     if (allowed_walking_symbols.indexOf(symbol) > -1) {
@@ -396,6 +394,29 @@ export class Labyrinth {
     ];
   }
   update_on_map() {
+    if (this.pressed.get('a')) {
+      this.is_weapon_selected = true;
+      this.pressed.set('a', false);
+      return;
+    }
+
+    if (this.pressed.get('s')) {
+      this.is_weapon_selected = false;
+      this.pressed.set('a', false);
+      return;
+    }
+
+    if (!this.is_weapon_selected) {
+      if (this.spell_count > 0) {
+        console.log('Lauch fireball!!');
+      } else {
+        this.current_status = 'Sort épuisé';
+      }
+
+      this.is_weapon_selected = true;
+      return;
+    }
+
     let hero_pos = this.pnjs.get('@');
     const future_pos = this.get_future_position(hero_pos);
 
@@ -425,9 +446,6 @@ export class Labyrinth {
 
     hero_pos = this.move_hero(hero_pos, future_pos[0]);
     this.move_pnjs(hero_pos);
-  }
-  update_on_inventory() {
-    // TODO
   }
   draw_map() {
     for (let y = 0; y < consts.map_lines; y++) {
@@ -503,38 +521,51 @@ export class Labyrinth {
     this.engine.text('  > ' + this.current_status, this.to_screen_coord(0, 1), consts.White);
 
     const money = currencyFormatter.format(this.coins) + ' $';
-    this.engine.text(money, this.to_screen_coord(consts.char_per_line - 6 - money.length, 1), item2color['$']);
-    this.engine.text('[i]', this.to_screen_coord(consts.char_per_line - 4, 1), consts.OverlayNormal);
+    this.engine.text(money, this.to_screen_coord(consts.char_per_line - money.length, 1), item2color['$']);
 
     const h = consts.map_lines + consts.header_size + 1;
 
     for (const [chr, pos] of charToCommand) {
-      if (this.pressed.get(chr)) {
+      if (!this.is_weapon_selected) {
+        this.engine.text('[' + chr + ']', this.to_screen_coord(pos.x, pos.y + h), '#FF0000');
+      } else if (this.pressed.get(chr)) {
         this.engine.text('[' + chr + ']', this.to_screen_coord(pos.x, pos.y + h), consts.OverlayHighlight);
       } else {
         this.engine.text('[' + chr + ']', this.to_screen_coord(pos.x, pos.y + h), consts.OverlayNormal);
       }
     }
 
+    if (this.is_weapon_selected) {
+      this.engine.text('[a] ' + make_first_letter_upper(consts.item2description[this.weapon].text),
+        this.to_screen_coord(3, 1 + h), consts.OverlayHighlight);
+      this.engine.text('[s] ' + make_first_letter_upper(consts.spell2description[this.spell] + ' (x' + this.spell_count + ')'),
+        this.to_screen_coord(3, 2 + h), consts.OverlayNormal);
+    } else {
+      this.engine.text('[a] ' + make_first_letter_upper(consts.item2description[this.weapon].text),
+        this.to_screen_coord(3, 1 + h), consts.OverlayNormal);
+      this.engine.text('[s] ' + make_first_letter_upper(consts.spell2description[this.spell] + ' (x' + this.spell_count + ')'),
+        this.to_screen_coord(3, 2 + h), consts.OverlayHighlight);
+    }
+
     const hero = this.pnjs.get('@');
     const symbol_over = this.current_map.get_symbol_at(hero.x, hero.y);
 
     if (symbol_over === '<') {
-      this.engine.text('[<]', this.to_screen_coord(20, h + 1), consts.OverlayHighlight);
+      this.engine.text('[<]', this.to_screen_coord(29, h + 2), consts.OverlayHighlight);
     } else {
-      this.engine.text('[<]', this.to_screen_coord(20, h + 1), consts.OverlayNormal);
+      this.engine.text('[<]', this.to_screen_coord(29, h + 2), consts.OverlayNormal);
     }
 
     if (symbol_over === '>') {
-      this.engine.text('[>]', this.to_screen_coord(24, h + 1), consts.OverlayHighlight);
+      this.engine.text('[>]', this.to_screen_coord(33, h + 2), consts.OverlayHighlight);
     } else {
-      this.engine.text('[>]', this.to_screen_coord(24, h + 1), consts.OverlayNormal);
+      this.engine.text('[>]', this.to_screen_coord(33, h + 2), consts.OverlayNormal);
     }
 
     if (this.is_hero_over_item) {
-      this.engine.text('[p]', this.to_screen_coord(33, h + 1), consts.OverlayHighlight);
+      this.engine.text('[p]', this.to_screen_coord(31, h + 1), consts.OverlayHighlight);
     } else {
-      this.engine.text('[p]', this.to_screen_coord(33, h + 1), consts.OverlayNormal);
+      this.engine.text('[p]', this.to_screen_coord(31, h + 1), consts.OverlayNormal);
     }
   }
   draw_all(): void {
@@ -542,33 +573,6 @@ export class Labyrinth {
     this.draw_items();
     this.draw_pnjs();
     this.draw_overlay();
-  }
-  draw_screen(screen_name: string): void {
-    const screen = AllScreens.get(screen_name);
-
-    for (let y = 0; y < consts.map_lines; y++) {
-      for (let x = 0; x < consts.char_per_line; x++) {
-        const start = y * (consts.char_per_line + 1);
-        this.engine.text(screen.map.substring(start, start + consts.char_per_line), {x: 0, y: y * 16}, consts.DefaultTextColor);
-      }
-    }
-
-    // TODO: Items!
-    if (screen_name === 'inventory') {
-      let y = 8;
-      const x = 18;
-
-      if (this.inventory.length === 0) {
-        const coord = this.to_screen_coord(x, y - 1);
-        this.engine.text('Rien', coord, consts.DefaultTextColor);
-      } else {
-        for (const item of this.inventory) {
-          const coord = this.to_screen_coord(x, y - 1);
-          this.engine.text('[' + this.inventory.indexOf(item) + '] ' + consts.item2description[item].text, coord, consts.DefaultTextColor);
-          y++;
-        }
-      }
-    }
   }
   resize(width, height): void {
     this.engine.resize(width, height);
@@ -592,7 +596,6 @@ export class Labyrinth {
       [ '7', false ],
       [ '8', false ],
       [ '9', false ],
-      [ 'i', false ],
       [ 'a', false ],
       [ 's', false ],
       [ 'p', false ],
@@ -603,10 +606,12 @@ export class Labyrinth {
     this.current_status = '';
     this.coins = 10000;
     this.char_width = this.engine.get_char_width();
-    this.inventory = initial_inventory;
+
+    this.weapon = '/';
+    this.spell = 'f';
+    this.spell_count = 0;
 
     Labyrinth.parse_all_maps();
-    Labyrinth.parse_all_screens();
 
     this.change_map(initial_map);
    }

@@ -76,7 +76,13 @@ export const item2description = {
   '*': { text: 'caillou', genre: 'M' },
   '?': { text: 'potion mystère', genre: 'F' },
   '!': { text: 'sort mystère', genre: 'M' },
-  '/': { text: 'épée', genre: 'F'}
+  '/': { text: 'épée', genre: 'F'},
+  '' : { text: 'aucune arme', genre: 'F' }
+};
+
+export const spell2description = {
+  'f': 'boule de feu',
+  '': 'aucun sort',
 };
 
 export const symbol2description = {
