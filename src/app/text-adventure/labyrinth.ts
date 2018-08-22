@@ -2,6 +2,7 @@ import {Engine} from './engine';
 import {AllMaps, AllScreens} from './map_content';
 import * as consts from './const';
 import {LevelMap, Pos} from './map_logic';
+import {item2color} from './const';
 
 const initial_map = 'bateau';
 const initial_inventory = [ '/' ]; // TODO: Only for debugging!
@@ -33,6 +34,10 @@ const charToCommand = new Map<string, Pos>([
   [ '3', new Pos(consts.char_per_line - 4, 2) ],
 ]);
 
+const currencyFormatter = new Intl.NumberFormat('fr-CH', {
+  style: 'decimal',
+  minimumFractionDigits: 0,
+});
 
 export class Labyrinth {
   private readonly engine: Engine;
@@ -496,6 +501,9 @@ export class Labyrinth {
   }
   draw_overlay() {
     this.engine.text('  > ' + this.current_status, this.to_screen_coord(0, 1), consts.White);
+
+    const money = currencyFormatter.format(this.coins) + ' $';
+    this.engine.text(money, this.to_screen_coord(consts.char_per_line - 6 - money.length, 1), item2color['$']);
     this.engine.text('[i]', this.to_screen_coord(consts.char_per_line - 4, 1), consts.White);
 
     const h = consts.map_lines + consts.header_size + 1;
@@ -593,7 +601,7 @@ export class Labyrinth {
     ]);
 
     this.current_status = '';
-    this.coins = 0;
+    this.coins = 10000;
     this.char_width = this.engine.get_char_width();
     this.inventory = initial_inventory;
 
