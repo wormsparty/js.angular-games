@@ -571,7 +571,7 @@ export class Labyrinth {
     }
 
     const slot = this.slots[idx];
-    let text = '[' + chr + '] ' + make_first_letter_upper(consts.item2description[slot.symbol].text;
+    let text = '[' + chr + '] ' + make_first_letter_upper(consts.item2description[slot.symbol].text);
 
     if (slot.usage !== -1) {
       text += ' (x' + slot.usage + ')';
