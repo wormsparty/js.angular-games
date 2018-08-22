@@ -21,17 +21,17 @@ function get_random_mouvement(pnj): Pos {
 }
 
 const charToCommand = new Map<string, Pos>([
-  [ 'a', new Pos(2, 1) ],
-  [ 's', new Pos(6, 1) ],
-  [ '7', new Pos(consts.char_per_line - 10, 0) ],
-  [ '8', new Pos(consts.char_per_line - 7, 0) ],
-  [ '9', new Pos(consts.char_per_line - 4, 0) ],
-  [ '4', new Pos(consts.char_per_line - 10, 1) ],
-  [ '5', new Pos(consts.char_per_line - 7, 1) ],
-  [ '6', new Pos(consts.char_per_line - 4, 1) ],
-  [ '1', new Pos(consts.char_per_line - 10, 2) ],
-  [ '2', new Pos(consts.char_per_line - 7, 2) ],
-  [ '3', new Pos(consts.char_per_line - 4, 2) ],
+  [ 'a', new Pos(7, 1) ],
+  [ 's', new Pos(11, 1) ],
+  [ '7', new Pos(consts.char_per_line - 13, 0) ],
+  [ '8', new Pos(consts.char_per_line - 10, 0) ],
+  [ '9', new Pos(consts.char_per_line - 7, 0) ],
+  [ '4', new Pos(consts.char_per_line - 13, 1) ],
+  [ '5', new Pos(consts.char_per_line - 10, 1) ],
+  [ '6', new Pos(consts.char_per_line - 7, 1) ],
+  [ '1', new Pos(consts.char_per_line - 13, 2) ],
+  [ '2', new Pos(consts.char_per_line - 10, 2) ],
+  [ '3', new Pos(consts.char_per_line - 7, 2) ],
 ]);
 
 const currencyFormatter = new Intl.NumberFormat('fr-CH', {
@@ -504,7 +504,7 @@ export class Labyrinth {
 
     const money = currencyFormatter.format(this.coins) + ' $';
     this.engine.text(money, this.to_screen_coord(consts.char_per_line - 6 - money.length, 1), item2color['$']);
-    this.engine.text('[i]', this.to_screen_coord(consts.char_per_line - 4, 1), consts.White);
+    this.engine.text('[i]', this.to_screen_coord(consts.char_per_line - 4, 1), consts.OverlayNormal);
 
     const h = consts.map_lines + consts.header_size + 1;
 
@@ -520,21 +520,21 @@ export class Labyrinth {
     const symbol_over = this.current_map.get_symbol_at(hero.x, hero.y);
 
     if (symbol_over === '<') {
-      this.engine.text('[<]', this.to_screen_coord(46, h + 1), consts.OverlayHighlight);
+      this.engine.text('[<]', this.to_screen_coord(20, h + 1), consts.OverlayHighlight);
     } else {
-      this.engine.text('[<]', this.to_screen_coord(46, h + 1), consts.OverlayNormal);
+      this.engine.text('[<]', this.to_screen_coord(20, h + 1), consts.OverlayNormal);
     }
 
     if (symbol_over === '>') {
-      this.engine.text('[>]', this.to_screen_coord(50, h + 1), consts.OverlayHighlight);
+      this.engine.text('[>]', this.to_screen_coord(24, h + 1), consts.OverlayHighlight);
     } else {
-      this.engine.text('[>]', this.to_screen_coord(50, h + 1), consts.OverlayNormal);
+      this.engine.text('[>]', this.to_screen_coord(24, h + 1), consts.OverlayNormal);
     }
 
     if (this.is_hero_over_item) {
-      this.engine.text('[p]', this.to_screen_coord(60, h + 1), consts.OverlayHighlight);
+      this.engine.text('[p]', this.to_screen_coord(33, h + 1), consts.OverlayHighlight);
     } else {
-      this.engine.text('[p]', this.to_screen_coord(60, h + 1), consts.OverlayNormal);
+      this.engine.text('[p]', this.to_screen_coord(33, h + 1), consts.OverlayNormal);
     }
   }
   draw_all(): void {
@@ -577,7 +577,7 @@ export class Labyrinth {
   constructor() {
     this.engine = new Engine(
       'canvas',
-      640,
+      460,
       480,
       16,
       'Inconsolata, monospace');

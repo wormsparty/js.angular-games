@@ -1,4 +1,4 @@
-export const char_per_line = 80;
+export const char_per_line = 56;
 export const map_lines = 22;
 export const header_size = 3;
 
