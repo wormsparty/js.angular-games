@@ -85,7 +85,6 @@ export const item2price = {
 };
 
 export const item2description = {
-  '$': { text: 'pièce de 1.-', genre: 'F' },
   '*': { text: 'caillou', genre: 'M' },
   '?': { text: 'potion mystère', genre: 'F' },
   '/': { text: 'épée', genre: 'F' },

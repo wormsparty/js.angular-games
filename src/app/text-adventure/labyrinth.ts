@@ -103,13 +103,12 @@ export class Labyrinth {
       for (const [item, positions] of this.current_map.item_positions) {
         for (let i = 0 ; i < positions.length; i++) {
           if (positions[i].equals(hero_pos)) {
-            const description = consts.item2description[item];
-
             if (item === '$') {
               this.coins++;
               positions.splice(i, 1);
-              current_status = '> ' + make_first_letter_upper(description.text) + consts.pris[description.genre];
+              current_status = '> 1 $' + consts.pris['M'];
             } else {
+              const description = consts.item2description[item];
 
               if (positions[i].price > 0) {
                 current_status = '[5] Acheter ' + description.text + ' (' + consts.item2price[item] + '.-)';
