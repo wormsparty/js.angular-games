@@ -82,29 +82,28 @@ export const item2description = {
 };
 
 export const symbol2description = {
-  '>': { text: 'Une entrée' },
-  '<': { text: 'Une sortie' },
+  '>': { text: '[>] Entrer' },
+  '<': { text: '[<] Sortir' },
   '.': { text: ''}
 };
 
 export const tile2text = {
-  '#': 'Aïe! Un mur.',
-  '~': 'C\'est toxique!',
+  '#': '> Aïe! Un mur.',
 };
 
 export const pnj2dialog = {
-  'm': 'Fuits et légumes frais!',
-  'g': 'Je ne te laisserai pas passer sans épée',
-};
-
-export const un = {
-  'M': 'Un ',
-  'F': 'Une ',
+  'm': '> Fuits et légumes frais!',
+  'g': '> Je ne te laisserai pas passer sans épée',
 };
 
 export const pris = {
   'M': ' pris',
   'F': ' prise',
+};
+
+export const depose = {
+  'M': ' déposé',
+  'F': ' déposée',
 };
 
 export const achete = {

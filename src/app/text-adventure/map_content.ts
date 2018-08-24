@@ -312,10 +312,10 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     undefined,
     new Map([
       [ 'g', function(l: Labyrinth, pnj: Pos, hero_pos: Pos): Pos {
-        if (l.weapon !== '') {
-          return new Pos(11, 10 - consts.header_size);
-        } else {
+        if (l.slots[0].symbol !== '/' && l.slots[1].symbol !== '/' && l.slots[2].symbol !== '/') {
           return new Pos(10, 9 - consts.header_size);
+        } else {
+          return new Pos(11, 10 - consts.header_size);
         }
       }],
     ]),

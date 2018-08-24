@@ -2,7 +2,7 @@ import {Engine} from './engine';
 import {AllMaps} from './map_content';
 import * as consts from './const';
 import {LevelMap, Pos} from './map_logic';
-import {item2color} from './const';
+import {item2color, item2description} from './const';
 
 const initial_map = 'bateau';
 
@@ -65,7 +65,6 @@ export class Labyrinth {
   private current_map: LevelMap;
   private pnjs: Map<string, Pos>;
 
-  private is_hero_over_item = false;
   private selected_slot: number;
 
   static parse_all_maps(): void {
@@ -100,14 +99,11 @@ export class Labyrinth {
     }
 
     if (!status_set) {
-      this.is_hero_over_item = false;
-
       for (const [item, positions] of this.current_map.item_positions) {
         for (let i = 0 ; i < positions.length; i++) {
           if (positions[i].equals(hero_pos)) {
-            this.is_hero_over_item = true;
             const description = consts.item2description[item];
-            current_status = consts.un[description.genre] + description.text;
+            current_status = '[p] Prendre ' + description.text;
 
             if (item !== '$' && consts.shop_maps.indexOf(this.current_map_name) > -1) {
               current_status += ' (' + consts.item2price[item] + '.-)';
@@ -144,23 +140,29 @@ export class Labyrinth {
   }
   try_pick_or_drop_item(hero_pos): boolean {
     if (this.pressed.get('D')) {
-      if (this.slots[this.selected_slot].symbol === '') {
-        this.current_status = 'Il n\'y a rien à déposer';
+      const selected_slot = this.slots[this.selected_slot];
+
+      if (selected_slot.symbol === '') {
+        this.current_status = '> Il n\'y a rien à déposer';
         return true;
       }
 
       for (const [item, positions] of this.current_map.item_positions) {
         for (let i = 0; i < positions.length; i++) {
           if (positions[i].equals(hero_pos)) {
-            this.current_status = 'Il y a déjà un objet ici';
+            this.current_status = '> Il y a déjà un objet ici';
             return true;
           }
         }
       }
 
+      const desc = item2description[selected_slot.symbol];
+      this.current_status = '> ' + make_first_letter_upper(desc.text) + consts.depose[desc.genre];
+
       this.drop_item(hero_pos);
-      this.slots[this.selected_slot].symbol = '';
-      this.slots[this.selected_slot].usage = -1;
+
+      selected_slot.symbol = '';
+      selected_slot.usage = -1;
 
       this.pressed.set('D', false);
       return true;
@@ -181,7 +183,7 @@ export class Labyrinth {
             if (item === '$') {
               coins++;
               positions.splice(i, 1);
-              current_status = description.text + consts.pris[description.genre];
+              current_status = '> ' + make_first_letter_upper(description.text) + consts.pris[description.genre];
             } else if (!is_shop || coins >= price) {
               this.drop_item(positions[i]);
 
@@ -192,14 +194,14 @@ export class Labyrinth {
 
               if (is_shop) {
                 coins -= price;
-                current_status = upper + consts.achete[description.genre] + ' pour ' + price + '.-';
+                current_status = '> ' + upper + consts.achete[description.genre] + ' pour ' + price + '.-';
               } else {
-                current_status = upper + consts.pris[description.genre];
+                current_status = '> ' + upper + consts.pris[description.genre];
               }
 
               positions.splice(i, 1);
             } else {
-              current_status = 'Pas assez d\'argent!';
+              current_status = '> Pas assez d\'argent!';
             }
 
             item_picked = true;
@@ -213,7 +215,7 @@ export class Labyrinth {
       }
 
       if (!item_picked) {
-        this.current_status = 'Il n\'y a rien à prendre.';
+        this.current_status = '> Il n\'y a rien à prendre.';
       } else {
         this.coins = coins;
         this.current_status = current_status;
@@ -228,17 +230,21 @@ export class Labyrinth {
   try_enter_or_exit(hero_pos): [boolean, Pos, string] {
     if (this.pressed.get('>'))  {
       if (this.current_map.get_symbol_at(hero_pos.x, hero_pos.y) !== '>') {
-        this.current_status = 'Il n\'y a pas d\'entrée ici.';
+        this.current_status = '> Il n\'y a pas d\'entrée ici.';
         return [ false, undefined, undefined ];
       }
 
+      // By symmetry
+      this.current_status = '[<] Sortir';
       return this.do_teleport('>', hero_pos, hero_pos, hero_pos);
     } else if (this.pressed.get('<')) {
       if (this.current_map.get_symbol_at(hero_pos.x, hero_pos.y) !== '<') {
-        this.current_status = 'Il n\'y a pas de sortie ici.';
+        this.current_status = '> Il n\'y a pas de sortie ici.';
         return [ false, undefined, undefined ];
       }
 
+      // By symmetry
+      this.current_status = '[>] Entrer';
       return this.do_teleport('<', hero_pos, hero_pos, hero_pos);
     }
 
@@ -581,7 +587,7 @@ export class Labyrinth {
   }
 
   draw_overlay() {
-    this.engine.text('  > ' + this.current_status, this.to_screen_coord(0, 1), consts.White);
+    this.engine.text(this.current_status, this.to_screen_coord(2, 1), consts.White);
 
     const money = currencyFormatter.format(this.coins) + ' $';
     this.engine.text(money, this.to_screen_coord(consts.char_per_line - money.length, 1), item2color['$']);
@@ -602,31 +608,22 @@ export class Labyrinth {
     this.print_slot(1, 's', this.to_screen_coord(3, h + 1));
     this.print_slot(2, 'd', this.to_screen_coord(3, h + 2));
 
-    const hero = this.pnjs.get('@');
-    const symbol_over = this.current_map.get_symbol_at(hero.x, hero.y);
-
-    if (symbol_over === '<') {
-      this.engine.text('[<]', this.to_screen_coord(29, h + 2), consts.OverlayHighlight);
+    if (this.slots[this.selected_slot].symbol !== '') {
+      this.engine.text('[⇧] Lancer', this.to_screen_coord(29, h), consts.OverlayHighlight);
     } else {
-      this.engine.text('[<]', this.to_screen_coord(29, h + 2), consts.OverlayNormal);
-    }
-
-    if (symbol_over === '>') {
-      this.engine.text('[>]', this.to_screen_coord(33, h + 2), consts.OverlayHighlight);
-    } else {
-      this.engine.text('[>]', this.to_screen_coord(33, h + 2), consts.OverlayNormal);
-    }
-
-    if (this.is_hero_over_item) {
-      this.engine.text('[p]', this.to_screen_coord(33, h + 1), consts.OverlayHighlight);
-    } else {
-      this.engine.text('[p]', this.to_screen_coord(33, h + 1), consts.OverlayNormal);
+      this.engine.text('[⇧]', this.to_screen_coord(29, h), consts.OverlayNormal);
     }
 
     if (this.slots[this.selected_slot].symbol !== '') {
-      this.engine.text('[D]', this.to_screen_coord(29, h + 1), consts.OverlayHighlight);
+      this.engine.text('[ ] Utiliser', this.to_screen_coord(29, h + 1), consts.OverlayHighlight);
     } else {
-      this.engine.text('[D]', this.to_screen_coord(29, h + 1), consts.OverlayNormal);
+      this.engine.text('[ ]', this.to_screen_coord(29, h + 1), consts.OverlayNormal);
+    }
+
+    if (this.slots[this.selected_slot].symbol !== '') {
+      this.engine.text('[D] Déposer', this.to_screen_coord(29, h + 2), consts.OverlayHighlight);
+    } else {
+      this.engine.text('[D] Déposer', this.to_screen_coord(29, h + 2), consts.OverlayNormal);
     }
   }
   draw_all(): void {
