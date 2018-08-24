@@ -1,6 +1,7 @@
 import {LevelMap, Pos} from './map_logic';
 import {Labyrinth} from './labyrinth';
 import * as consts from './const';
+import {Target, TargetSpawner} from './target';
 
 export const AllMaps: Map<string, LevelMap> = new Map([
   [ 'bateau', new LevelMap('' +
@@ -70,6 +71,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
    '#000005',
    undefined,
    undefined,
+   undefined,
   )],
   [ 'dans-bateau', new LevelMap('' +
     '                                                 ~~~~~~~\n' +
@@ -130,6 +132,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     '#000005',
     undefined,
     undefined,
+    undefined,
   )],  [ 'mission', new LevelMap('' +
     '                                                        \n' +
     '         ***************************************        \n' +
@@ -188,6 +191,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     ]),
     undefined,
     '#000005',
+    undefined,
     undefined,
     undefined,
   )],
@@ -254,6 +258,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
   ]),
   undefined,
   '#050505',
+  undefined,
   undefined,
   undefined,
   )],
@@ -326,6 +331,18 @@ export const AllMaps: Map<string, LevelMap> = new Map([
         }
       }],
     ]),
+    new TargetSpawner(function(tick: number): Target {
+      tick = tick % 20;
+
+      if (tick >= 16) {
+        return undefined;
+      }
+
+      return new Target(new Pos(24 + tick, consts.header_size - 1), 'O', function(t: Target): boolean {
+        t.pos.y++;
+        return t.pos.y >= consts.map_lines + consts.header_size;
+      });
+    }),
   )],
   [ 'premier', new LevelMap('' +
   '                                                        \n' +
@@ -376,6 +393,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
   new Map([
     [ '1', 'outside' ],
   ]),
+  undefined,
   undefined,
   undefined,
   undefined,
@@ -436,6 +454,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
   undefined,
   undefined,
   undefined,
+  undefined,
   )],
   [ 'lac', new LevelMap('' +
   '                                                        \n' +
@@ -491,6 +510,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
   undefined,
   undefined,
   undefined,
+  undefined,
   )],
   [ 'palace', new LevelMap('' +
     '                                                        \n' +
@@ -541,6 +561,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     new Map([
       [ '6', 'outside' ],
     ]),
+    undefined,
     undefined,
     undefined,
     undefined,

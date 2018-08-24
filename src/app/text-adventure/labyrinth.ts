@@ -105,10 +105,17 @@ export class Labyrinth {
           if (positions[i].equals(hero_pos)) {
             const description = consts.item2description[item];
 
-            if (positions[i].price > 0) {
-              current_status = '[5] Acheter ' + description.text + ' (' + consts.item2price[item] + '.-)';
+            if (item === '$') {
+              this.coins++;
+              positions.splice(i, 1);
+              current_status = '> ' + make_first_letter_upper(description.text) + consts.pris[description.genre];
             } else {
-              current_status = '[5] Prendre ' + description.text;
+
+              if (positions[i].price > 0) {
+                current_status = '[5] Acheter ' + description.text + ' (' + consts.item2price[item] + '.-)';
+              } else {
+                current_status = '[5] Prendre ' + description.text;
+              }
             }
 
             status_set = true;
@@ -189,11 +196,7 @@ export class Labyrinth {
           if (positions[i].equals(hero_pos)) {
             const price = positions[i].price;
 
-            if (item === '$') {
-              coins++;
-              positions.splice(i, 1);
-              current_status = '> ' + make_first_letter_upper(description.text) + consts.pris[description.genre];
-            } else if (coins >= price) {
+            if (coins >= price) {
               // Take the item to weapon slot
               let found_slot = false;
 
@@ -454,6 +457,11 @@ export class Labyrinth {
       new_map_name,
     ];
   }
+  update_targets() {
+    if (this.current_map.target_spawner !== undefined) {
+      this.current_map.target_spawner.update();
+    }
+  }
   update_on_map() {
     if (this.pressed.get('a')) {
       this.selected_slot = 0;
@@ -473,6 +481,16 @@ export class Labyrinth {
       return;
     }
 
+    if (this.pressed.get('Shift') && this.has_throwable_item_on_slot(this.selected_slot)) {
+      if (this.action !== 'throw') {
+        this.action = 'throw';
+      } else {
+        this.action = '';
+      }
+
+      return;
+    }
+
     if (this.pressed.get(' ') && this.has_usable_item_on_slot(this.selected_slot)) {
       if (this.has_consumable_on_slot(this.selected_slot)) {
         this.current_status = '> TODO: Utiliser consomable';
@@ -487,16 +505,7 @@ export class Labyrinth {
         }
       }
 
-      return;
-    }
-
-    if (this.pressed.get('Shift') && this.has_throwable_item_on_slot(this.selected_slot)) {
-      if (this.action !== 'throw') {
-        this.action = 'throw';
-      } else {
-        this.action = '';
-      }
-
+      this.update_targets();
       return;
     }
 
@@ -514,6 +523,7 @@ export class Labyrinth {
     }
 
     if (this.try_pick_or_drop_item(hero_pos)) {
+      this.update_targets();
       return;
     }
 
@@ -529,6 +539,7 @@ export class Labyrinth {
         }
 
         this.action = '';
+        this.update_targets();
         return;
       }
     }
@@ -539,6 +550,7 @@ export class Labyrinth {
         selected_slot.symbol = '';
         selected_slot.usage = -1;
         this.action = '';
+        this.update_targets();
         return;
       }
 
@@ -552,12 +564,14 @@ export class Labyrinth {
         }
 
         this.action = '';
+        this.update_targets();
         return;
       }
     }
 
     if (future_pos[1] !== '') {
       this.current_status = future_pos[1];
+      this.update_targets();
       return;
     }
 
@@ -567,6 +581,7 @@ export class Labyrinth {
 
     hero_pos = this.move_hero(hero_pos, future_pos[0]);
     this.move_pnjs(hero_pos);
+    this.update_targets();
   }
   draw_map() {
     for (let y = 0; y < consts.map_lines; y++) {
@@ -614,6 +629,14 @@ export class Labyrinth {
     if (this.current_map.texts !== undefined) {
       for (const [text, pos] of this.current_map.texts) {
         this.engine.text(text, this.to_screen_coord(pos.x, pos.y), this.current_map.text_color);
+      }
+    }
+  }
+  draw_targets() {
+    if (this.current_map.target_spawner !== undefined) {
+      for (const target of this.current_map.target_spawner.targets) {
+        this.engine.rect(this.to_screen_coord(target.pos.x, target.pos.y), this.char_width, 16, this.current_map.background_color);
+        this.engine.text(target.symbol, this.to_screen_coord(target.pos.x, target.pos.y), '#FF9900');
       }
     }
   }
@@ -748,6 +771,7 @@ export class Labyrinth {
     this.draw_map();
     this.draw_items();
     this.draw_pnjs();
+    this.draw_targets();
     this.draw_overlay();
   }
   resize(width, height): void {

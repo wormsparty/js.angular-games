@@ -1,5 +1,6 @@
 import * as consts from './const';
 import {Labyrinth} from './labyrinth';
+import {TargetSpawner} from './target';
 
 export class Pos {
   x: number;
@@ -54,10 +55,12 @@ export class LevelMap {
   background_color: string;
   text_color: string;
   pnj2position: Map<string, (l: Labyrinth, p1: Pos, p2: Pos) => Pos>;
+  target_spawner: TargetSpawner;
 
   constructor(map: string, meta: string, teleport_map: Map<string, string>,
               tile2color: Map<string, string>, texts: Map<string, Pos>, background: string,
-              text_color: string, pnj2position: Map<string, (l: Labyrinth, p1: Pos, p2: Pos) => Pos>) {
+              text_color: string, pnj2position: Map<string, (l: Labyrinth, p1: Pos, p2: Pos) => Pos>,
+              target_spawner: TargetSpawner) {
     this.map = map;
     this.meta = meta;
     this.teleport_map = teleport_map;
@@ -69,6 +72,7 @@ export class LevelMap {
     this.item_positions = new Map<string, Array<ObjPos>>();
     this.start = new Pos(0, 0);
     this.pnj2position = pnj2position;
+    this.target_spawner = target_spawner;
 
     if (background !== undefined) {
       this.background_color = background;
