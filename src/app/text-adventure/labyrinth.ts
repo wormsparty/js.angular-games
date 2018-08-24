@@ -241,7 +241,7 @@ export class Labyrinth {
       }
 
       if (!item_picked) {
-        this.current_status = '> Il n\'y a rien à prendre.';
+        this.current_status = '';
       } else {
         this.coins = coins;
         this.current_status = current_status;
