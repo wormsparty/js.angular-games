@@ -1,7 +1,7 @@
 import {Engine} from './engine';
 import {AllMaps} from './map_content';
 import * as consts from './const';
-import {LevelMap, Pos} from './map_logic';
+import {LevelMap, Pos, ObjPos} from './map_logic';
 import {item2color, item2description} from './const';
 
 const initial_map = 'bateau';
@@ -105,7 +105,7 @@ export class Labyrinth {
           if (positions[i].equals(hero_pos)) {
             const description = consts.item2description[item];
 
-            if (item !== '$' && consts.shop_maps.indexOf(this.current_map_name) > -1) {
+            if (positions[i].price > 0) {
               current_status = '[5] Acheter ' + description.text + ' (' + consts.item2price[item] + '.-)';
             } else {
               current_status = '[5] Prendre ' + description.text;
@@ -128,7 +128,7 @@ export class Labyrinth {
       this.current_status = current_status;
     }
   }
-  drop_item(pos: Pos) {
+  drop_current_slot_item_at(pos: Pos) {
     // Drop item on the ground if any
     const selected_slot = this.slots[this.selected_slot];
 
@@ -137,7 +137,7 @@ export class Labyrinth {
         this.current_map.item_positions.set(selected_slot.symbol, []);
       }
 
-      this.current_map.item_positions.get(selected_slot.symbol).push(pos);
+      this.current_map.item_positions.get(selected_slot.symbol).push(new ObjPos(pos.x, pos.y, selected_slot.usage, 0));
     }
   }
   try_pick_or_drop_item(hero_pos): boolean {
@@ -168,7 +168,7 @@ export class Labyrinth {
       const desc = item2description[selected_slot.symbol];
       this.current_status = '> ' + make_first_letter_upper(desc.text) + consts.depose[desc.genre];
 
-      this.drop_item(hero_pos);
+      this.drop_current_slot_item_at(hero_pos);
 
       selected_slot.symbol = '';
       selected_slot.usage = -1;
@@ -181,27 +181,28 @@ export class Labyrinth {
       let item_picked = false;
       let coins = this.coins;
       let current_status = this.current_status;
-      const is_shop = consts.shop_maps.indexOf(this.current_map_name) > -1;
 
       for (const [item, positions] of this.current_map.item_positions) {
-        const price = consts.item2price[item];
         const description = consts.item2description[item];
 
         for (let i = 0 ; i < positions.length; i++) {
           if (positions[i].equals(hero_pos)) {
+            const price = positions[i].price;
+
             if (item === '$') {
               coins++;
               positions.splice(i, 1);
               current_status = '> ' + make_first_letter_upper(description.text) + consts.pris[description.genre];
-            } else if (!is_shop || coins >= price) {
-              this.drop_item(positions[i]);
+            } else if (coins >= price) {
+              this.drop_current_slot_item_at(positions[i]);
 
               // Take the item to weapon slot
               this.slots[this.selected_slot].symbol = item;
+              this.slots[this.selected_slot].usage = positions[i].usage;
 
               const upper = make_first_letter_upper(description.text);
 
-              if (is_shop) {
+              if (price > 0) {
                 coins -= price;
                 current_status = '> ' + upper + consts.achete[description.genre] + ' pour ' + price + '.-';
               } else {
@@ -636,7 +637,7 @@ export class Labyrinth {
     const slot = this.slots[idx];
     let text = chr + '. ' + make_first_letter_upper(consts.item2description[slot.symbol].text);
 
-    if (slot.usage !== -1) {
+    if (slot.usage > 1) {
       text += ' (x' + slot.usage + ')';
     }
 
@@ -655,10 +656,10 @@ export class Labyrinth {
     return consts.consumable_items.indexOf(this.slots[slot].symbol) > -1;
   }
   has_usable_item_on_slot(slot: number) {
-    return this.has_consumable_on_slot(this.selected_slot) || this.has_spell_on_slot(this.selected_slot);
+    return this.has_consumable_on_slot(slot) || this.has_spell_on_slot(slot);
   }
   has_throwable_item_on_slot(slot: number) {
-    return this.has_weapon_on_slot(this.selected_slot) || this.has_throwable_on_slot(this.selected_slot);
+    return this.has_weapon_on_slot(slot) || this.has_throwable_on_slot(slot);
   }
   draw_overlay() {
     this.engine.text(this.current_status, this.to_screen_coord(2, 1), consts.White);

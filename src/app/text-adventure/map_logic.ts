@@ -15,14 +15,11 @@ export class Pos {
   }
 }
 
-export class TeleportPos {
-  x: number;
-  y: number;
+export class TeleportPos extends Pos {
   id: number;
 
   constructor(x: number, y: number, id: number) {
-    this.x = x;
-    this.y = y;
+    super(x, y);
     this.id = id;
   }
 
@@ -31,6 +28,18 @@ export class TeleportPos {
   }
 }
 
+export class ObjPos extends Pos {
+  x: number;
+  y: number;
+  usage: number;
+  price: number;
+
+  constructor(x: number, y: number, usage: number, price: number) {
+    super(x, y);
+    this.usage = usage;
+    this.price = price;
+  }
+}
 export class LevelMap {
   map: string;
   meta: string;
@@ -40,7 +49,7 @@ export class LevelMap {
   teleports: Map<string, Array<TeleportPos>>;
   teleport_count: Map<string, number>;
   pnj_positions: Map<string, Array<Pos>>;
-  item_positions: Map<string, Array<Pos>>;
+  item_positions: Map<string, Array<ObjPos>>;
   start: Pos;
   background_color: string;
   text_color: string;
@@ -57,7 +66,7 @@ export class LevelMap {
     this.teleports = new Map<string, Array<TeleportPos>>();
     this.teleport_count = new Map<string, number>();
     this.pnj_positions = new Map<string, Array<Pos>>();
-    this.item_positions = new Map<string, Array<Pos>>();
+    this.item_positions = new Map<string, Array<ObjPos>>();
     this.start = new Pos(0, 0);
     this.pnj2position = pnj2position;
 
@@ -117,7 +126,22 @@ export class LevelMap {
             this.item_positions.set(chr, []);
           }
 
-          this.item_positions.get(chr).push(new Pos(x, y));
+          let usage = consts.spell_usage[chr];
+          let price = 0;
+
+          if (usage === undefined) {
+            usage = 1;
+          }
+
+          if (consts.shop_maps.indexOf(name) > -1) {
+            price = consts.item2price[chr];
+            console.log(chr + ' costs ' + price + ' on ' + name);
+          } else{
+            console.log(chr + ' is free on ' + name);
+
+          }
+
+          this.item_positions.get(chr).push(new ObjPos(x, y, usage, price));
         } else if (chr !== ' ' && chr !== undefined) {
           if (chr === '@') {
             this.start = new Pos(x, y);

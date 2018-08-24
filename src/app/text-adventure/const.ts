@@ -65,7 +65,7 @@ export const mouvementMap = {
 export const item2color = {
   '$': '#FFFF00',
   // '(': '#FF8800',
-  '&': '#FF0000',
+  '=': '#FF0000',
   // '[': '#FF0088',
   // ']': '#FF00FF',
   '*': '#dd99FF',
@@ -89,7 +89,7 @@ export const item2description = {
   '*': { text: 'caillou', genre: 'M' },
   '?': { text: 'potion mystère', genre: 'F' },
   '/': { text: 'épée', genre: 'F' },
-  '=': { text: 'boule de feu', genre: 'F' },
+  '=': { text: 'sort de feu', genre: 'M' },
   '' : { text: 'rien', genre: 'M' }
 };
 
