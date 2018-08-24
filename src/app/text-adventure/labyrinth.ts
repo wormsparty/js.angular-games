@@ -4,7 +4,7 @@ import * as consts from './const';
 import {LevelMap, Pos, ObjPos} from './map_logic';
 import {item2color, item2description} from './const';
 
-const initial_map = 'bateau';
+const initial_map = 'training';
 
 function get_random_mouvement(pnj): Pos {
   const new_pnj = new Pos(pnj.x, pnj.y);
@@ -194,11 +194,24 @@ export class Labyrinth {
               positions.splice(i, 1);
               current_status = '> ' + make_first_letter_upper(description.text) + consts.pris[description.genre];
             } else if (coins >= price) {
-              this.drop_current_slot_item_at(positions[i]);
-
               // Take the item to weapon slot
-              this.slots[this.selected_slot].symbol = item;
-              this.slots[this.selected_slot].usage = positions[i].usage;
+              let found_slot = false;
+
+              if (consts.throwable_items.indexOf(item) > -1) {
+                for (let j = 0; j < 3 ; j++) {
+                  if (this.slots[j].symbol === item) {
+                    this.slots[j].usage++;
+                    found_slot = true;
+                    break;
+                  }
+                }
+              }
+
+              if (!found_slot) {
+                this.drop_current_slot_item_at(positions[i]);
+                this.slots[this.selected_slot].symbol = item;
+                this.slots[this.selected_slot].usage = positions[i].usage;
+              }
 
               const upper = make_first_letter_upper(description.text);
 

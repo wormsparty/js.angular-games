@@ -135,10 +135,6 @@ export class LevelMap {
 
           if (consts.shop_maps.indexOf(name) > -1) {
             price = consts.item2price[chr];
-            console.log(chr + ' costs ' + price + ' on ' + name);
-          } else{
-            console.log(chr + ' is free on ' + name);
-
           }
 
           this.item_positions.get(chr).push(new ObjPos(x, y, usage, price));
