@@ -661,6 +661,23 @@ export class Labyrinth {
   has_throwable_item_on_slot(slot: number) {
     return this.has_weapon_on_slot(slot) || this.has_throwable_on_slot(slot);
   }
+  has_item_or_pnj_at(pos: Pos, current_pnj: string) {
+    for (const [item, positions] of this.current_map.item_positions) {
+      for (let i = 0; i < positions.length; i++) {
+        if (positions[i].equals(pos)) {
+          return true;
+        }
+      }
+    }
+
+    for (const [pnj, pnj_pos] of this.pnjs) {
+      if (pnj !== current_pnj && pnj_pos.equals(pos)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
   draw_overlay() {
     this.engine.text(this.current_status, this.to_screen_coord(2, 1), consts.White);
 
