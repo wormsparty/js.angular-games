@@ -7,49 +7,45 @@ export const DefaultTextColor =  '#FFFF00';
 export const White =  '#FFFFFF';
 export const OverlayNormal =  '#555555';
 export const OverlayHighlight =  '#FFFFFF';
+export const OverlaySelected =  '#FF00FF';
 
+/*
+ * Map
+ */
 export const globalTile2color = {
   '#': '#646464',
   '.': '#646464',
   '~': '#C8C8C8',
 };
 
+export const symbol2description = {
+  '>': { text: '[5] Entrer' },
+  '<': { text: '[5] Sortir' },
+  '.': { text: ''}
+};
+
+export const tile2text = {
+  '#': '> Aïe! Un mur.',
+};
+
+export const pnj2dialog = {
+  'm': '> Achetez, achetez!',
+  'g': '> Je ne te laisserai pas passer sans épée',
+};
+
+export const teleport_symbols: Array<string> = [ '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '>', '<' ];
+export const item_symbols: Array<string> = [ '?', '*', '$', '/', '=' ];
+export const walkable_symbols: Array<string> = [ '.', '<', '>' ];
+export const shop_maps: Array<string> = [ 'outside' ];
+
+/*
+ * PNJ
+ */
 export const pnj2color = {
   'g': '#0000FF',
   'm': '#6699FF',
   '@': '#FF0000',
-  'O': '#FF0000',
-};
-
-export const item2color = {
-  '$': '#FFFF00',
-  '(': '#FF8800',
-  '&': '#FF0000',
-  '[': '#FF0088',
-  ']': '#FF00FF',
-  '*': '#dd99FF',
-  '{': '#00FFFF',
-  ')': '#0000FF',
-  '}': '#00FF00',
-  '%': '#119900',
-  '!': '#555555',
-  '?': '#FFFFFF',
-  '/': '#222222',
-};
-
-export const item2price = {
-  '%': 10,
-  '&': 2,
-  '(': 5,
-  ')': 5,
-  '[': 10,
-  ']': 10,
-  '{': 15,
-  '}': 15,
-  '*': 1,
-  '?': 4,
-  '!': 2,
-  '/': 50,
+  'O': '#FF7700',
 };
 
 export const mouvementMap = {
@@ -63,39 +59,52 @@ export const mouvementMap = {
   7: {x: -1, y: -1},
 };
 
+/*
+ * Items
+ */
+export const item2color = {
+  '$': '#FFFF00',
+  // '(': '#FF8800',
+  '&': '#FF0000',
+  // '[': '#FF0088',
+  // ']': '#FF00FF',
+  '*': '#dd99FF',
+  // '{': '#00FFFF',
+  // ')': '#0000FF',
+  // '}': '#00FF00',
+  '%': '#119900',
+  // '!': '#555555',
+  '?': '#FFFFFF',
+  '/': '#222222',
+};
+
+export const item2price = {
+  '*': 1,
+  '?': 20,
+  '/': 500,
+};
+
 export const item2description = {
   '$': { text: 'pièce de 1.-', genre: 'F' },
-  '%': { text: 'laitue', genre: 'F' },
-  '&': { text: 'tomate', genre: 'F' },
-  '(': { text: 'bout de bois gauche', genre: 'M' },
-  ')': { text: 'bout de bois droit', genre: 'M' },
-  '[': { text: 'crochet gauche', genre: 'M' },
-  ']': { text: 'crochet droit', genre: 'M' },
-  '{': { text: 'arc gauche', genre: 'M' },
-  '}': { text: 'arc droit', genre: 'M' },
   '*': { text: 'caillou', genre: 'M' },
   '?': { text: 'potion mystère', genre: 'F' },
-  '!': { text: 'sort mystère', genre: 'M' },
   '/': { text: 'épée', genre: 'F' },
-  'f': { text: 'boule de feu', genre: 'F' },
+  '=': { text: 'boule de feu', genre: 'F' },
   '' : { text: 'rien', genre: 'M' }
 };
 
-export const symbol2description = {
-  '>': { text: '[>] Entrer' },
-  '<': { text: '[<] Sortir' },
-  '.': { text: ''}
+export const weapon_items = [ '/' ];
+export const throwable_items = [ '*' ];
+export const spell_items = [ '=' ];
+export const consumable_items = [ '?' ];
+
+export const spell_usage = {
+  '=': 10,
 };
 
-export const tile2text = {
-  '#': '> Aïe! Un mur.',
-};
-
-export const pnj2dialog = {
-  'm': '> Fuits et légumes frais!',
-  'g': '> Je ne te laisserai pas passer sans épée',
-};
-
+/*
+ * Translations
+ */
 export const pris = {
   'M': ' pris',
   'F': ' prise',
@@ -110,8 +119,3 @@ export const achete = {
   'M': ' acheté',
   'F': ' achetée'
 };
-
-export const teleport_symbols: Array<string> = [ '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '>', '<' ];
-export const item_symbols: Array<string> = [ '{', '}', '[', ']', '(', ')', '&', '%', '!', '?', '*', '$', '/'];
-export const walkable_symbols: Array<string> = [ '.', '<', '>' ];
-export const shop_maps: Array<string> = [ 'outside' ];

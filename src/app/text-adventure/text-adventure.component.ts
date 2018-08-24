@@ -26,6 +26,8 @@ export class TextAdventureComponent implements OnInit {
     $(document).on('keydown', function (event) {
       let update = false;
 
+      // console.log('key: ' + event.key);
+
       if (labyrinth.pressed.has(event.key)) {
         labyrinth.pressed.set(event.key, true);
         update = true;
@@ -48,21 +50,9 @@ export class TextAdventureComponent implements OnInit {
       if (update) {
         labyrinth.do_update();
         labyrinth.draw();
-      }
-    });
 
-    $(document).on('keyup', function (event) {
-      if (labyrinth.pressed.has(event.key)) {
-        labyrinth.pressed.set(event.key, false);
-      } else {
-        if (event.key === 'ArrowLeft') {
-          labyrinth.pressed.set('4', false);
-        } else if (event.key === 'ArrowRight') {
-          labyrinth.pressed.set('6', false);
-        } else if (event.key === 'ArrowUp') {
-          labyrinth.pressed.set('8', false);
-        } else if (event.key === 'ArrowDown') {
-          labyrinth.pressed.set('2', false);
+        for (const [key, boolean] of labyrinth.pressed) {
+          labyrinth.pressed.set(key, false);
         }
       }
     });

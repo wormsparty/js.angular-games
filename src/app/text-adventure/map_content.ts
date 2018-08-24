@@ -104,9 +104,9 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     '                                                        \n' +
     '     ##############################################     \n' +
     '      #                                          #      \n' +
-    '       #      ?    $$                   <       #       \n' +
-    '        #          $$    /                     #        \n' +
-    '         #    !    $$                         #         \n' +
+    '       #           $$                   <       #       \n' +
+    '        #     ?    $$    /                     #        \n' +
+    '         #         $$                         #         \n' +
     '          ##                                ##          \n' +
     '            ################################            \n' +
     '                                                        \n' +
@@ -224,10 +224,10 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     '                #                                      5\n' +
     '                 #                                     5\n' +
     '                #                                      5\n' +
-    '               #            &         &                5\n' +
-    '            ###             %  mmmmm  &               ##\n' +
-    '       #####                %  mmmmm  %              #  \n' +
-    '#######                     &         %             #   \n' +
+    '               #            *         ?                5\n' +
+    '            ###             *  mmmmm  *               ##\n' +
+    '       #####                ?  mmmmm  *              #  \n' +
+    '#######                     *         *             #   \n' +
     '2                                                 ##    \n' +
     '2                                              ###      \n' +
     '2                                           ###         \n' +
@@ -312,7 +312,9 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     undefined,
     new Map([
       [ 'g', function(l: Labyrinth, pnj: Pos, hero_pos: Pos): Pos {
-        if (l.slots[0].symbol !== '/' && l.slots[1].symbol !== '/' && l.slots[2].symbol !== '/') {
+        if (l.has_weapon_on_slot(0)
+         || l.has_weapon_on_slot(1)
+         || l.has_weapon_on_slot(2)) {
           return new Pos(10, 9 - consts.header_size);
         } else {
           return new Pos(11, 10 - consts.header_size);

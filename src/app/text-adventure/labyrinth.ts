@@ -66,6 +66,7 @@ export class Labyrinth {
   private pnjs: Map<string, Pos>;
 
   private selected_slot: number;
+  private action: string;
 
   static parse_all_maps(): void {
     for (const [key, map] of AllMaps) {
@@ -82,8 +83,8 @@ export class Labyrinth {
   get_string_from(x, y, length): string {
     return this.current_map.map.substr(y * (consts.char_per_line + 1) + x, length);
   }
-  to_screen_coord(x, y): Pos {
-    return new Pos(this.char_width * x, 16 * y);
+  to_screen_coord(x, y, dx = 0, dy = 0): Pos {
+    return new Pos(this.char_width * x + dx, 16 * y + dy);
   }
   update_current_status(hero_pos): void {
     let status_set = false;
@@ -103,10 +104,11 @@ export class Labyrinth {
         for (let i = 0 ; i < positions.length; i++) {
           if (positions[i].equals(hero_pos)) {
             const description = consts.item2description[item];
-            current_status = '[p] Prendre ' + description.text;
 
             if (item !== '$' && consts.shop_maps.indexOf(this.current_map_name) > -1) {
-              current_status += ' (' + consts.item2price[item] + '.-)';
+              current_status = '[5] Acheter ' + description.text + ' (' + consts.item2price[item] + '.-)';
+            } else {
+              current_status = '[5] Prendre ' + description.text;
             }
 
             status_set = true;
@@ -139,7 +141,7 @@ export class Labyrinth {
     }
   }
   try_pick_or_drop_item(hero_pos): boolean {
-    if (this.pressed.get('D')) {
+    if (this.pressed.get('q')) {
       const selected_slot = this.slots[this.selected_slot];
 
       if (selected_slot.symbol === '') {
@@ -156,6 +158,13 @@ export class Labyrinth {
         }
       }
 
+      const current_symbol = this.current_map.get_symbol_at(hero_pos.x, hero_pos.y);
+
+      if (current_symbol === '>' || current_symbol === '<') {
+        this.current_status = '> Pas sur un escalier';
+        return true;
+      }
+
       const desc = item2description[selected_slot.symbol];
       this.current_status = '> ' + make_first_letter_upper(desc.text) + consts.depose[desc.genre];
 
@@ -163,12 +172,12 @@ export class Labyrinth {
 
       selected_slot.symbol = '';
       selected_slot.usage = -1;
+      this.action = '';
 
-      this.pressed.set('D', false);
       return true;
     }
 
-    if (this.pressed.get('p')) {
+    if (this.pressed.get('5')) {
       let item_picked = false;
       let coins = this.coins;
       let current_status = this.current_status;
@@ -221,33 +230,29 @@ export class Labyrinth {
         this.current_status = current_status;
       }
 
-      this.pressed.set('p', false);
       return true;
     }
 
     return false;
   }
   try_enter_or_exit(hero_pos): [boolean, Pos, string] {
-    if (this.pressed.get('>'))  {
-      if (this.current_map.get_symbol_at(hero_pos.x, hero_pos.y) !== '>') {
-        this.current_status = '> Il n\'y a pas d\'entrée ici.';
-        return [ false, undefined, undefined ];
+    if (this.pressed.get('5')) {
+      const symbol = this.current_map.get_symbol_at(hero_pos.x, hero_pos.y);
+
+      if (symbol !== '>' && symbol !== '<') {
+        this.current_status = '> Il n\'y a pas d\'escalier ici.';
+        return [false, undefined, undefined];
       }
 
       // By symmetry
-      this.current_status = '[<] Sortir';
-      return this.do_teleport('>', hero_pos, hero_pos, hero_pos);
-    } else if (this.pressed.get('<')) {
-      if (this.current_map.get_symbol_at(hero_pos.x, hero_pos.y) !== '<') {
-        this.current_status = '> Il n\'y a pas de sortie ici.';
-        return [ false, undefined, undefined ];
+      if (symbol === '>') {
+        this.current_status = '[5] Sortir';
+      } else {
+        this.current_status = '[5] Entrer';
       }
 
-      // By symmetry
-      this.current_status = '[>] Entrer';
-      return this.do_teleport('<', hero_pos, hero_pos, hero_pos);
+      return this.do_teleport(symbol, hero_pos, hero_pos, hero_pos);
     }
-
   }
   try_talk(future_pos: Pos): boolean {
     for (const [pnj, pnj_pos] of this.pnjs) {
@@ -438,46 +443,51 @@ export class Labyrinth {
   update_on_map() {
     if (this.pressed.get('a')) {
       this.selected_slot = 0;
-      this.pressed.set('a', false);
+      this.action = '';
       return;
     }
 
     if (this.pressed.get('s')) {
       this.selected_slot = 1;
-      this.pressed.set('s', false);
+      this.action = '';
       return;
     }
 
     if (this.pressed.get('d')) {
       this.selected_slot = 2;
-      this.pressed.set('d', false);
+      this.action = '';
       return;
     }
 
-    let hero_pos = this.pnjs.get('@');
-    const future_pos = this.get_future_position(hero_pos);
-
-    if (this.try_pick_or_drop_item(hero_pos)) {
-      return;
-    }
-
-    const selected_slot = this.slots[this.selected_slot];
-
-    if (selected_slot.usage !== -1) {
-      if (selected_slot.usage > 0) {
-        console.log('Launch fireball!!');
-        selected_slot.usage--;
+    if (this.pressed.get(' ') && this.has_usable_item_on_slot(this.selected_slot)) {
+      if (this.has_consumable_on_slot(this.selected_slot)) {
+        this.current_status = '> TODO: Utiliser consomable';
+        this.slots[this.selected_slot].symbol = '';
+        this.slots[this.selected_slot].usage = -1;
+        this.action = '';
       } else {
-        this.current_status = 'Sort épuisé';
+        if (this.action !== 'use') {
+          this.action = 'use';
+        } else {
+          this.action = '';
+        }
       }
 
       return;
     }
 
-    if (future_pos[1] !== '') {
-      this.current_status = future_pos[1];
+    if (this.pressed.get('Shift') && this.has_throwable_item_on_slot(this.selected_slot)) {
+      if (this.action !== 'throw') {
+        this.action = 'throw';
+      } else {
+        this.action = '';
+      }
+
       return;
     }
+
+    let hero_pos = this.pnjs.get('@');
+    const future_pos = this.get_future_position(hero_pos);
 
     const ret = this.try_enter_or_exit(hero_pos);
 
@@ -485,8 +495,55 @@ export class Labyrinth {
       if (ret[0]) {
         this.change_map(ret[2]);
         this.pnjs.set('@', ret[1]);
+        return;
+      }
+    }
+
+    if (this.try_pick_or_drop_item(hero_pos)) {
+      return;
+    }
+
+    const selected_slot = this.slots[this.selected_slot];
+
+    if (this.action === 'use') {
+      if (this.has_spell_on_slot(this.selected_slot)) {
+        if (selected_slot.usage > 0) {
+          this.current_status = '> TODO: Lancer sort';
+          selected_slot.usage--;
+        } else {
+          this.current_status = '> Sort épuisé';
+        }
+
+        this.action = '';
+        return;
+      }
+    }
+
+    if (this.action === 'throw') {
+      if (this.has_weapon_on_slot(this.selected_slot)) {
+        this.current_status = '> TODO: Lancer arme';
+        selected_slot.symbol = '';
+        selected_slot.usage = -1;
+        this.action = '';
+        return;
       }
 
+      if (this.has_throwable_on_slot(this.selected_slot)) {
+        this.current_status = '> TODO: Lancer object';
+        selected_slot.usage--;
+
+        if (selected_slot.usage <= 0) {
+          selected_slot.symbol = '';
+          selected_slot.usage = -1;
+        }
+
+        this.action = '';
+        return;
+      }
+    }
+
+    if (future_pos[1] !== '') {
+      this.current_status = future_pos[1];
       return;
     }
 
@@ -577,7 +634,7 @@ export class Labyrinth {
     }
 
     const slot = this.slots[idx];
-    let text = '[' + chr + '] ' + make_first_letter_upper(consts.item2description[slot.symbol].text);
+    let text = chr + '. ' + make_first_letter_upper(consts.item2description[slot.symbol].text);
 
     if (slot.usage !== -1) {
       text += ' (x' + slot.usage + ')';
@@ -585,7 +642,24 @@ export class Labyrinth {
 
     this.engine.text(text, pos, color);
   }
-
+  has_weapon_on_slot(slot: number) {
+    return consts.weapon_items.indexOf(this.slots[slot].symbol) > -1;
+  }
+  has_throwable_on_slot(slot: number) {
+    return consts.throwable_items.indexOf(this.slots[slot].symbol) > -1;
+  }
+  has_spell_on_slot(slot: number) {
+    return consts.spell_items.indexOf(this.slots[slot].symbol) > -1;
+  }
+  has_consumable_on_slot(slot: number) {
+    return consts.consumable_items.indexOf(this.slots[slot].symbol) > -1;
+  }
+  has_usable_item_on_slot(slot: number) {
+    return this.has_consumable_on_slot(this.selected_slot) || this.has_spell_on_slot(this.selected_slot);
+  }
+  has_throwable_item_on_slot(slot: number) {
+    return this.has_weapon_on_slot(this.selected_slot) || this.has_throwable_on_slot(this.selected_slot);
+  }
   draw_overlay() {
     this.engine.text(this.current_status, this.to_screen_coord(2, 1), consts.White);
 
@@ -595,12 +669,12 @@ export class Labyrinth {
     const h = consts.map_lines + consts.header_size + 1;
 
     for (const [chr, pos] of charToCommand) {
-      if (this.slots[this.selected_slot].usage !== -1) {
-        this.engine.text('[' + chr + ']', this.to_screen_coord(pos.x, pos.y + h), '#FF0000');
+      if (this.action !== '') {
+        this.engine.text(chr, this.to_screen_coord(pos.x, pos.y + h), consts.OverlaySelected);
       } else if (this.pressed.get(chr)) {
-        this.engine.text('[' + chr + ']', this.to_screen_coord(pos.x, pos.y + h), consts.OverlayHighlight);
+        this.engine.text(chr, this.to_screen_coord(pos.x, pos.y + h), consts.OverlayHighlight);
       } else {
-        this.engine.text('[' + chr + ']', this.to_screen_coord(pos.x, pos.y + h), consts.OverlayNormal);
+        this.engine.text(chr, this.to_screen_coord(pos.x, pos.y + h), consts.OverlayNormal);
       }
     }
 
@@ -608,22 +682,35 @@ export class Labyrinth {
     this.print_slot(1, 's', this.to_screen_coord(3, h + 1));
     this.print_slot(2, 'd', this.to_screen_coord(3, h + 2));
 
-    if (this.slots[this.selected_slot].symbol !== '') {
-      this.engine.text('[⇧] Lancer', this.to_screen_coord(29, h), consts.OverlayHighlight);
+    if (this.has_throwable_item_on_slot(this.selected_slot)) {
+      if (this.action === 'throw') {
+        this.engine.text('⇧ Lancer', this.to_screen_coord(29, h, -2), consts.OverlaySelected);
+      } else {
+        this.engine.text('⇧ Lancer', this.to_screen_coord(29, h, -2), consts.OverlayHighlight);
+      }
     } else {
-      this.engine.text('[⇧]', this.to_screen_coord(29, h), consts.OverlayNormal);
+      this.engine.text('⇧', this.to_screen_coord(29, h, -2), consts.OverlayNormal);
     }
 
-    if (this.slots[this.selected_slot].symbol !== '') {
-      this.engine.text('[ ] Utiliser', this.to_screen_coord(29, h + 1), consts.OverlayHighlight);
+    if (this.has_usable_item_on_slot(this.selected_slot)) {
+      if (this.action === 'use') {
+        this.engine.text('␣', this.to_screen_coord(29, h + 1, -3, -2), consts.OverlaySelected);
+        this.engine.text('Utiliser', this.to_screen_coord(31, h + 1), consts.OverlaySelected);
+      } else {
+        this.engine.text('␣', this.to_screen_coord(29, h + 1, -3, -2), consts.OverlayHighlight);
+        this.engine.text('Utiliser', this.to_screen_coord(31, h + 1), consts.OverlayHighlight);
+      }
     } else {
-      this.engine.text('[ ]', this.to_screen_coord(29, h + 1), consts.OverlayNormal);
+      this.engine.text('␣', this.to_screen_coord(29, h + 1, -3, -2), consts.OverlayNormal);
     }
 
-    if (this.slots[this.selected_slot].symbol !== '') {
-      this.engine.text('[D] Déposer', this.to_screen_coord(29, h + 2), consts.OverlayHighlight);
+    const hero_pos = this.pnjs.get('@');
+    const current_symbol = this.current_map.get_symbol_at(hero_pos.x, hero_pos.y);
+
+    if (this.slots[this.selected_slot].symbol !== '' && current_symbol !== '>' && current_symbol !== '<') {
+      this.engine.text('q Déposer', this.to_screen_coord(29, h + 2), consts.OverlayHighlight);
     } else {
-      this.engine.text('[D] Déposer', this.to_screen_coord(29, h + 2), consts.OverlayNormal);
+      this.engine.text('q', this.to_screen_coord(29, h + 2), consts.OverlayNormal);
     }
   }
   draw_all(): void {
@@ -657,10 +744,9 @@ export class Labyrinth {
       [ 'a', false ],
       [ 's', false ],
       [ 'd', false ],
-      [ 'p', false ],
-      [ 'D', false ],
-      [ '>', false ],
-      [ '<', false ],
+      [ 'q', false ],
+      [ ' ', false ],
+      [ 'Shift', false ],
     ]);
 
     this.current_status = '';
@@ -669,10 +755,11 @@ export class Labyrinth {
 
     this.slots = new Array<Item>(3);
     this.slots[0] = new Item('/', -1);
-    this.slots[1] = new Item('f', 3);
-    this.slots[2] = new Item('', -1);
+    this.slots[1] = new Item('=', consts.spell_usage['=']);
+    this.slots[2] = new Item('*', 10);
 
     this.selected_slot = 0;
+    this.action = '';
 
     Labyrinth.parse_all_maps();
 
