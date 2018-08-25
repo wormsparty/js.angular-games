@@ -1,7 +1,7 @@
 ﻿import {Engine} from './engine';
 import {AllMaps} from './map_content';
 import * as consts from './const';
-import {LevelMap, Pos, ObjPos} from './map_logic';
+import {LevelMap, Pos, ObjPos, ProjPos} from './map_logic';
 import {item2color, item2description} from './const';
 import {SpawnerState} from './target';
 
@@ -50,9 +50,10 @@ class Item {
 }
 
 class PersistedMapData {
-  pnj_position: Map<string, Pos>;
-  item_positions: Map<string, Array<ObjPos>>;
-  spawner_state: SpawnerState;
+  pnjs: Map<string, Pos>;
+  items: Map<string, Array<ObjPos>>;
+  projectiles: Array<ProjPos>;
+  spawner: SpawnerState;
 
   static parse(json): PersistedMapData {
     if (json === null) {
@@ -61,47 +62,55 @@ class PersistedMapData {
 
     const p = new PersistedMapData();
 
-    p.pnj_position = new Map<string, Pos>();
+    p.pnjs = new Map<string, Pos>();
 
-    for (const pnj in json.pnj_position) {
-      if (json.pnj_position.hasOwnProperty(pnj)) {
-        p.pnj_position.set(pnj, new Pos(json.pnj_position[pnj].x, json.pnj_position[pnj].y));
+    for (const pnj in json.pnjs) {
+      if (json.pnjs.hasOwnProperty(pnj)) {
+        p.pnjs.set(pnj, new Pos(json.pnjs[pnj].x, json.pnjs[pnj].y));
       }
     }
 
-    p.item_positions = new Map<string, Array<ObjPos>>();
+    p.items = new Map<string, Array<ObjPos>>();
 
-    for (const item in json.item_positions) {
-      if (json.item_positions.hasOwnProperty(item)) {
+    for (const item in json.items) {
+      if (json.items.hasOwnProperty(item)) {
         const pss: Array<ObjPos> = [];
-        const positions = json.item_positions[item];
+        const positions = json.items[item];
 
         for (let i = 0; i < positions.length; i++) {
           pss.push(new ObjPos(positions[i].x, positions[i].y, positions[i].usage, positions[i].price));
         }
 
-        p.item_positions.set(item, pss);
+        p.items.set(item, pss);
       }
     }
 
-    p.spawner_state = SpawnerState.parse(json.spawner_state);
+    p.projectiles = [];
+
+    for (let i = 0 ; i < json.projectiles.length; i++) {
+      const proj = json.projectiles[i];
+      p.projectiles.push(new ProjPos(proj.x, proj.y, proj.vx, proj.vy, proj.symbol, proj.power));
+    }
+
+    p.spawner = SpawnerState.parse(json.spawner);
     return p;
   }
   print(): {} {
     const p = {
-      pnj_position: {},
-      item_positions: {},
-      spawner_state: this.spawner_state.print(),
+      pnjs: {},
+      items: {},
+      projectiles: [],
+      spawner: this.spawner.print(),
     };
 
-    for (const [pnj, position] of this.pnj_position) {
-      p.pnj_position[pnj] = {
+    for (const [pnj, position] of this.pnjs) {
+      p.pnjs[pnj] = {
         x: position.x,
         y: position.y,
       };
     }
 
-    for (const [item, positions] of this.item_positions) {
+    for (const [item, positions] of this.items) {
       const pss = [];
 
       for (let i = 0; i < positions.length; i++) {
@@ -113,7 +122,18 @@ class PersistedMapData {
         });
       }
 
-      p.item_positions[item] = pss;
+      p.items[item] = pss;
+    }
+
+    for (const proj of this.projectiles) {
+      p.projectiles.push({
+        x: proj.x,
+        y: proj.y,
+        vx: proj.vx,
+        vy: proj.vy,
+        symbol: proj.symbol,
+        power: proj.power,
+      });
     }
 
     return p;
@@ -121,25 +141,31 @@ class PersistedMapData {
   copy(): PersistedMapData {
     const cpy = new PersistedMapData();
 
-    cpy.pnj_position = new Map<string, Pos>();
+    cpy.pnjs = new Map<string, Pos>();
 
-    for (const [pnj, position] of this.pnj_position) {
-      cpy.pnj_position.set(pnj, position.copy());
+    for (const [pnj, position] of this.pnjs) {
+      cpy.pnjs.set(pnj, position.copy());
     }
 
-    cpy.item_positions = new Map<string, Array<ObjPos>>();
+    cpy.items = new Map<string, Array<ObjPos>>();
 
-    for (const [item, positions] of this.item_positions) {
+    for (const [item, positions] of this.items) {
       const pss: Array<ObjPos> = [];
 
       for (const p of positions) {
         pss.push(p.copy());
       }
 
-      cpy.item_positions.set(item, pss);
+      cpy.items.set(item, pss);
     }
 
-    cpy.spawner_state = this.spawner_state.copy();
+    cpy.projectiles = [];
+
+    for (const proj of this.projectiles) {
+      cpy.projectiles.push(proj.copy());
+    }
+
+    cpy.spawner = this.spawner.copy();
     return cpy;
   }
 }
@@ -248,15 +274,16 @@ export class Labyrinth {
       map.parse(key); // TODO: Pourquoi map.parse est détectée comme non utilisée??
 
       const map_data = new PersistedMapData();
-      map_data.item_positions = new Map<string, Array<ObjPos>>();
-      map_data.pnj_position = new Map<string, Pos>();
-      map_data.spawner_state = new SpawnerState([], 0);
+      map_data.items = new Map<string, Array<ObjPos>>();
+      map_data.pnjs = new Map<string, Pos>();
+      map_data.projectiles = [];
+      map_data.spawner = new SpawnerState([], 0);
 
       //
       // If new fresh state
       //
       for (const [pnj, positions] of map.initial_pnj_positions) {
-        map_data.pnj_position.set(pnj, positions[Math.floor(Math.random() * positions.length)].copy());
+        map_data.pnjs.set(pnj, positions[Math.floor(Math.random() * positions.length)].copy());
       }
 
       for (const [item, positions] of map.initial_item_positions) {
@@ -266,7 +293,7 @@ export class Labyrinth {
           item_positions.push(positions[i].copy());
         }
 
-        map_data.item_positions.set(item, item_positions);
+        map_data.items.set(item, item_positions);
       }
 
       this.persisted_data.map_data.set(key, map_data);
@@ -299,7 +326,7 @@ export class Labyrinth {
     }
 
     if (!status_set) {
-      for (const [item, positions] of this.current_map_data.item_positions) {
+      for (const [item, positions] of this.current_map_data.items) {
         for (let i = 0 ; i < positions.length; i++) {
           if (positions[i].equals(hero_pos)) {
             if (item === '$') {
@@ -338,11 +365,11 @@ export class Labyrinth {
     const selected_slot = this.persisted_data.slots[this.selected_slot];
 
     if (selected_slot.symbol !== '') {
-      if (!this.current_map_data.item_positions.has(selected_slot.symbol)) {
-        this.current_map_data.item_positions.set(selected_slot.symbol, []);
+      if (!this.current_map_data.items.has(selected_slot.symbol)) {
+        this.current_map_data.items.set(selected_slot.symbol, []);
       }
 
-      this.current_map_data.item_positions.get(selected_slot.symbol).push(new ObjPos(pos.x, pos.y, selected_slot.usage, 0));
+      this.current_map_data.items.get(selected_slot.symbol).push(new ObjPos(pos.x, pos.y, selected_slot.usage, 0));
     }
   }
   try_pick_or_drop_item(hero_pos): boolean {
@@ -354,7 +381,7 @@ export class Labyrinth {
         return true;
       }
 
-      for (const [item, positions] of this.current_map_data.item_positions) {
+      for (const [item, positions] of this.current_map_data.items) {
         for (let i = 0; i < positions.length; i++) {
           if (positions[i].equals(hero_pos)) {
             this.current_status = '> Il y a déjà un objet ici';
@@ -387,7 +414,7 @@ export class Labyrinth {
       let coins = this.persisted_data.coins;
       let current_status = this.current_status;
 
-      for (const [item, positions] of this.current_map_data.item_positions) {
+      for (const [item, positions] of this.current_map_data.items) {
         const description = consts.item2description[item];
 
         for (let i = 0 ; i < positions.length; i++) {
@@ -470,7 +497,7 @@ export class Labyrinth {
     }
   }
   try_talk(future_pos: Pos): boolean {
-    for (const [pnj, pnj_pos] of this.current_map_data.pnj_position) {
+    for (const [pnj, pnj_pos] of this.current_map_data.pnjs) {
       if (pnj_pos.equals(future_pos)) {
         this.current_status = consts.pnj2dialog[pnj];
         return true;
@@ -480,15 +507,15 @@ export class Labyrinth {
     return false;
   }
   move_pnjs(future_pos): void {
-    for (const [p, pnj] of this.current_map_data.pnj_position) {
+    for (const [p, pnj] of this.current_map_data.pnjs) {
       if (this.current_map.pnj2position !== undefined && this.current_map.pnj2position.has(p)) {
-        this.current_map_data.pnj_position.set(p, this.current_map.pnj2position.get(p)(this, pnj, future_pos));
+        this.current_map_data.pnjs.set(p, this.current_map.pnj2position.get(p)(this, pnj, future_pos));
       } else {
         const new_pnj = get_random_mouvement(pnj);
 
         if (!new_pnj.equals(future_pos)
           && consts.walkable_symbols.indexOf(this.get_symbol_at(new_pnj)) > -1) {
-          this.current_map_data.pnj_position.set(p, new_pnj);
+          this.current_map_data.pnjs.set(p, new_pnj);
         }
       }
     }
@@ -510,7 +537,7 @@ export class Labyrinth {
         hero_pos = walkable_pos;
         this.update_current_status(hero_pos);
       } else if (evt === 'hit') {
-        this.current_status = '> Cible touchée!';
+        this.current_status = '> Cible détruite!';
       }
     }
 
@@ -691,15 +718,21 @@ export class Labyrinth {
       return '';
     }
 
-    const targets = this.current_map_data.spawner_state.targets;
+    const targets = this.current_map_data.spawner.targets;
 
     for (let i = 0; i < targets.length;) {
       const target = targets[i];
 
       if (target.pos.equals(aim_pos)) {
         if (this.has_weapon_equiped()) {
-          targets.splice(i, 1);
-          return 'hit';
+          target.pv--;
+
+          if (target.pv <= 0) {
+            targets.splice(i, 1);
+            return 'hit';
+          } else {
+            return 'push';
+          }
         } else {
           return 'push';
         }
@@ -712,10 +745,30 @@ export class Labyrinth {
   }
   update_targets(hero_pos: Pos): Pos {
     if (this.current_map.target_spawner !== undefined) {
-      return this.current_map.target_spawner.update(this, this.current_map_data.spawner_state, hero_pos);
+      return this.current_map.target_spawner.update(this, this.current_map_data.spawner, hero_pos);
     }
 
     return hero_pos;
+  }
+  move_projectiles() {
+    for (let i = 0; i < this.current_map_data.projectiles.length;) {
+      const proj = this.current_map_data.projectiles[i];
+
+      const newprojx = proj.x + proj.vx;
+      const newprojy = proj.y + proj.vy;
+
+      if (newprojy >= consts.map_lines || newprojy < 0
+        || newprojx < 0 || newprojx >= consts.char_per_line
+        || consts.walkable_symbols.indexOf(this.current_map.get_symbol_at(newprojx, newprojy)) === -1) {
+        this.projectile2item(i);
+        continue;
+      }
+
+      proj.x = newprojx;
+      proj.y = newprojy;
+
+      i++;
+    }
   }
   move_targets_or_die(hero_pos: Pos) {
     hero_pos = this.update_targets(hero_pos);
@@ -773,6 +826,7 @@ export class Labyrinth {
         }
       }
 
+      this.move_projectiles();
       this.move_targets_or_die(this.persisted_data.hero_position);
       return;
     }
@@ -793,6 +847,7 @@ export class Labyrinth {
     }
 
     if (this.try_pick_or_drop_item(this.persisted_data.hero_position)) {
+      this.move_projectiles();
       this.move_targets_or_die(this.persisted_data.hero_position);
       return;
     }
@@ -807,6 +862,7 @@ export class Labyrinth {
         }
 
         this.action = '';
+        this.move_projectiles();
         this.move_targets_or_die(this.persisted_data.hero_position);
         return;
       }
@@ -818,12 +874,23 @@ export class Labyrinth {
         selected_slot.symbol = '';
         selected_slot.usage = -1;
         this.action = '';
+        this.move_projectiles();
         this.move_targets_or_die(this.persisted_data.hero_position);
         return;
       }
 
       if (this.has_throwable_on_slot(this.selected_slot)) {
-        this.current_status = '> TODO: Lancer object';
+        const item = consts.item2description[this.persisted_data.slots[this.selected_slot].symbol];
+
+        this.current_status = '> ' + make_first_letter_upper(item.text + consts.lance[item.genre]);
+
+        // TODO: REFACTOR
+        const x = this.persisted_data.hero_position.x;
+        const y = this.persisted_data.hero_position.y;
+        const vx = future_pos[1].x - x;
+        const vy = future_pos[1].y - y;
+
+        this.current_map_data.projectiles.push(new ProjPos(x, y, vx, vy, '*', 1));
         selected_slot.usage--;
 
         if (selected_slot.usage <= 0) {
@@ -832,6 +899,7 @@ export class Labyrinth {
         }
 
         this.action = '';
+        this.move_projectiles();
         this.move_targets_or_die(this.persisted_data.hero_position);
         return;
       }
@@ -839,6 +907,7 @@ export class Labyrinth {
 
     if (future_pos[2] !== '') {
       this.current_status = future_pos[2];
+      this.move_projectiles();
       this.move_targets_or_die(this.persisted_data.hero_position);
       return;
     }
@@ -849,6 +918,7 @@ export class Labyrinth {
 
     this.persisted_data.hero_position = this.move_hero(this.persisted_data.hero_position, future_pos[0], future_pos[1]);
     this.move_pnjs(this.persisted_data.hero_position);
+    this.move_projectiles();
     this.move_targets_or_die(this.persisted_data.hero_position);
   }
   draw_map() {
@@ -900,12 +970,21 @@ export class Labyrinth {
       }
     }
   }
+  draw_projectiles() {
+    for (const proj of this.current_map_data.projectiles) {
+      const coord = this.to_screen_coord(proj.x, proj.y + consts.header_size);
+
+      this.engine.rect(coord, this.char_width, 16, this.current_map.background_color);
+      this.engine.text(proj.symbol, coord, consts.projectile2color[proj.symbol]);
+    }
+  }
   draw_targets() {
     if (this.current_map.target_spawner !== undefined) {
-      for (const target of this.current_map_data.spawner_state.targets) {
-        this.engine.rect(this.to_screen_coord(target.pos.x, target.pos.y + consts.header_size),
-          this.char_width, 16, this.current_map.background_color);
-        this.engine.text(target.symbol, this.to_screen_coord(target.pos.x, target.pos.y + consts.header_size), '#FF9900');
+      for (const target of this.current_map_data.spawner.targets) {
+        const coord = this.to_screen_coord(target.pos.x, target.pos.y + consts.header_size);
+
+        this.engine.rect(coord, this.char_width, 16, this.current_map.background_color);
+        this.engine.text(target.symbol, coord, this.current_map.target_spawner.pv2color(target.pv));
       }
     }
   }
@@ -914,7 +993,7 @@ export class Labyrinth {
     this.engine.text(chr, coord, color);
   }
   draw_pnjs() {
-    for (const [p, pnj] of this.current_map_data.pnj_position) {
+    for (const [p, pnj] of this.current_map_data.pnjs) {
       const coord = this.to_screen_coord(pnj.x, pnj.y + consts.header_size);
       const color = consts.pnj2color[p];
 
@@ -926,7 +1005,7 @@ export class Labyrinth {
       consts.pnj2color['@']);
   }
   draw_items() {
-    for (const [item, positions] of this.current_map_data.item_positions) {
+    for (const [item, positions] of this.current_map_data.items) {
 
       for (let i = 0; i < positions.length; i++) {
         const coord = this.to_screen_coord(positions[i].x, positions[i].y + consts.header_size);
@@ -979,7 +1058,7 @@ export class Labyrinth {
     return this.has_weapon_on_slot(slot) || this.has_throwable_on_slot(slot);
   }
   has_item_or_pnj_at(pos: Pos, current_pnj: string) {
-    for (const [item, positions] of this.current_map_data.item_positions) {
+    for (const [item, positions] of this.current_map_data.items) {
       for (let i = 0; i < positions.length; i++) {
         if (positions[i].equals(pos)) {
           return true;
@@ -987,7 +1066,7 @@ export class Labyrinth {
       }
     }
 
-    for (const [pnj, pnj_pos] of this.current_map_data.pnj_position) {
+    for (const [pnj, pnj_pos] of this.current_map_data.pnjs) {
       if (pnj !== current_pnj && pnj_pos.equals(pos)) {
         return true;
       }
@@ -997,6 +1076,27 @@ export class Labyrinth {
   }
   get_symbol_at(pos: Pos): string {
     return this.current_map.get_symbol_at(pos.x, pos.y);
+  }
+  hits_projectile(pos: Pos): [number, number] {
+    for (let i = 0; i < this.current_map_data.projectiles.length; i++) {
+      const proj = this.current_map_data.projectiles[i];
+
+      if (proj.equals(pos)) {
+        return [i, proj.power];
+      }
+    }
+
+    return [-1, 0];
+  }
+  projectile2item(projectile_position: number) {
+    const proj = this.current_map_data.projectiles[projectile_position];
+
+    if (!this.current_map_data.items.has(proj.symbol)) {
+      this.current_map_data.items.set(proj.symbol, []);
+    }
+
+    this.current_map_data.items.get(proj.symbol).push(new ObjPos(proj.x, proj.y, 1, 0));
+    this.current_map_data.projectiles.splice(projectile_position, 1);
   }
   draw_overlay() {
     this.engine.text(this.current_status, this.to_screen_coord(2, 1), consts.White);
@@ -1054,6 +1154,7 @@ export class Labyrinth {
     this.draw_map();
     this.draw_items();
     this.draw_pnjs();
+    this.draw_projectiles();
     this.draw_targets();
     this.draw_overlay();
   }
@@ -1095,27 +1196,26 @@ export class Labyrinth {
     this.parse_all_maps();
 
     // TODO: FOR DEBUGGING
-//    this.clear_storage();
+    this.clear_storage();
 
     if (!this.load_from_storage()) {
       // If there is no save
-      this.change_map('bateau');
+      this.change_map('training');
       this.persisted_data.hero_position = this.current_map.start;
       this.persisted_data.coins = 0;
       this.persisted_data.slots = new Array<Item>(3);
-      this.persisted_data.slots[0] = new Item('', -1);
-      this.persisted_data.slots[1] = new Item('', -1);
-      this.persisted_data.slots[2] = new Item('', -1);
-      // this.persisted_data.slots[0] = new Item('/', -1);
-      // this.persisted_data.slots[1] = new Item('=', consts.spell_usage['=']);
-      // this.persisted_data.slots[2] = new Item('*', 10);
-      this.save_to_memory();
+      // this.persisted_data.slots[0] = new Item('', -1);
+      // this.persisted_data.slots[1] = new Item('', -1);
+      // this.persisted_data.slots[2] = new Item('', -1);
+      this.persisted_data.slots[0] = new Item('/', -1);
+      this.persisted_data.slots[1] = new Item('=', consts.spell_usage['=']);
+      this.persisted_data.slots[2] = new Item('*', 10);
       // TODO: REMOVE, FOR DEBUGGING
   //    this.save_to_storage();
     } else {
       this.change_map(this.persisted_data.current_map_name);
     }
 
-    // TODO: Load
+    this.save_to_memory();
   }
 }

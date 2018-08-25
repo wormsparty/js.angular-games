@@ -5,14 +5,18 @@ import * as consts from './const';
 export class Target {
   pos: Pos;
   symbol: string;
+  pv: number;
+  pv_max: number;
 
-  constructor(pos: Pos, symbol: string) {
+  constructor(pos: Pos, symbol: string, pv: number, pv_max: number) {
     this.pos = pos;
     this.symbol = symbol;
+    this.pv = pv;
+    this.pv_max = pv_max;
   }
 
   copy(): Target {
-    return new Target(this.pos.copy(), this.symbol);
+    return new Target(this.pos.copy(), this.symbol, this.pv, this.pv_max);
   }
 }
 
@@ -34,7 +38,7 @@ export class SpawnerState {
 
     for (let i = 0; i < json.targets.length; i++) {
       const target = json.targets[i];
-      p.targets.push(new Target(new Pos(target.pos.x, target.pos.y), target.symbol));
+      p.targets.push(new Target(new Pos(target.pos.x, target.pos.y), target.symbol, target.pv, target.pv_max));
     }
 
     return p;
@@ -69,16 +73,19 @@ export class SpawnerState {
 }
 
 export class TargetSpawner {
-  private readonly spawner_update: (number) => Target;
-  private target_update: () => Pos;
+  private readonly spawner_update: (number) => [number, Target];
+  private readonly target_update: () => Pos;
+  pv2color: (number) => string;
 
-  constructor(spawner_update: (number) => Target, target_update: () => Pos) {
+  constructor(spawner_update: (number) => [number, Target], target_update: () => Pos, pv2color: (number) => string) {
     this.spawner_update = spawner_update;
     this.target_update = target_update;
+    this.pv2color = pv2color;
   }
 
   update(l: Labyrinth, stateHolder: SpawnerState, hero_pos: Pos): Pos {
-    const new_target = this.spawner_update(stateHolder.tick);
+    const [tick, new_target] = this.spawner_update(stateHolder.tick);
+    stateHolder.tick = tick;
 
     if (new_target !== undefined) {
       stateHolder.targets.push(new_target);
@@ -88,6 +95,23 @@ export class TargetSpawner {
       const target = stateHolder.targets[i];
       const dp = this.target_update();
 
+      // We need to make the test twice (see below).
+      // This case is if the projectile hits directly
+      // The case below is if the two are separated by 1:
+      // the target gets at the same position as the projectile
+      // -> It needs to count as a hit too
+      /*let [hit, power] = l.hits_projectile(target.pos);
+
+      if (hit !== -1) {
+        l.projectile2item(hit);
+        target.pv -= power;
+
+        if (target.pv <= 0) {
+          stateHolder.targets.splice(i, 1);
+          continue;
+        }
+      }*/
+
       target.pos.x += dp.x;
       target.pos.y += dp.y;
 
@@ -96,6 +120,18 @@ export class TargetSpawner {
         || l.get_symbol_at(target.pos) === '#') {
         stateHolder.targets.splice(i, 1);
         continue;
+      }
+
+      const [hit, power] = l.hits_projectile(target.pos);
+
+      if (hit !== -1) {
+        l.projectile2item(hit);
+        target.pv -= power;
+
+        if (target.pv <= 0) {
+          stateHolder.targets.splice(i, 1);
+          continue;
+        }
       }
 
       if (stateHolder.targets[i].pos.equals(hero_pos)) {

@@ -1,6 +1,6 @@
 import {LevelMap, Pos} from './map_logic';
 import {Labyrinth} from './labyrinth';
-import {SpawnerState, Target, TargetSpawner} from './target';
+import {Target, TargetSpawner} from './target';
 
 export const AllMaps: Map<string, LevelMap> = new Map([
   [ 'bateau', new LevelMap('' +
@@ -105,9 +105,9 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     '                                                        \n' +
     '     ##############################################     \n' +
     '      #                                          #      \n' +
-    '       #           $$                   <       #       \n' +
-    '        #     ?    $$    /       @             #        \n' +
-    '         #         $$                         #         \n' +
+    '       #         $$                     <       #       \n' +
+    '        #        $$    /         @             #        \n' +
+    '         #       $$                           #         \n' +
     '          ##                                ##          \n' +
     '            ################################            \n' +
     '                                                        \n' +
@@ -227,9 +227,9 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     '                #                                      5\n' +
     '                 #                                     5\n' +
     '                #                                      5\n' +
-    '               #            *         ?                5\n' +
+    '               #            *         *                5\n' +
     '            ###             *  mmmmm  *               ##\n' +
-    '       #####                ?  mmmmm  *              #  \n' +
+    '       #####                *  mmmmm  *              #  \n' +
     '#######                     *         *             #   \n' +
     '2                                                 ##    \n' +
     '2                                              ###      \n' +
@@ -278,7 +278,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     '                  #...............................##    \n' +
     '                 #~~~~.........................###      \n' +
     '               ##~~~~~~...............~~~~~####         \n' +
-    '            ###~~~~~~~~........~~~~~~~~####             \n' +
+    '            ###~~~~~~~~~~......~~~~~~~~####             \n' +
     '          ##~~~~~~~~~~~~~~~~~~~~~~~~~~#                 \n' +
     '         #~~~~~~~~~~~~~~~~~~~~~~~~~~~#                  \n' +
     '        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~##                \n' +
@@ -328,16 +328,24 @@ export const AllMaps: Map<string, LevelMap> = new Map([
         }
       }],
     ]),
-    new TargetSpawner(function(tick: number): Target {
+    new TargetSpawner(function(tick: number): [number, Target] {
       tick = tick % 20;
 
       if (tick >= 16) {
-        return undefined;
+        return [ tick, undefined ];
       }
 
-      return new Target(new Pos(24 + tick, -1), 'O');
+      return [tick, new Target(new Pos(24 + tick, -1), 'O', 3, 3) ];
     }, function(): Pos {
       return new Pos(0, 1);
+    }, function(pv: number): string {
+      if (pv === 3) {
+        return '#00FF00';
+      } else if (pv === 2) {
+        return '#FF9900';
+      } else {
+        return '#FF0000';
+      }
     }),
   )],
   [ 'premier', new LevelMap('' +

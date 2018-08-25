@@ -34,7 +34,7 @@ export const pnj2dialog = {
 };
 
 export const teleport_symbols: Array<string> = [ '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '>', '<' ];
-export const item_symbols: Array<string> = [ '?', '*', '$', '/', '=' ];
+export const item_symbols: Array<string> = [ '*', '$', '/', '=' ];
 export const walkable_symbols: Array<string> = [ '.', '<', '>' ];
 export const shop_maps: Array<string> = [ 'outside' ];
 
@@ -74,19 +74,19 @@ export const item2color = {
   // '}': '#00FF00',
   '%': '#119900',
   // '!': '#555555',
-  '?': '#FFFFFF',
+  // '?': '#FFFFFF',
   '/': '#222222',
 };
 
 export const item2price = {
   '*': 1,
-  '?': 20,
+  //  '?': 20,
   '/': 500,
 };
 
 export const item2description = {
   '*': { text: 'caillou', genre: 'M' },
-  '?': { text: 'potion mystère', genre: 'F' },
+  // '?': { text: 'potion mystère', genre: 'F' },
   '/': { text: 'épée', genre: 'F' },
   '=': { text: 'sort de feu', genre: 'M' },
   '' : { text: 'rien', genre: 'M' }
@@ -95,10 +95,15 @@ export const item2description = {
 export const weapon_items = [ '/' ];
 export const throwable_items = [ '*' ];
 export const spell_items = [ '=' ];
-export const consumable_items = [ '?' ];
+export const consumable_items = []; // [ '?' ];
 
 export const spell_usage = {
   '=': 10,
+};
+
+export const projectile2color = {
+  '*': '#999999',
+  '&': '#FF0000',
 };
 
 /*
@@ -117,4 +122,9 @@ export const depose = {
 export const achete = {
   'M': ' acheté',
   'F': ' achetée'
+};
+
+export const lance = {
+  'M': ' lancé',
+  'F': ' lancée',
 };

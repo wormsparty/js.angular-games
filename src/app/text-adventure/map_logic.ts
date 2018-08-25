@@ -11,11 +11,11 @@ export class Pos {
     this.y = y;
   }
 
-  equals(other_pos: Pos) {
+  equals(other_pos: Pos): boolean {
     return this.x === other_pos.x && this.y === other_pos.y;
   }
 
-  copy() {
+  copy(): Pos {
     return new Pos(this.x, this.y);
   }
 }
@@ -26,10 +26,6 @@ export class TeleportPos extends Pos {
   constructor(x: number, y: number, id: number) {
     super(x, y);
     this.id = id;
-  }
-
-  equals(other_pos: TeleportPos) {
-    return this.x === other_pos.x && this.y === other_pos.y;
   }
 }
 
@@ -45,10 +41,32 @@ export class ObjPos extends Pos {
     this.price = price;
   }
 
-  copy() {
+  copy(): ObjPos {
     return new ObjPos(this.x, this.y, this.usage, this.price);
   }
 }
+
+export class ProjPos extends Pos {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  symbol: string;
+  power: number;
+
+  constructor(x: number, y: number, vx: number, vy: number, symbol: string, power: number) {
+    super(x, y);
+    this.vx = vx;
+    this.vy = vy;
+    this.symbol = symbol;
+    this.power = power;
+  }
+
+  copy(): ProjPos {
+    return new ProjPos(this.x, this.y, this.vx, this.vy, this.symbol, this.power);
+  }
+}
+
 export class LevelMap {
   map: string;
   meta: string;
