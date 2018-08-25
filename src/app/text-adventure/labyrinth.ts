@@ -90,7 +90,7 @@ export class Labyrinth {
     let status_set = false;
     let current_status = this.current_status;
 
-    const current_symbol = this.current_map.get_symbol_at(hero_pos.x, hero_pos.y);
+    const current_symbol = this.get_symbol_at(hero_pos);
     if (consts.walkable_symbols.indexOf(current_symbol) > -1) {
       current_status = consts.symbol2description[current_symbol].text;
 
@@ -164,7 +164,7 @@ export class Labyrinth {
         }
       }
 
-      const current_symbol = this.current_map.get_symbol_at(hero_pos.x, hero_pos.y);
+      const current_symbol = this.get_symbol_at(hero_pos);
 
       if (current_symbol === '>' || current_symbol === '<') {
         this.current_status = '> Pas sur un escalier';
@@ -253,7 +253,7 @@ export class Labyrinth {
   }
   try_enter_or_exit(hero_pos): [boolean, Pos, string] {
     if (this.pressed.get('5')) {
-      const symbol = this.current_map.get_symbol_at(hero_pos.x, hero_pos.y);
+      const symbol = this.get_symbol_at(hero_pos);
 
       if (symbol !== '>' && symbol !== '<') {
         this.current_status = '> Il n\'y a pas d\'escalier ici.';
@@ -296,31 +296,36 @@ export class Labyrinth {
         const new_pnj = get_random_mouvement(pnj);
 
         if (!new_pnj.equals(future_pos)
-          && consts.walkable_symbols.indexOf(this.current_map.get_symbol_at(new_pnj.x, new_pnj.y)) > -1) {
+          && consts.walkable_symbols.indexOf(this.get_symbol_at(new_pnj)) > -1) {
           this.pnjs.set(p, new_pnj);
         }
       }
     }
   }
-  move_hero(hero_pos: Pos, future_pos: Pos): Pos {
-    const ret = this.try_teleport(hero_pos, future_pos);
+  move_hero(hero_pos: Pos, walkable_pos: Pos, aim_pos: Pos): Pos {
+    const ret = this.try_teleport(hero_pos, walkable_pos);
 
     if (ret[0]) {
-      if (ret[2] !== undefined) {
-        this.change_map(ret[2]);
-      }
-
+      this.change_map(ret[2]);
       hero_pos = ret[1];
       this.pnjs.set('@', ret[1]);
     } else {
-      hero_pos = future_pos;
-      this.pnjs.set('@', future_pos);
+      if (!this.try_hit_target(hero_pos, aim_pos)) {
+        hero_pos = walkable_pos;
+        this.pnjs.set('@', walkable_pos);
+        this.update_current_status(hero_pos);
+      } else {
+        this.current_status = '> Cible touchée!';
+      }
     }
 
-    this.update_current_status(hero_pos);
     return hero_pos;
   }
-  get_future_position(hero_pos): [Pos, string] {
+  // We get:
+  // (1) The walkable future position,
+  // (2) The real future direction (for aiming) and
+  // (3) the new status, if we hit something
+  get_future_position(hero_pos): [Pos, Pos, string] {
     let x = hero_pos.x;
     let y = hero_pos.y;
 
@@ -343,24 +348,24 @@ export class Labyrinth {
     const future_pos: Pos = new Pos(x, y);
     const allowed_walking_symbols = consts.walkable_symbols;
 
-    let symbol = this.current_map.get_symbol_at(future_pos.x, future_pos.y);
+    let symbol = this.get_symbol_at(future_pos);
 
     if (allowed_walking_symbols.indexOf(symbol) > -1) {
-      return [future_pos, ''];
+      return [future_pos, future_pos, ''];
     }
 
     if (hero_pos.y !== future_pos.y) {
       symbol = this.current_map.get_symbol_at(hero_pos.x, future_pos.y);
 
       if (allowed_walking_symbols.indexOf(symbol) > -1) {
-        return [new Pos(hero_pos.x, future_pos.y), ''];
+        return [new Pos(hero_pos.x, future_pos.y), future_pos, ''];
       } else {
         if (future_pos.x !== hero_pos.x) {
           symbol = this.current_map.get_symbol_at(future_pos.x, hero_pos.y);
         }
 
         if (allowed_walking_symbols.indexOf(symbol) > -1) {
-          return [new Pos(future_pos.x, hero_pos.y), ''];
+          return [new Pos(future_pos.x, hero_pos.y), future_pos, ''];
         } else {
           let status = consts.tile2text[symbol];
 
@@ -368,14 +373,14 @@ export class Labyrinth {
             status = '';
           }
 
-          return [hero_pos, status];
+          return [hero_pos, future_pos, status];
         }
       }
     } else {
       symbol = this.current_map.get_symbol_at(future_pos.x, hero_pos.y);
 
       if (allowed_walking_symbols.indexOf(symbol) > -1) {
-        return [new Pos(future_pos.x, hero_pos.y), ''];
+        return [new Pos(future_pos.x, hero_pos.y), future_pos, ''];
       } else {
         let status = consts.tile2text[symbol];
 
@@ -383,7 +388,7 @@ export class Labyrinth {
           status = '';
         }
 
-        return [ hero_pos, status ];
+        return [ hero_pos, future_pos, status ];
       }
     }
   }
@@ -456,9 +461,27 @@ export class Labyrinth {
       new_map_name,
     ];
   }
+  try_hit_target(hero_pos: Pos, aim_pos: Pos): boolean {
+    if (this.current_map.target_spawner === undefined) {
+      return false;
+    }
+
+    const targets = this.current_map.target_spawner.targets;
+
+    for (let i = 0; i < targets.length;) {
+      const target = targets[i];
+
+      if (target.pos.equals(aim_pos)) {
+        targets.splice(i, 1);
+        return true;
+      }
+
+      i++;
+    }
+  }
   update_targets() {
     if (this.current_map.target_spawner !== undefined) {
-      this.current_map.target_spawner.update();
+      this.current_map.target_spawner.update(this);
     }
   }
   update_on_map() {
@@ -568,8 +591,8 @@ export class Labyrinth {
       }
     }
 
-    if (future_pos[1] !== '') {
-      this.current_status = future_pos[1];
+    if (future_pos[2] !== '') {
+      this.current_status = future_pos[2];
       this.update_targets();
       return;
     }
@@ -578,7 +601,7 @@ export class Labyrinth {
       return;
     }
 
-    hero_pos = this.move_hero(hero_pos, future_pos[0]);
+    hero_pos = this.move_hero(hero_pos, future_pos[0], future_pos[1]);
     this.move_pnjs(hero_pos);
     this.update_targets();
   }
@@ -634,8 +657,9 @@ export class Labyrinth {
   draw_targets() {
     if (this.current_map.target_spawner !== undefined) {
       for (const target of this.current_map.target_spawner.targets) {
-        this.engine.rect(this.to_screen_coord(target.pos.x, target.pos.y), this.char_width, 16, this.current_map.background_color);
-        this.engine.text(target.symbol, this.to_screen_coord(target.pos.x, target.pos.y), '#FF9900');
+        this.engine.rect(this.to_screen_coord(target.pos.x, target.pos.y + consts.header_size),
+          this.char_width, 16, this.current_map.background_color);
+        this.engine.text(target.symbol, this.to_screen_coord(target.pos.x, target.pos.y + consts.header_size), '#FF9900');
       }
     }
   }
@@ -713,6 +737,9 @@ export class Labyrinth {
 
     return false;
   }
+  get_symbol_at(pos: Pos): string {
+    return this.current_map.get_symbol_at(pos.x, pos.y);
+  }
   draw_overlay() {
     this.engine.text(this.current_status, this.to_screen_coord(2, 1), consts.White);
 
@@ -758,7 +785,7 @@ export class Labyrinth {
     }
 
     const hero_pos = this.pnjs.get('@');
-    const current_symbol = this.current_map.get_symbol_at(hero_pos.x, hero_pos.y);
+    const current_symbol = this.get_symbol_at(hero_pos);
 
     if (this.slots[this.selected_slot].symbol !== '' && current_symbol !== '>' && current_symbol !== '<') {
       this.engine.text('q Déposer', this.to_screen_coord(29, h + 2), consts.OverlayHighlight);

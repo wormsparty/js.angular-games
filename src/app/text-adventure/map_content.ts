@@ -319,13 +319,13 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     undefined,
     new Map([
       [ 'g', function(l: Labyrinth, pnj: Pos, hero_pos: Pos): Pos {
-        const guarded_position = new Pos(10, 9 - consts.header_size);
+        const guarded_position = new Pos(10, 6);
 
         if (l.has_weapon_on_slot(0)
          || l.has_weapon_on_slot(1)
          || l.has_weapon_on_slot(2)
          || l.has_item_or_pnj_at(guarded_position, 'g')) {
-          return new Pos(11, 10 - consts.header_size);
+          return new Pos(11, 7);
         } else {
           return guarded_position;
         }
@@ -338,9 +338,9 @@ export const AllMaps: Map<string, LevelMap> = new Map([
         return undefined;
       }
 
-      return new Target(new Pos(24 + tick, consts.header_size - 1), 'O', function(t: Target): boolean {
+      return new Target(new Pos(24 + tick, -1), 'O', function(l: Labyrinth, t: Target): boolean {
         t.pos.y++;
-        return t.pos.y >= consts.map_lines + consts.header_size;
+        return t.pos.y >= consts.map_lines || l.get_symbol_at(t.pos) === '#';
       });
     }),
   )],

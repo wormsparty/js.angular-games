@@ -1,11 +1,12 @@
 import {Pos} from './map_logic';
+import {Labyrinth} from './labyrinth';
 
 export class Target {
   pos: Pos;
   symbol: string;
-  update: (Target) => boolean;
+  update: (Labyrinth, Target) => boolean;
 
-  constructor(pos: Pos, symbol: string, update: (Target) => boolean) {
+  constructor(pos: Pos, symbol: string, update: (Labyrinth, Target) => boolean) {
     this.pos = pos;
     this.symbol = symbol;
     this.update = update;
@@ -24,7 +25,7 @@ export class TargetSpawner {
     this.targets = [];
   }
 
-  update(): void {
+  update(l: Labyrinth): void {
     const new_target = this.do_update(this.tick);
 
     if (new_target !== undefined) {
@@ -32,7 +33,7 @@ export class TargetSpawner {
     }
 
     for (let i = 0; i < this.targets.length;) {
-      if (this.targets[i].update(this.targets[i])) {
+      if (this.targets[i].update(l, this.targets[i])) {
         this.targets.splice(i, 1);
         continue;
       }
