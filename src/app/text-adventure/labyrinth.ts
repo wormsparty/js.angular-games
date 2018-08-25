@@ -5,8 +5,6 @@ import {LevelMap, Pos, ObjPos} from './map_logic';
 import {item2color, item2description} from './const';
 import {SpawnerState} from './target';
 
-const initial_map = 'training';
-
 function get_random_mouvement(pnj): Pos {
   const new_pnj = new Pos(pnj.x, pnj.y);
   const r = Math.floor(Math.random() * 16);
@@ -56,6 +54,70 @@ class PersistedMapData {
   item_positions: Map<string, Array<ObjPos>>;
   spawner_state: SpawnerState;
 
+  static parse(json): PersistedMapData {
+    if (json === null) {
+      return null;
+    }
+
+    const p = new PersistedMapData();
+
+    p.pnj_position = new Map<string, Pos>();
+
+    for (const pnj in json.pnj_position) {
+      if (json.pnj_position.hasOwnProperty(pnj)) {
+        p.pnj_position.set(pnj, new Pos(json.pnj_position[pnj].x, json.pnj_position[pnj].y));
+      }
+    }
+
+    p.item_positions = new Map<string, Array<ObjPos>>();
+
+    for (const item in json.item_positions) {
+      if (json.item_positions.hasOwnProperty(item)) {
+        const pss: Array<ObjPos> = [];
+        const positions = json.item_positions[item];
+
+        for (let i = 0; i < positions.length; i++) {
+          pss.push(new ObjPos(positions[i].x, positions[i].y, positions[i].usage, positions[i].price));
+        }
+
+        p.item_positions.set(item, pss);
+      }
+    }
+
+    p.spawner_state = SpawnerState.parse(json.spawner_state);
+    return p;
+  }
+  print(): {} {
+    const p = {
+      pnj_position: {},
+      item_positions: {},
+      spawner_state: this.spawner_state.print(),
+    };
+
+    for (const [pnj, position] of this.pnj_position) {
+      p.pnj_position[pnj] = {
+        x: position.x,
+        y: position.y,
+      };
+    }
+
+    for (const [item, positions] of this.item_positions) {
+      const pss = [];
+
+      for (let i = 0; i < positions.length; i++) {
+        pss.push({
+          x: positions[i].x,
+          y: positions[i].y,
+          usage: positions[i].usage,
+          price: positions[i].price,
+        });
+      }
+
+      p.item_positions[item] = pss;
+    }
+
+    return p;
+  }
   copy(): PersistedMapData {
     const cpy = new PersistedMapData();
 
@@ -89,6 +151,58 @@ class PersistedData {
   map_data: Map<string, PersistedMapData>;
   current_map_name: string;
 
+  static parse(json): PersistedData {
+    if (json === null) {
+      return null;
+    }
+
+    const p = new PersistedData();
+
+    p.slots = new Array<Item>(json.slots.length);
+
+    for (let i = 0; i < json.slots.length; i++) {
+      p.slots[i] = new Item(json.slots[i].symbol, json.slots[i].usage);
+    }
+
+    p.coins = json.coins;
+    p.hero_position = new Pos(json.hero_position.x, json.hero_position.y);
+
+    p.map_data = new Map<string, PersistedMapData>();
+
+    for (const map in json.map_data) {
+      if (json.map_data.hasOwnProperty(map)) {
+        p.map_data.set(map, PersistedMapData.parse(json.map_data[map]));
+      }
+    }
+
+    p.current_map_name = json.current_map_name;
+    return p;
+  }
+  print(): {} {
+    const p = {
+      slots: [],
+      coins: this.coins,
+      hero_position: {
+        x: this.hero_position.x,
+        y: this.hero_position.y
+      },
+      map_data: {},
+      current_map_name: this.current_map_name,
+    };
+
+    for (let i = 0; i < this.slots.length; i++) {
+      p.slots[i] = {
+        symbol: this.slots[i].symbol,
+        usage: this.slots[i].usage,
+      };
+    }
+
+    for (const [i, data] of this.map_data) {
+      p.map_data[i] = data.print();
+    }
+
+    return p;
+  }
   copy(): PersistedData {
     const cpy = new PersistedData();
 
@@ -386,7 +500,9 @@ export class Labyrinth {
       this.change_map(ret[2]);
       hero_pos = ret[1];
       this.persisted_data.hero_position = ret[1];
-      this.save();
+      this.save_to_memory();
+      // TODO: REMOVE, FOR DEBUGGING
+      this.save_to_storage();
     } else {
       const evt = this.try_hit_target(hero_pos, aim_pos);
 
@@ -476,9 +592,37 @@ export class Labyrinth {
     this.persisted_data.current_map_name = map_name;
     this.current_map_data = this.persisted_data.map_data.get(map_name);
   }
-  save() {
+  save_to_memory() {
     this.last_save = this.persisted_data.copy();
-    console.log('Saved');
+  }
+  load_from_storage(): boolean {
+    const save_data = window.localStorage.getItem('save');
+
+    if (save_data === undefined) {
+      return false;
+    }
+
+    // console.log('Data = ' + save_data);
+
+    const persisted_data = PersistedData.parse(JSON.parse(save_data));
+
+    if (persisted_data === null) {
+      return false;
+    }
+
+    this.persisted_data = persisted_data;
+
+    return true;
+  }
+  save_to_storage() {
+    // TODO: Use this!
+    const save_data = JSON.stringify(this.persisted_data.print());
+    // console.log('Saved : ' + save_data);
+    window.localStorage.setItem('save', save_data);
+  }
+  clear_storage() {
+    // TODO: Use this!
+    window.localStorage.clear();
   }
   load_last_save() {
     this.persisted_data = this.last_save.copy();
@@ -641,7 +785,9 @@ export class Labyrinth {
       if (ret[0]) {
         this.change_map(ret[2]);
         this.persisted_data.hero_position = ret[1];
-        this.save();
+        this.save_to_memory();
+        // TODO: REMOVE, FOR DEBUGGING
+        this.save_to_storage();
         return;
       }
     }
@@ -948,15 +1094,27 @@ export class Labyrinth {
 
     this.parse_all_maps();
 
-    // If there is no save
-    this.change_map(initial_map);
-    this.persisted_data.hero_position = this.current_map.start;
-    this.persisted_data.coins = 10000;
-    this.persisted_data.slots = new Array<Item>(3);
-    this.persisted_data.slots[0] = new Item('/', -1);
-    this.persisted_data.slots[1] = new Item('=', consts.spell_usage['=']);
-    this.persisted_data.slots[2] = new Item('*', 10);
-    this.save();
+    // TODO: FOR DEBUGGING
+//    this.clear_storage();
+
+    if (!this.load_from_storage()) {
+      // If there is no save
+      this.change_map('bateau');
+      this.persisted_data.hero_position = this.current_map.start;
+      this.persisted_data.coins = 0;
+      this.persisted_data.slots = new Array<Item>(3);
+      this.persisted_data.slots[0] = new Item('', -1);
+      this.persisted_data.slots[1] = new Item('', -1);
+      this.persisted_data.slots[2] = new Item('', -1);
+      // this.persisted_data.slots[0] = new Item('/', -1);
+      // this.persisted_data.slots[1] = new Item('=', consts.spell_usage['=']);
+      // this.persisted_data.slots[2] = new Item('*', 10);
+      this.save_to_memory();
+      // TODO: REMOVE, FOR DEBUGGING
+  //    this.save_to_storage();
+    } else {
+      this.change_map(this.persisted_data.current_map_name);
+    }
 
     // TODO: Load
   }

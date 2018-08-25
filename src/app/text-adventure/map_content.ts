@@ -335,9 +335,9 @@ export const AllMaps: Map<string, LevelMap> = new Map([
         return undefined;
       }
 
-      return new Target(new Pos(24 + tick, -1), 'O', function(): Pos {
-        return new Pos(0, 1);
-      });
+      return new Target(new Pos(24 + tick, -1), 'O');
+    }, function(): Pos {
+      return new Pos(0, 1);
     }),
   )],
   [ 'premier', new LevelMap('' +
