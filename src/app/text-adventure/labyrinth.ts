@@ -479,10 +479,21 @@ export class Labyrinth {
       i++;
     }
   }
-  update_targets() {
+  update_targets(hero_pos: Pos): Pos {
     if (this.current_map.target_spawner !== undefined) {
-      this.current_map.target_spawner.update(this);
+      return this.current_map.target_spawner.update(this, hero_pos);
     }
+
+    return hero_pos;
+  }
+  move_targets_or_die(hero_pos: Pos) {
+    hero_pos = this.update_targets(hero_pos);
+
+    if (consts.walkable_symbols.indexOf(this.get_symbol_at(hero_pos)) === -1) {
+      console.log('DEAD');
+    }
+
+    this.pnjs['@'] = hero_pos;
   }
   update_on_map() {
     if (this.pressed.get('a')) {
@@ -513,6 +524,8 @@ export class Labyrinth {
       return;
     }
 
+    let hero_pos = this.pnjs.get('@');
+
     if (this.pressed.get(' ') && this.has_usable_item_on_slot(this.selected_slot)) {
       if (this.has_consumable_on_slot(this.selected_slot)) {
         this.current_status = '> TODO: Utiliser consomable';
@@ -527,11 +540,10 @@ export class Labyrinth {
         }
       }
 
-      this.update_targets();
+      this.move_targets_or_die(hero_pos);
       return;
     }
 
-    let hero_pos = this.pnjs.get('@');
     const future_pos = this.get_future_position(hero_pos);
 
     const ret = this.try_enter_or_exit(hero_pos);
@@ -545,7 +557,7 @@ export class Labyrinth {
     }
 
     if (this.try_pick_or_drop_item(hero_pos)) {
-      this.update_targets();
+      this.move_targets_or_die(hero_pos);
       return;
     }
 
@@ -561,7 +573,7 @@ export class Labyrinth {
         }
 
         this.action = '';
-        this.update_targets();
+        this.move_targets_or_die(hero_pos);
         return;
       }
     }
@@ -572,7 +584,7 @@ export class Labyrinth {
         selected_slot.symbol = '';
         selected_slot.usage = -1;
         this.action = '';
-        this.update_targets();
+        this.move_targets_or_die(hero_pos);
         return;
       }
 
@@ -586,14 +598,14 @@ export class Labyrinth {
         }
 
         this.action = '';
-        this.update_targets();
+        this.move_targets_or_die(hero_pos);
         return;
       }
     }
 
     if (future_pos[2] !== '') {
       this.current_status = future_pos[2];
-      this.update_targets();
+      this.move_targets_or_die(hero_pos);
       return;
     }
 
@@ -603,7 +615,7 @@ export class Labyrinth {
 
     hero_pos = this.move_hero(hero_pos, future_pos[0], future_pos[1]);
     this.move_pnjs(hero_pos);
-    this.update_targets();
+    this.move_targets_or_die(hero_pos);
   }
   draw_map() {
     for (let y = 0; y < consts.map_lines; y++) {

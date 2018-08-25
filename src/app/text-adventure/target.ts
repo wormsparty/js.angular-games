@@ -1,12 +1,13 @@
 import {Pos} from './map_logic';
 import {Labyrinth} from './labyrinth';
+import * as consts from './const';
 
 export class Target {
   pos: Pos;
   symbol: string;
-  update: (Labyrinth, Target) => boolean;
+  update: () => Pos;
 
-  constructor(pos: Pos, symbol: string, update: (Labyrinth, Target) => boolean) {
+  constructor(pos: Pos, symbol: string, update: () => Pos) {
     this.pos = pos;
     this.symbol = symbol;
     this.update = update;
@@ -25,7 +26,7 @@ export class TargetSpawner {
     this.targets = [];
   }
 
-  update(l: Labyrinth): void {
+  update(l: Labyrinth, hero_pos: Pos): Pos {
     const new_target = this.do_update(this.tick);
 
     if (new_target !== undefined) {
@@ -33,16 +34,28 @@ export class TargetSpawner {
     }
 
     for (let i = 0; i < this.targets.length;) {
-      if (this.targets[i].update(l, this.targets[i])) {
+      const target = this.targets[i];
+      const dp = target.update();
+
+      target.pos.x += dp.x;
+      target.pos.y += dp.y;
+
+      if (target.pos.y >= consts.map_lines || target.pos.y < 0
+        || target.pos.x < 0 || target.pos.x >= consts.char_per_line
+        || l.get_symbol_at(target.pos) === '#') {
         this.targets.splice(i, 1);
         continue;
       }
 
+      if (this.targets[i].pos.equals(hero_pos)) {
+        hero_pos.x += dp.x;
+        hero_pos.y += dp.y;
+      }
+
       i++;
-    }
-    for (const target of this.targets) {
     }
 
     this.tick++;
+    return hero_pos;
   }
 }

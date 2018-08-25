@@ -338,9 +338,8 @@ export const AllMaps: Map<string, LevelMap> = new Map([
         return undefined;
       }
 
-      return new Target(new Pos(24 + tick, -1), 'O', function(l: Labyrinth, t: Target): boolean {
-        t.pos.y++;
-        return t.pos.y >= consts.map_lines || l.get_symbol_at(t.pos) === '#';
+      return new Target(new Pos(24 + tick, -1), 'O', function(): Pos {
+        return new Pos(0, 1);
       });
     }),
   )],
