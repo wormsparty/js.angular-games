@@ -12,14 +12,28 @@ export class Target {
     this.symbol = symbol;
     this.update = update;
   }
+
+  copy(): Target {
+    return new Target(this.pos.copy(), this.symbol, this.update);
+  }
 }
 export class SpawnerState {
   readonly targets: Array<Target>;
   tick: number;
 
-  constructor(tragets: Array<Target>, tick: number) {
-    this.targets = tragets;
+  constructor(targets: Array<Target>, tick: number) {
+    this.targets = targets;
     this.tick = tick;
+  }
+
+  copy(): SpawnerState {
+    const cpy = new SpawnerState([], this.tick);
+
+    for (const t of this.targets) {
+      cpy.targets.push(t.copy());
+    }
+
+    return cpy;
   }
 }
 

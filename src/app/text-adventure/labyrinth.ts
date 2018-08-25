@@ -55,18 +55,64 @@ class PersistedMapData {
   pnj_position: Map<string, Pos>;
   item_positions: Map<string, Array<ObjPos>>;
   spawner_state: SpawnerState;
+
+  copy(): PersistedMapData {
+    const cpy = new PersistedMapData();
+
+    cpy.pnj_position = new Map<string, Pos>();
+
+    for (const [pnj, position] of this.pnj_position) {
+      cpy.pnj_position.set(pnj, position.copy());
+    }
+
+    cpy.item_positions = new Map<string, Array<ObjPos>>();
+
+    for (const [item, positions] of this.item_positions) {
+      const pss: Array<ObjPos> = [];
+
+      for (const p of positions) {
+        pss.push(p.copy());
+      }
+
+      cpy.item_positions.set(item, pss);
+    }
+
+    cpy.spawner_state = this.spawner_state.copy();
+    return cpy;
+  }
+}
+
+class PersistedData {
+  slots: Array<Item>;
+  coins: number;
+  hero_position: Pos;
+  map_data: Map<string, PersistedMapData>;
+  current_map_name: string;
+
+  copy(): PersistedData {
+    const cpy = new PersistedData();
+
+    cpy.slots = new Array<Item>(this.slots.length);
+
+    for (let i = 0; i < this.slots.length; i++) {
+      cpy.slots[i] = new Item(this.slots[i].symbol, this.slots[i].usage);
+    }
+
+    cpy.coins = this.coins;
+    cpy.hero_position = this.hero_position.copy();
+
+    cpy.map_data = new Map<string, PersistedMapData>();
+
+    for (const [name, data] of this.map_data) {
+      cpy.map_data.set(name, data.copy());
+    }
+
+    cpy.current_map_name = this.current_map_name;
+    return cpy;
+  }
 }
 
 export class Labyrinth {
-  //
-  // Persisted block
-  //
-  public slots: Array<Item>;
-  private coins: number;
-  private map_data: Map<string, PersistedMapData>;
-
-  // The rest is either parsed at runtime
-  // or unimportant to persist
   public pressed: Map<string, boolean>;
   private readonly engine: Engine;
   readonly char_width: number;
@@ -74,13 +120,15 @@ export class Labyrinth {
   private selected_slot: number;
   private action: string;
 
-  private hero_position: Pos;
-  private current_map_data: PersistedMapData;
-  private current_map_name: string;
-  private current_map: LevelMap;
+  last_save: PersistedData;
+  persisted_data: PersistedData;
+
+  current_map: LevelMap;
+  current_map_data: PersistedMapData;
 
   parse_all_maps(): void {
-    this.map_data = new Map<string, PersistedMapData>();
+    this.persisted_data = new PersistedData();
+    this.persisted_data.map_data = new Map<string, PersistedMapData>();
 
     for (const [key, map] of AllMaps) {
       map.parse(key); // TODO: Pourquoi map.parse est détectée comme non utilisée??
@@ -107,11 +155,7 @@ export class Labyrinth {
         map_data.item_positions.set(item, item_positions);
       }
 
-      this.map_data.set(key, map_data);
-
-      //
-      // TODO: If loading
-      //
+      this.persisted_data.map_data.set(key, map_data);
     }
   }
   draw(): void {
@@ -145,7 +189,7 @@ export class Labyrinth {
         for (let i = 0 ; i < positions.length; i++) {
           if (positions[i].equals(hero_pos)) {
             if (item === '$') {
-              this.coins++;
+              this.persisted_data.coins++;
               positions.splice(i, 1);
               current_status = '> 1 $' + consts.pris['M'];
             } else {
@@ -177,7 +221,7 @@ export class Labyrinth {
   }
   drop_current_slot_item_at(pos: Pos) {
     // Drop item on the ground if any
-    const selected_slot = this.slots[this.selected_slot];
+    const selected_slot = this.persisted_data.slots[this.selected_slot];
 
     if (selected_slot.symbol !== '') {
       if (!this.current_map_data.item_positions.has(selected_slot.symbol)) {
@@ -189,7 +233,7 @@ export class Labyrinth {
   }
   try_pick_or_drop_item(hero_pos): boolean {
     if (this.pressed.get('q')) {
-      const selected_slot = this.slots[this.selected_slot];
+      const selected_slot = this.persisted_data.slots[this.selected_slot];
 
       if (selected_slot.symbol === '') {
         this.current_status = '> Il n\'y a rien à déposer';
@@ -226,7 +270,7 @@ export class Labyrinth {
 
     if (this.pressed.get('5')) {
       let item_picked = false;
-      let coins = this.coins;
+      let coins = this.persisted_data.coins;
       let current_status = this.current_status;
 
       for (const [item, positions] of this.current_map_data.item_positions) {
@@ -242,8 +286,8 @@ export class Labyrinth {
 
               if (consts.throwable_items.indexOf(item) > -1) {
                 for (let j = 0; j < 3 ; j++) {
-                  if (this.slots[j].symbol === item) {
-                    this.slots[j].usage++;
+                  if (this.persisted_data.slots[j].symbol === item) {
+                    this.persisted_data.slots[j].usage++;
                     found_slot = true;
                     break;
                   }
@@ -252,8 +296,8 @@ export class Labyrinth {
 
               if (!found_slot) {
                 this.drop_current_slot_item_at(positions[i]);
-                this.slots[this.selected_slot].symbol = item;
-                this.slots[this.selected_slot].usage = positions[i].usage;
+                this.persisted_data.slots[this.selected_slot].symbol = item;
+                this.persisted_data.slots[this.selected_slot].usage = positions[i].usage;
               }
 
               const upper = make_first_letter_upper(description.text);
@@ -283,7 +327,7 @@ export class Labyrinth {
       if (!item_picked) {
         this.current_status = '';
       } else {
-        this.coins = coins;
+        this.persisted_data.coins = coins;
         this.current_status = current_status;
       }
 
@@ -341,7 +385,8 @@ export class Labyrinth {
     if (ret[0]) {
       this.change_map(ret[2]);
       hero_pos = ret[1];
-      this.hero_position = ret[1];
+      this.persisted_data.hero_position = ret[1];
+      this.save();
     } else {
       const evt = this.try_hit_target(hero_pos, aim_pos);
 
@@ -426,10 +471,18 @@ export class Labyrinth {
       }
     }
   }
-  change_map(map_name): void {
+  change_map(map_name: string): void {
     this.current_map = AllMaps.get(map_name);
-    this.current_map_name = map_name;
-    this.current_map_data = this.map_data.get(map_name);
+    this.persisted_data.current_map_name = map_name;
+    this.current_map_data = this.persisted_data.map_data.get(map_name);
+  }
+  save() {
+    this.last_save = this.persisted_data.copy();
+    console.log('Saved');
+  }
+  load_last_save() {
+    this.persisted_data = this.last_save.copy();
+    this.change_map(this.persisted_data.current_map_name);
   }
   try_teleport(hero_pos, future_pos): [boolean, Pos, string] {
     for (const [chr, teleports_for_char] of this.current_map.teleports) {
@@ -524,10 +577,12 @@ export class Labyrinth {
     hero_pos = this.update_targets(hero_pos);
 
     if (consts.walkable_symbols.indexOf(this.get_symbol_at(hero_pos)) === -1) {
-      console.log('DEAD');
+      // TODO: Game over screen
+      this.load_last_save();
+    } else {
+      this.persisted_data.hero_position = hero_pos;
     }
 
-    this.hero_position = hero_pos;
   }
   update_on_map() {
     if (this.pressed.get('a')) {
@@ -558,11 +613,13 @@ export class Labyrinth {
       return;
     }
 
+    const selected_slot = this.persisted_data.slots[this.selected_slot];
+
     if (this.pressed.get(' ') && this.has_usable_item_on_slot(this.selected_slot)) {
       if (this.has_consumable_on_slot(this.selected_slot)) {
         this.current_status = '> TODO: Utiliser consomable';
-        this.slots[this.selected_slot].symbol = '';
-        this.slots[this.selected_slot].usage = -1;
+        selected_slot.symbol = '';
+        selected_slot.usage = -1;
         this.action = '';
       } else {
         if (this.action !== 'use') {
@@ -572,28 +629,27 @@ export class Labyrinth {
         }
       }
 
-      this.move_targets_or_die(this.hero_position);
+      this.move_targets_or_die(this.persisted_data.hero_position);
       return;
     }
 
-    const future_pos = this.get_future_position(this.hero_position);
+    const future_pos = this.get_future_position(this.persisted_data.hero_position);
 
-    const ret = this.try_enter_or_exit(this.hero_position);
+    const ret = this.try_enter_or_exit(this.persisted_data.hero_position);
 
     if (ret !== undefined) {
       if (ret[0]) {
         this.change_map(ret[2]);
-        this.hero_position = ret[1];
+        this.persisted_data.hero_position = ret[1];
+        this.save();
         return;
       }
     }
 
-    if (this.try_pick_or_drop_item(this.hero_position)) {
-      this.move_targets_or_die(this.hero_position);
+    if (this.try_pick_or_drop_item(this.persisted_data.hero_position)) {
+      this.move_targets_or_die(this.persisted_data.hero_position);
       return;
     }
-
-    const selected_slot = this.slots[this.selected_slot];
 
     if (this.action === 'use') {
       if (this.has_spell_on_slot(this.selected_slot)) {
@@ -605,7 +661,7 @@ export class Labyrinth {
         }
 
         this.action = '';
-        this.move_targets_or_die(this.hero_position);
+        this.move_targets_or_die(this.persisted_data.hero_position);
         return;
       }
     }
@@ -616,7 +672,7 @@ export class Labyrinth {
         selected_slot.symbol = '';
         selected_slot.usage = -1;
         this.action = '';
-        this.move_targets_or_die(this.hero_position);
+        this.move_targets_or_die(this.persisted_data.hero_position);
         return;
       }
 
@@ -630,14 +686,14 @@ export class Labyrinth {
         }
 
         this.action = '';
-        this.move_targets_or_die(this.hero_position);
+        this.move_targets_or_die(this.persisted_data.hero_position);
         return;
       }
     }
 
     if (future_pos[2] !== '') {
       this.current_status = future_pos[2];
-      this.move_targets_or_die(this.hero_position);
+      this.move_targets_or_die(this.persisted_data.hero_position);
       return;
     }
 
@@ -645,9 +701,9 @@ export class Labyrinth {
       return;
     }
 
-    this.hero_position = this.move_hero(this.hero_position, future_pos[0], future_pos[1]);
-    this.move_pnjs(this.hero_position);
-    this.move_targets_or_die(this.hero_position);
+    this.persisted_data.hero_position = this.move_hero(this.persisted_data.hero_position, future_pos[0], future_pos[1]);
+    this.move_pnjs(this.persisted_data.hero_position);
+    this.move_targets_or_die(this.persisted_data.hero_position);
   }
   draw_map() {
     for (let y = 0; y < consts.map_lines; y++) {
@@ -720,7 +776,8 @@ export class Labyrinth {
     }
 
     this.draw_character('@',
-      this.to_screen_coord(this.hero_position.x, this.hero_position.y + consts.header_size), consts.pnj2color['@']);
+      this.to_screen_coord(this.persisted_data.hero_position.x, this.persisted_data.hero_position.y + consts.header_size),
+      consts.pnj2color['@']);
   }
   draw_items() {
     for (const [item, positions] of this.current_map_data.item_positions) {
@@ -743,7 +800,7 @@ export class Labyrinth {
       color = consts.OverlayNormal;
     }
 
-    const slot = this.slots[idx];
+    const slot = this.persisted_data.slots[idx];
     let text = chr + '. ' + make_first_letter_upper(consts.item2description[slot.symbol].text);
 
     if (slot.usage > 1) {
@@ -753,7 +810,7 @@ export class Labyrinth {
     this.engine.text(text, pos, color);
   }
   has_weapon_on_slot(slot: number) {
-    return consts.weapon_items.indexOf(this.slots[slot].symbol) > -1;
+    return consts.weapon_items.indexOf(this.persisted_data.slots[slot].symbol) > -1;
   }
   has_weapon_equiped() {
     return this.has_weapon_on_slot(0)
@@ -761,13 +818,13 @@ export class Labyrinth {
         || this.has_weapon_on_slot(2);
   }
   has_throwable_on_slot(slot: number) {
-    return consts.throwable_items.indexOf(this.slots[slot].symbol) > -1;
+    return consts.throwable_items.indexOf(this.persisted_data.slots[slot].symbol) > -1;
   }
   has_spell_on_slot(slot: number) {
-    return consts.spell_items.indexOf(this.slots[slot].symbol) > -1;
+    return consts.spell_items.indexOf(this.persisted_data.slots[slot].symbol) > -1;
   }
   has_consumable_on_slot(slot: number) {
-    return consts.consumable_items.indexOf(this.slots[slot].symbol) > -1;
+    return consts.consumable_items.indexOf(this.persisted_data.slots[slot].symbol) > -1;
   }
   has_usable_item_on_slot(slot: number) {
     return this.has_consumable_on_slot(slot) || this.has_spell_on_slot(slot);
@@ -798,7 +855,7 @@ export class Labyrinth {
   draw_overlay() {
     this.engine.text(this.current_status, this.to_screen_coord(2, 1), consts.White);
 
-    const money = currencyFormatter.format(this.coins) + ' $';
+    const money = currencyFormatter.format(this.persisted_data.coins) + ' $';
     this.engine.text(money, this.to_screen_coord(consts.char_per_line - money.length, 1), item2color['$']);
 
     const h = consts.map_lines + consts.header_size + 1;
@@ -839,9 +896,9 @@ export class Labyrinth {
       this.engine.text('␣', this.to_screen_coord(29, h + 1, -3, -2), consts.OverlayNormal);
     }
 
-    const current_symbol = this.get_symbol_at(this.hero_position);
+    const current_symbol = this.get_symbol_at(this.persisted_data.hero_position);
 
-    if (this.slots[this.selected_slot].symbol !== '' && current_symbol !== '>' && current_symbol !== '<') {
+    if (this.persisted_data.slots[this.selected_slot].symbol !== '' && current_symbol !== '>' && current_symbol !== '<') {
       this.engine.text('q Déposer', this.to_screen_coord(29, h + 2), consts.OverlayHighlight);
     } else {
       this.engine.text('q', this.to_screen_coord(29, h + 2), consts.OverlayNormal);
@@ -893,12 +950,13 @@ export class Labyrinth {
 
     // If there is no save
     this.change_map(initial_map);
-    this.hero_position = this.current_map.start;
-    this.coins = 10000;
-    this.slots = new Array<Item>(3);
-    this.slots[0] = new Item('/', -1);
-    this.slots[1] = new Item('=', consts.spell_usage['=']);
-    this.slots[2] = new Item('*', 10);
+    this.persisted_data.hero_position = this.current_map.start;
+    this.persisted_data.coins = 10000;
+    this.persisted_data.slots = new Array<Item>(3);
+    this.persisted_data.slots[0] = new Item('/', -1);
+    this.persisted_data.slots[1] = new Item('=', consts.spell_usage['=']);
+    this.persisted_data.slots[2] = new Item('*', 10);
+    this.save();
 
     // TODO: Load
   }
