@@ -14,6 +14,10 @@ export class Pos {
   equals(other_pos: Pos) {
     return this.x === other_pos.x && this.y === other_pos.y;
   }
+
+  copy() {
+    return new Pos(this.x, this.y);
+  }
 }
 
 export class TeleportPos extends Pos {
@@ -40,6 +44,10 @@ export class ObjPos extends Pos {
     this.usage = usage;
     this.price = price;
   }
+
+  copy() {
+    return new ObjPos(this.x, this.y, this.usage, this.price);
+  }
 }
 export class LevelMap {
   map: string;
@@ -49,8 +57,8 @@ export class LevelMap {
   texts: Map<string, Pos>;
   teleports: Map<string, Array<TeleportPos>>;
   teleport_count: Map<string, number>;
-  pnj_positions: Map<string, Array<Pos>>;
-  item_positions: Map<string, Array<ObjPos>>;
+  initial_pnj_positions: Map<string, Array<Pos>>;
+  initial_item_positions: Map<string, Array<ObjPos>>;
   start: Pos;
   background_color: string;
   text_color: string;
@@ -68,8 +76,8 @@ export class LevelMap {
     this.texts = texts;
     this.teleports = new Map<string, Array<TeleportPos>>();
     this.teleport_count = new Map<string, number>();
-    this.pnj_positions = new Map<string, Array<Pos>>();
-    this.item_positions = new Map<string, Array<ObjPos>>();
+    this.initial_pnj_positions = new Map<string, Array<Pos>>();
+    this.initial_item_positions = new Map<string, Array<ObjPos>>();
     this.start = new Pos(0, 0);
     this.pnj2position = pnj2position;
     this.target_spawner = target_spawner;
@@ -126,8 +134,8 @@ export class LevelMap {
           this.teleports.get(chr).push(new TeleportPos(x, y, this.teleport_count.get(chr)));
           this.teleport_count.set(chr, this.teleport_count.get(chr) + 1);
         } else if (consts.item_symbols.indexOf(chr) > -1) {
-          if (!this.item_positions.has(chr)) {
-            this.item_positions.set(chr, []);
+          if (!this.initial_item_positions.has(chr)) {
+            this.initial_item_positions.set(chr, []);
           }
 
           let usage = consts.spell_usage[chr];
@@ -141,16 +149,16 @@ export class LevelMap {
             price = consts.item2price[chr];
           }
 
-          this.item_positions.get(chr).push(new ObjPos(x, y, usage, price));
+          this.initial_item_positions.get(chr).push(new ObjPos(x, y, usage, price));
         } else if (chr !== ' ' && chr !== undefined) {
           if (chr === '@') {
             this.start = new Pos(x, y);
           } else {
-            if (!this.pnj_positions.has(chr)) {
-              this.pnj_positions.set(chr, []);
+            if (!this.initial_pnj_positions.has(chr)) {
+              this.initial_pnj_positions.set(chr, []);
             }
 
-            this.pnj_positions.get(chr).push(new Pos(x, y));
+            this.initial_pnj_positions.get(chr).push(new Pos(x, y));
           }
         }
       }

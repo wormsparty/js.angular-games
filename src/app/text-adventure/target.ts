@@ -13,28 +13,32 @@ export class Target {
     this.update = update;
   }
 }
+export class SpawnerState {
+  readonly targets: Array<Target>;
+  tick: number;
+
+  constructor(tragets: Array<Target>, tick: number) {
+    this.targets = tragets;
+    this.tick = tick;
+  }
+}
 
 export class TargetSpawner {
-  readonly targets: Array<Target>;
-
-  private tick: number;
   private readonly do_update: (number) => Target;
 
   constructor(update: (number) => Target) {
     this.do_update = update;
-    this.tick = 0;
-    this.targets = [];
   }
 
-  update(l: Labyrinth, hero_pos: Pos): Pos {
-    const new_target = this.do_update(this.tick);
+  update(l: Labyrinth, stateHolder: SpawnerState, hero_pos: Pos): Pos {
+    const new_target = this.do_update(stateHolder.tick);
 
     if (new_target !== undefined) {
-      this.targets.push(new_target);
+      stateHolder.targets.push(new_target);
     }
 
-    for (let i = 0; i < this.targets.length;) {
-      const target = this.targets[i];
+    for (let i = 0; i < stateHolder.targets.length;) {
+      const target = stateHolder.targets[i];
       const dp = target.update();
 
       target.pos.x += dp.x;
@@ -43,11 +47,11 @@ export class TargetSpawner {
       if (target.pos.y >= consts.map_lines || target.pos.y < 0
         || target.pos.x < 0 || target.pos.x >= consts.char_per_line
         || l.get_symbol_at(target.pos) === '#') {
-        this.targets.splice(i, 1);
+        stateHolder.targets.splice(i, 1);
         continue;
       }
 
-      if (this.targets[i].pos.equals(hero_pos)) {
+      if (stateHolder.targets[i].pos.equals(hero_pos)) {
         hero_pos.x += dp.x;
         hero_pos.y += dp.y;
       }
@@ -55,7 +59,7 @@ export class TargetSpawner {
       i++;
     }
 
-    this.tick++;
+    stateHolder.tick++;
     return hero_pos;
   }
 }

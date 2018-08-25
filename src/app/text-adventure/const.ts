@@ -4,7 +4,7 @@ export const header_size = 3;
 
 export const DefaultBackgroundColor = '#000000';
 export const DefaultTextColor =  '#FFFF00';
-export const White =  '#FFFFFF';
+export const White = '#FFFFFF';
 export const OverlayNormal =  '#555555';
 export const OverlayHighlight =  '#FFFFFF';
 export const OverlaySelected =  '#FF00FF';

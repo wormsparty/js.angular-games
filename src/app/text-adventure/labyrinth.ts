@@ -3,6 +3,7 @@ import {AllMaps} from './map_content';
 import * as consts from './const';
 import {LevelMap, Pos, ObjPos} from './map_logic';
 import {item2color, item2description} from './const';
+import {SpawnerState} from './target';
 
 const initial_map = 'training';
 
@@ -50,27 +51,67 @@ class Item {
   }
 }
 
+class PersistedMapData {
+  pnj_position: Map<string, Pos>;
+  item_positions: Map<string, Array<ObjPos>>;
+  spawner_state: SpawnerState;
+}
+
 export class Labyrinth {
+  //
+  // Persisted block
+  //
   public slots: Array<Item>;
-
-  public pressed: Map<string, boolean>;
-
-  private readonly engine: Engine;
-
-  readonly char_width: number;
-
-  private current_map_name: string;
-  private current_status: string;
   private coins: number;
-  private current_map: LevelMap;
-  private pnjs: Map<string, Pos>;
+  private map_data: Map<string, PersistedMapData>;
 
+  // The rest is either parsed at runtime
+  // or unimportant to persist
+  public pressed: Map<string, boolean>;
+  private readonly engine: Engine;
+  readonly char_width: number;
+  private current_status: string;
   private selected_slot: number;
   private action: string;
 
-  static parse_all_maps(): void {
+  private hero_position: Pos;
+  private current_map_data: PersistedMapData;
+  private current_map_name: string;
+  private current_map: LevelMap;
+
+  parse_all_maps(): void {
+    this.map_data = new Map<string, PersistedMapData>();
+
     for (const [key, map] of AllMaps) {
-      map.parse(key);
+      map.parse(key); // TODO: Pourquoi map.parse est détectée comme non utilisée??
+
+      const map_data = new PersistedMapData();
+      map_data.item_positions = new Map<string, Array<ObjPos>>();
+      map_data.pnj_position = new Map<string, Pos>();
+      map_data.spawner_state = new SpawnerState([], 0);
+
+      //
+      // If new fresh state
+      //
+      for (const [pnj, positions] of map.initial_pnj_positions) {
+        map_data.pnj_position.set(pnj, positions[Math.floor(Math.random() * positions.length)].copy());
+      }
+
+      for (const [item, positions] of map.initial_item_positions) {
+        const item_positions: Array<ObjPos> = [];
+
+        for (let i = 0; i < positions.length; i++) {
+          item_positions.push(positions[i].copy());
+        }
+
+        map_data.item_positions.set(item, item_positions);
+      }
+
+      this.map_data.set(key, map_data);
+
+      //
+      // TODO: If loading
+      //
     }
   }
   draw(): void {
@@ -100,7 +141,7 @@ export class Labyrinth {
     }
 
     if (!status_set) {
-      for (const [item, positions] of this.current_map.item_positions) {
+      for (const [item, positions] of this.current_map_data.item_positions) {
         for (let i = 0 ; i < positions.length; i++) {
           if (positions[i].equals(hero_pos)) {
             if (item === '$') {
@@ -139,11 +180,11 @@ export class Labyrinth {
     const selected_slot = this.slots[this.selected_slot];
 
     if (selected_slot.symbol !== '') {
-      if (!this.current_map.item_positions.has(selected_slot.symbol)) {
-        this.current_map.item_positions.set(selected_slot.symbol, []);
+      if (!this.current_map_data.item_positions.has(selected_slot.symbol)) {
+        this.current_map_data.item_positions.set(selected_slot.symbol, []);
       }
 
-      this.current_map.item_positions.get(selected_slot.symbol).push(new ObjPos(pos.x, pos.y, selected_slot.usage, 0));
+      this.current_map_data.item_positions.get(selected_slot.symbol).push(new ObjPos(pos.x, pos.y, selected_slot.usage, 0));
     }
   }
   try_pick_or_drop_item(hero_pos): boolean {
@@ -155,7 +196,7 @@ export class Labyrinth {
         return true;
       }
 
-      for (const [item, positions] of this.current_map.item_positions) {
+      for (const [item, positions] of this.current_map_data.item_positions) {
         for (let i = 0; i < positions.length; i++) {
           if (positions[i].equals(hero_pos)) {
             this.current_status = '> Il y a déjà un objet ici';
@@ -188,7 +229,7 @@ export class Labyrinth {
       let coins = this.coins;
       let current_status = this.current_status;
 
-      for (const [item, positions] of this.current_map.item_positions) {
+      for (const [item, positions] of this.current_map_data.item_positions) {
         const description = consts.item2description[item];
 
         for (let i = 0 ; i < positions.length; i++) {
@@ -271,11 +312,7 @@ export class Labyrinth {
     }
   }
   try_talk(future_pos: Pos): boolean {
-    for (const [pnj, pnj_pos] of this.pnjs) {
-      if (pnj === '@') {
-        return false;
-      }
-
+    for (const [pnj, pnj_pos] of this.current_map_data.pnj_position) {
       if (pnj_pos.equals(future_pos)) {
         this.current_status = consts.pnj2dialog[pnj];
         return true;
@@ -285,19 +322,15 @@ export class Labyrinth {
     return false;
   }
   move_pnjs(future_pos): void {
-    for (const [p, pnj] of this.pnjs) {
-      if (p === '@') {
-        return;
-      }
-
+    for (const [p, pnj] of this.current_map_data.pnj_position) {
       if (this.current_map.pnj2position !== undefined && this.current_map.pnj2position.has(p)) {
-        this.pnjs.set(p, this.current_map.pnj2position.get(p)(this, pnj, future_pos));
+        this.current_map_data.pnj_position.set(p, this.current_map.pnj2position.get(p)(this, pnj, future_pos));
       } else {
         const new_pnj = get_random_mouvement(pnj);
 
         if (!new_pnj.equals(future_pos)
           && consts.walkable_symbols.indexOf(this.get_symbol_at(new_pnj)) > -1) {
-          this.pnjs.set(p, new_pnj);
+          this.current_map_data.pnj_position.set(p, new_pnj);
         }
       }
     }
@@ -308,11 +341,11 @@ export class Labyrinth {
     if (ret[0]) {
       this.change_map(ret[2]);
       hero_pos = ret[1];
-      this.pnjs.set('@', ret[1]);
+      this.hero_position = ret[1];
     } else {
       if (!this.try_hit_target(hero_pos, aim_pos)) {
         hero_pos = walkable_pos;
-        this.pnjs.set('@', walkable_pos);
+        this.current_map_data.pnj_position.set('@', walkable_pos);
         this.update_current_status(hero_pos);
       } else {
         this.current_status = '> Cible touchée!';
@@ -395,13 +428,7 @@ export class Labyrinth {
   change_map(map_name): void {
     this.current_map = AllMaps.get(map_name);
     this.current_map_name = map_name;
-    this.pnjs = new Map<string, Pos>();
-
-    for (const [pnj, positions] of this.current_map.pnj_positions) {
-      this.pnjs.set(pnj, positions[Math.floor(Math.random() * positions.length)]);
-    }
-
-    this.pnjs.set('@', this.current_map.start);
+    this.current_map_data = this.map_data.get(map_name);
   }
   try_teleport(hero_pos, future_pos): [boolean, Pos, string] {
     for (const [chr, teleports_for_char] of this.current_map.teleports) {
@@ -466,7 +493,7 @@ export class Labyrinth {
       return false;
     }
 
-    const targets = this.current_map.target_spawner.targets;
+    const targets = this.current_map_data.spawner_state.targets;
 
     for (let i = 0; i < targets.length;) {
       const target = targets[i];
@@ -481,7 +508,7 @@ export class Labyrinth {
   }
   update_targets(hero_pos: Pos): Pos {
     if (this.current_map.target_spawner !== undefined) {
-      return this.current_map.target_spawner.update(this, hero_pos);
+      return this.current_map.target_spawner.update(this, this.current_map_data.spawner_state, hero_pos);
     }
 
     return hero_pos;
@@ -493,7 +520,7 @@ export class Labyrinth {
       console.log('DEAD');
     }
 
-    this.pnjs['@'] = hero_pos;
+    this.hero_position = hero_pos;
   }
   update_on_map() {
     if (this.pressed.get('a')) {
@@ -524,8 +551,6 @@ export class Labyrinth {
       return;
     }
 
-    let hero_pos = this.pnjs.get('@');
-
     if (this.pressed.get(' ') && this.has_usable_item_on_slot(this.selected_slot)) {
       if (this.has_consumable_on_slot(this.selected_slot)) {
         this.current_status = '> TODO: Utiliser consomable';
@@ -540,24 +565,24 @@ export class Labyrinth {
         }
       }
 
-      this.move_targets_or_die(hero_pos);
+      this.move_targets_or_die(this.hero_position);
       return;
     }
 
-    const future_pos = this.get_future_position(hero_pos);
+    const future_pos = this.get_future_position(this.hero_position);
 
-    const ret = this.try_enter_or_exit(hero_pos);
+    const ret = this.try_enter_or_exit(this.hero_position);
 
     if (ret !== undefined) {
       if (ret[0]) {
         this.change_map(ret[2]);
-        this.pnjs.set('@', ret[1]);
+        this.hero_position = ret[1];
         return;
       }
     }
 
-    if (this.try_pick_or_drop_item(hero_pos)) {
-      this.move_targets_or_die(hero_pos);
+    if (this.try_pick_or_drop_item(this.hero_position)) {
+      this.move_targets_or_die(this.hero_position);
       return;
     }
 
@@ -573,7 +598,7 @@ export class Labyrinth {
         }
 
         this.action = '';
-        this.move_targets_or_die(hero_pos);
+        this.move_targets_or_die(this.hero_position);
         return;
       }
     }
@@ -584,7 +609,7 @@ export class Labyrinth {
         selected_slot.symbol = '';
         selected_slot.usage = -1;
         this.action = '';
-        this.move_targets_or_die(hero_pos);
+        this.move_targets_or_die(this.hero_position);
         return;
       }
 
@@ -598,14 +623,14 @@ export class Labyrinth {
         }
 
         this.action = '';
-        this.move_targets_or_die(hero_pos);
+        this.move_targets_or_die(this.hero_position);
         return;
       }
     }
 
     if (future_pos[2] !== '') {
       this.current_status = future_pos[2];
-      this.move_targets_or_die(hero_pos);
+      this.move_targets_or_die(this.hero_position);
       return;
     }
 
@@ -613,9 +638,9 @@ export class Labyrinth {
       return;
     }
 
-    hero_pos = this.move_hero(hero_pos, future_pos[0], future_pos[1]);
-    this.move_pnjs(hero_pos);
-    this.move_targets_or_die(hero_pos);
+    this.hero_position = this.move_hero(this.hero_position, future_pos[0], future_pos[1]);
+    this.move_pnjs(this.hero_position);
+    this.move_targets_or_die(this.hero_position);
   }
   draw_map() {
     for (let y = 0; y < consts.map_lines; y++) {
@@ -668,7 +693,7 @@ export class Labyrinth {
   }
   draw_targets() {
     if (this.current_map.target_spawner !== undefined) {
-      for (const target of this.current_map.target_spawner.targets) {
+      for (const target of this.current_map_data.spawner_state.targets) {
         this.engine.rect(this.to_screen_coord(target.pos.x, target.pos.y + consts.header_size),
           this.char_width, 16, this.current_map.background_color);
         this.engine.text(target.symbol, this.to_screen_coord(target.pos.x, target.pos.y + consts.header_size), '#FF9900');
@@ -676,7 +701,7 @@ export class Labyrinth {
     }
   }
   draw_pnjs() {
-    for (const [p, pnj] of this.pnjs) {
+    for (const [p, pnj] of this.current_map_data.pnj_position) {
       const coord = this.to_screen_coord(pnj.x, pnj.y + consts.header_size);
       const color = consts.pnj2color[p];
 
@@ -685,7 +710,7 @@ export class Labyrinth {
     }
   }
   draw_items() {
-    for (const [item, positions] of this.current_map.item_positions) {
+    for (const [item, positions] of this.current_map_data.item_positions) {
 
       for (let i = 0; i < positions.length; i++) {
         const coord = this.to_screen_coord(positions[i].x, positions[i].y + consts.header_size);
@@ -733,7 +758,7 @@ export class Labyrinth {
     return this.has_weapon_on_slot(slot) || this.has_throwable_on_slot(slot);
   }
   has_item_or_pnj_at(pos: Pos, current_pnj: string) {
-    for (const [item, positions] of this.current_map.item_positions) {
+    for (const [item, positions] of this.current_map_data.item_positions) {
       for (let i = 0; i < positions.length; i++) {
         if (positions[i].equals(pos)) {
           return true;
@@ -741,7 +766,7 @@ export class Labyrinth {
       }
     }
 
-    for (const [pnj, pnj_pos] of this.pnjs) {
+    for (const [pnj, pnj_pos] of this.current_map_data.pnj_position) {
       if (pnj !== current_pnj && pnj_pos.equals(pos)) {
         return true;
       }
@@ -796,8 +821,7 @@ export class Labyrinth {
       this.engine.text('␣', this.to_screen_coord(29, h + 1, -3, -2), consts.OverlayNormal);
     }
 
-    const hero_pos = this.pnjs.get('@');
-    const current_symbol = this.get_symbol_at(hero_pos);
+    const current_symbol = this.get_symbol_at(this.hero_position);
 
     if (this.slots[this.selected_slot].symbol !== '' && current_symbol !== '>' && current_symbol !== '<') {
       this.engine.text('q Déposer', this.to_screen_coord(29, h + 2), consts.OverlayHighlight);
@@ -843,19 +867,21 @@ export class Labyrinth {
     ]);
 
     this.current_status = '';
-    this.coins = 10000;
     this.char_width = this.engine.get_char_width();
+    this.selected_slot = 0;
+    this.action = '';
 
+    this.parse_all_maps();
+
+    // If there is no save
+    this.change_map(initial_map);
+    this.hero_position = this.current_map.start;
+    this.coins = 10000;
     this.slots = new Array<Item>(3);
     this.slots[0] = new Item('/', -1);
     this.slots[1] = new Item('=', consts.spell_usage['=']);
     this.slots[2] = new Item('*', 10);
 
-    this.selected_slot = 0;
-    this.action = '';
-
-    Labyrinth.parse_all_maps();
-
-    this.change_map(initial_map);
-   }
+    // TODO: Load
+  }
 }
