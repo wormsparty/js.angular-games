@@ -72,7 +72,7 @@ export class LevelMap {
   meta: string;
   teleport_map: Map<string, string>;
   tile2color: Map<string, string>;
-  texts: Map<string, Pos>;
+  texts: {};
   teleports: Map<string, Array<TeleportPos>>;
   teleport_count: Map<string, number>;
   initial_pnj_positions: Map<string, Array<Pos>>;
@@ -84,7 +84,7 @@ export class LevelMap {
   target_spawner: TargetSpawner;
 
   constructor(map: string, meta: string, teleport_map: Map<string, string>,
-              tile2color: Map<string, string>, texts: Map<string, Pos>, background: string,
+              tile2color: Map<string, string>, texts: {}, background: string,
               text_color: string, pnj2position: Map<string, (l: Labyrinth, p1: Pos, p2: Pos) => Pos>,
               target_spawner: TargetSpawner) {
     this.map = map;

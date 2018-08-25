@@ -18,20 +18,6 @@ export const globalTile2color = {
   '~': '#C8C8C8',
 };
 
-export const symbol2description = {
-  '>': { text: '[5] Entrer' },
-  '<': { text: '[5] Sortir' },
-  '.': { text: ''}
-};
-
-export const tile2text = {
-  '#': '> Aïe! Un mur.',
-};
-
-export const pnj2dialog = {
-  'm': '> Achetez, achetez!',
-};
-
 export const teleport_symbols: Array<string> = [ '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '>', '<' ];
 export const item_symbols: Array<string> = [ '*', '$', '/', '=' ];
 export const walkable_symbols: Array<string> = [ '.', '<', '>' ];
@@ -47,7 +33,7 @@ export const pnj2color = {
   'O': '#FF7700',
 };
 
-export const mouvementMap = {
+export const mouvement_map = {
   0: {x: 1, y: 0},
   1: {x: -1, y: 0},
   2: {x: 0, y: 1},
@@ -83,14 +69,6 @@ export const item2price = {
   '/': 500,
 };
 
-export const item2description = {
-  '*': { text: 'caillou', genre: 'M' },
-  // '?': { text: 'potion mystère', genre: 'F' },
-  '/': { text: 'épée', genre: 'F' },
-  '=': { text: 'sort de feu', genre: 'M' },
-  '' : { text: 'rien', genre: 'M' }
-};
-
 export const weapon_items = [ '/' ];
 export const throwable_items = [ '*' ];
 export const spell_items = [ '=' ];
@@ -103,27 +81,4 @@ export const spell_usage = {
 export const projectile2color = {
   '*': '#999999',
   '&': '#FF0000',
-};
-
-/*
- * Translations
- */
-export const pris = {
-  'M': ' pris',
-  'F': ' prise',
-};
-
-export const depose = {
-  'M': ' déposé',
-  'F': ' déposée',
-};
-
-export const achete = {
-  'M': ' acheté',
-  'F': ' achetée'
-};
-
-export const lance = {
-  'M': ' lancé',
-  'F': ' lancée',
 };

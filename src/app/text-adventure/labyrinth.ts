@@ -1,14 +1,15 @@
 ﻿import {Engine} from './engine';
 import {AllMaps} from './map_content';
 import * as consts from './const';
+import * as translations from './translations';
 import {LevelMap, Pos, ObjPos, ProjPos} from './map_logic';
-import {item2color, item2description} from './const';
+import {item2color} from './const';
 import {SpawnerState} from './target';
 
 function get_random_mouvement(pnj): Pos {
   const new_pnj = new Pos(pnj.x, pnj.y);
   const r = Math.floor(Math.random() * 16);
-  const mouvement = consts.mouvementMap[r];
+  const mouvement = consts.mouvement_map[r];
 
   if (mouvement !== undefined) {
     new_pnj.x += mouvement.x;
@@ -176,6 +177,7 @@ class PersistedData {
   hero_position: Pos;
   map_data: Map<string, PersistedMapData>;
   current_map_name: string;
+  language: string;
 
   static parse(json): PersistedData {
     if (json === null) {
@@ -192,6 +194,7 @@ class PersistedData {
 
     p.coins = json.coins;
     p.hero_position = new Pos(json.hero_position.x, json.hero_position.y);
+    p.language = json.language;
 
     p.map_data = new Map<string, PersistedMapData>();
 
@@ -208,6 +211,7 @@ class PersistedData {
     const p = {
       slots: [],
       coins: this.coins,
+      language: this.language,
       hero_position: {
         x: this.hero_position.x,
         y: this.hero_position.y
@@ -239,6 +243,7 @@ class PersistedData {
     }
 
     cpy.coins = this.coins;
+    cpy.language = this.language;
     cpy.hero_position = this.hero_position.copy();
 
     cpy.map_data = new Map<string, PersistedMapData>();
@@ -315,46 +320,36 @@ export class Labyrinth {
   update_current_status(hero_pos): void {
     let status_set = false;
     let current_status = this.current_status;
+    const lang = this.persisted_data.language;
 
-    const current_symbol = this.get_symbol_at(hero_pos);
-    if (consts.walkable_symbols.indexOf(current_symbol) > -1) {
-      current_status = consts.symbol2description[current_symbol].text;
+    for (const [item, positions] of this.current_map_data.items) {
+      for (let i = 0 ; i < positions.length; i++) {
+        if (positions[i].equals(hero_pos)) {
+          if (item === '$') {
+            this.persisted_data.coins++;
+            positions.splice(i, 1);
+            current_status = '> 1 $' + translations.pris[lang]['M'];
+          } else {
+            const description = translations.item2description[lang][item];
 
-      if (current_status !== '') {
-        status_set = true;
-      }
-    }
-
-    if (!status_set) {
-      for (const [item, positions] of this.current_map_data.items) {
-        for (let i = 0 ; i < positions.length; i++) {
-          if (positions[i].equals(hero_pos)) {
-            if (item === '$') {
-              this.persisted_data.coins++;
-              positions.splice(i, 1);
-              current_status = '> 1 $' + consts.pris['M'];
+            if (positions[i].price > 0) {
+              current_status = translations.buy[lang] + description.text + ' (' + consts.item2price[item] + '.-)';
             } else {
-              const description = consts.item2description[item];
+              current_status = translations.take[lang] + description.text;
 
-              if (positions[i].price > 0) {
-                current_status = '[5] Acheter ' + description.text + ' (' + consts.item2price[item] + '.-)';
-              } else {
-                current_status = '[5] Prendre ' + description.text;
-
-                if (positions[i].usage > 1) {
-                  current_status += ' (x' + positions[i].usage + ')';
-                }
+              if (positions[i].usage > 1) {
+                current_status += ' (x' + positions[i].usage + ')';
               }
             }
-
-            status_set = true;
-            break;
           }
-        }
 
-        if (status_set) {
+          status_set = true;
           break;
         }
+      }
+
+      if (status_set) {
+        break;
       }
     }
 
@@ -377,6 +372,8 @@ export class Labyrinth {
     }
   }
   try_pick_or_drop_item(hero_pos): boolean {
+    const lang = this.persisted_data.language;
+
     if (this.pressed.get('q')) {
       const selected_slot = this.persisted_data.slots[this.selected_slot];
 
@@ -401,8 +398,8 @@ export class Labyrinth {
         return true;
       }
 
-      const desc = item2description[selected_slot.symbol];
-      this.current_status = '> ' + make_first_letter_upper(desc.text) + consts.depose[desc.genre];
+      const desc = translations.item2description[lang][selected_slot.symbol];
+      this.current_status = '> ' + make_first_letter_upper(desc.text) + translations.depose[lang][desc.genre];
 
       this.drop_current_slot_item_at(hero_pos);
 
@@ -419,7 +416,7 @@ export class Labyrinth {
       let current_status = this.current_status;
 
       for (const [item, positions] of this.current_map_data.items) {
-        const description = consts.item2description[item];
+        const description = translations.item2description[lang][item];
 
         for (let i = 0 ; i < positions.length; i++) {
           if (positions[i].equals(hero_pos)) {
@@ -431,8 +428,15 @@ export class Labyrinth {
 
               if (consts.throwable_items.indexOf(item) > -1) {
                 for (let j = 0; j < 3 ; j++) {
-                  if (this.persisted_data.slots[j].symbol === item) {
-                    this.persisted_data.slots[j].usage += positions[i].usage;
+                  const slt = this.persisted_data.slots[j];
+
+                  if (slt.symbol === item) {
+                    slt.usage += positions[i].usage;
+                    found_slot = true;
+                    break;
+                  } else if (slt.symbol === '') {
+                    slt.symbol = item;
+                    slt.usage = positions[i].usage;
                     found_slot = true;
                     break;
                   }
@@ -449,7 +453,7 @@ export class Labyrinth {
 
               if (price > 0) {
                 coins -= price;
-                current_status = '> ' + upper + consts.achete[description.genre] + ' pour ' + price + '.-';
+                current_status = '> ' + upper + translations.achete[lang][description.genre] + price + '.-';
               } else {
                 current_status = '> ' + upper;
 
@@ -457,12 +461,12 @@ export class Labyrinth {
                   current_status += ' (x' + positions[i].usage + ')';
                 }
 
-                current_status += consts.pris[description.genre];
+                current_status += translations.pris[lang][description.genre];
               }
 
               positions.splice(i, 1);
             } else {
-              current_status = '> Pas assez d\'argent!';
+              current_status = translations.not_enough[lang];
             }
 
             item_picked = true;
@@ -488,28 +492,18 @@ export class Labyrinth {
     return false;
   }
   try_enter_or_exit(hero_pos): [boolean, Pos, string] {
-    if (this.pressed.get('5')) {
-      const symbol = this.get_symbol_at(hero_pos);
+    const symbol = this.get_symbol_at(hero_pos);
 
-      if (symbol !== '>' && symbol !== '<') {
-        this.current_status = '> Il n\'y a pas d\'escalier ici.';
-        return [false, undefined, undefined];
-      }
-
-      // By symmetry
-      if (symbol === '>') {
-        this.current_status = '[5] Sortir';
-      } else {
-        this.current_status = '[5] Entrer';
-      }
-
-      return this.do_teleport(symbol, hero_pos, hero_pos, hero_pos);
+    if (symbol !== '>' && symbol !== '<') {
+      return [false, undefined, undefined];
     }
+
+    return this.do_teleport(symbol, hero_pos, hero_pos, hero_pos);
   }
   try_talk(future_pos: Pos): boolean {
     for (const [pnj, pnj_pos] of this.current_map_data.pnjs) {
       if (pnj_pos.equals(future_pos)) {
-        this.current_status = consts.pnj2dialog[pnj];
+        this.current_status = translations.pnj2dialog[this.persisted_data.language][pnj];
         return true;
       }
     }
@@ -579,6 +573,7 @@ export class Labyrinth {
 
     const future_pos: Pos = new Pos(x, y);
     const allowed_walking_symbols = consts.walkable_symbols;
+    const lang = this.persisted_data.language;
 
     let symbol = this.get_symbol_at(future_pos);
 
@@ -599,13 +594,7 @@ export class Labyrinth {
         if (allowed_walking_symbols.indexOf(symbol) > -1) {
           return [new Pos(future_pos.x, hero_pos.y), future_pos, ''];
         } else {
-          let status = consts.tile2text[symbol];
-
-          if (status === undefined) {
-            status = '';
-          }
-
-          return [hero_pos, future_pos, status];
+          return [hero_pos, future_pos, ''];
         }
       }
     } else {
@@ -614,13 +603,7 @@ export class Labyrinth {
       if (allowed_walking_symbols.indexOf(symbol) > -1) {
         return [new Pos(future_pos.x, hero_pos.y), future_pos, ''];
       } else {
-        let status = consts.tile2text[symbol];
-
-        if (status === undefined) {
-          status = '';
-        }
-
-        return [ hero_pos, future_pos, status ];
+        return [ hero_pos, future_pos, '' ];
       }
     }
   }
@@ -842,8 +825,9 @@ export class Labyrinth {
     }
 
     const future_pos = this.get_future_position(this.persisted_data.hero_position);
+    const lang = this.persisted_data.language;
 
-    const ret = this.try_enter_or_exit(this.persisted_data.hero_position);
+    const ret = this.try_enter_or_exit(future_pos[0]);
 
     if (ret !== undefined) {
       if (ret[0]) {
@@ -865,10 +849,11 @@ export class Labyrinth {
     if (this.action === 'use') {
       if (this.has_spell_on_slot(this.selected_slot)) {
         if (selected_slot.usage > 0) {
+          // TODO: TRANSLATE
           this.current_status = '> TODO: Lancer sort';
           selected_slot.usage--;
         } else {
-          this.current_status = '> Sort épuisé';
+          this.current_status = translations.epuise[lang];
         }
 
         this.action = '';
@@ -880,6 +865,7 @@ export class Labyrinth {
 
     if (this.action === 'throw') {
       if (this.has_weapon_on_slot(this.selected_slot)) {
+        // TODO: TRANSLATE
         this.current_status = '> TODO: Lancer arme';
         selected_slot.symbol = '';
         selected_slot.usage = -1;
@@ -890,9 +876,9 @@ export class Labyrinth {
       }
 
       if (this.has_throwable_on_slot(this.selected_slot)) {
-        const item = consts.item2description[this.persisted_data.slots[this.selected_slot].symbol];
+        const item = translations.item2description[lang][this.persisted_data.slots[this.selected_slot].symbol];
 
-        this.current_status = '> ' + make_first_letter_upper(item.text + consts.lance[item.genre]);
+        this.current_status = '> ' + make_first_letter_upper(item.text + translations.lance[lang][item.genre]);
 
         // TODO: REFACTOR
         const x = this.persisted_data.hero_position.x;
@@ -975,8 +961,13 @@ export class Labyrinth {
     }
 
     if (this.current_map.texts !== undefined) {
-      for (const [text, pos] of this.current_map.texts) {
-        this.engine.text(text, this.to_screen_coord(pos.x, pos.y), this.current_map.text_color);
+      const texts = this.current_map.texts[this.persisted_data.language];
+
+      for (const key in texts) {
+        if (texts.hasOwnProperty(key)) {
+          const pos = texts[key];
+          this.engine.text(key, this.to_screen_coord(pos.x, pos.y), this.current_map.text_color);
+        }
       }
     }
   }
@@ -1036,7 +1027,8 @@ export class Labyrinth {
     }
 
     const slot = this.persisted_data.slots[idx];
-    let text = chr + '. ' + make_first_letter_upper(consts.item2description[slot.symbol].text);
+    const lang = this.persisted_data.language;
+    let text = chr + '. ' + make_first_letter_upper(translations.item2description[lang][slot.symbol].text);
 
     if (slot.usage > 1) {
       text += ' (x' + slot.usage + ')';
@@ -1224,9 +1216,10 @@ export class Labyrinth {
 
     if (!this.load_from_storage()) {
       // If there is no save
-      this.change_map('training');
+      this.change_map('bateau');
       this.persisted_data.hero_position = this.current_map.start;
       this.persisted_data.coins = 0;
+      this.persisted_data.language = 'en';
       this.persisted_data.slots = new Array<Item>(3);
       this.persisted_data.slots[0] = new Item('', -1);
       this.persisted_data.slots[1] = new Item('', -1);
