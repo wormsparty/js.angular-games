@@ -320,9 +320,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
       [ 'g', function(l: Labyrinth, pnj: Pos, hero_pos: Pos): Pos {
         const guarded_position = new Pos(10, 6);
 
-        if (l.has_weapon_on_slot(0)
-         || l.has_weapon_on_slot(1)
-         || l.has_weapon_on_slot(2)
+        if (l.has_weapon_equiped()
          || l.has_item_or_pnj_at(guarded_position, 'g')) {
           return new Pos(11, 7);
         } else {

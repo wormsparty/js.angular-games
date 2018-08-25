@@ -1,4 +1,4 @@
-import {Engine} from './engine';
+﻿import {Engine} from './engine';
 import {AllMaps} from './map_content';
 import * as consts from './const';
 import {LevelMap, Pos, ObjPos} from './map_logic';
@@ -343,11 +343,12 @@ export class Labyrinth {
       hero_pos = ret[1];
       this.hero_position = ret[1];
     } else {
-      if (!this.try_hit_target(hero_pos, aim_pos)) {
+      const evt = this.try_hit_target(hero_pos, aim_pos);
+
+      if (evt === '') {
         hero_pos = walkable_pos;
-        this.current_map_data.pnj_position.set('@', walkable_pos);
         this.update_current_status(hero_pos);
-      } else {
+      } else if (evt === 'hit') {
         this.current_status = '> Cible touchée!';
       }
     }
@@ -488,9 +489,9 @@ export class Labyrinth {
       new_map_name,
     ];
   }
-  try_hit_target(hero_pos: Pos, aim_pos: Pos): boolean {
+  try_hit_target(hero_pos: Pos, aim_pos: Pos): string {
     if (this.current_map.target_spawner === undefined) {
-      return false;
+      return '';
     }
 
     const targets = this.current_map_data.spawner_state.targets;
@@ -499,12 +500,18 @@ export class Labyrinth {
       const target = targets[i];
 
       if (target.pos.equals(aim_pos)) {
-        targets.splice(i, 1);
-        return true;
+        if (this.has_weapon_equiped()) {
+          targets.splice(i, 1);
+          return 'hit';
+        } else {
+          return 'push';
+        }
       }
 
       i++;
     }
+
+    return '';
   }
   update_targets(hero_pos: Pos): Pos {
     if (this.current_map.target_spawner !== undefined) {
@@ -700,14 +707,20 @@ export class Labyrinth {
       }
     }
   }
+  draw_character(chr: string, coord: Pos, color: string) {
+    this.engine.rect(coord, this.char_width, 16, this.current_map.background_color);
+    this.engine.text(chr, coord, color);
+  }
   draw_pnjs() {
     for (const [p, pnj] of this.current_map_data.pnj_position) {
       const coord = this.to_screen_coord(pnj.x, pnj.y + consts.header_size);
       const color = consts.pnj2color[p];
 
-      this.engine.rect(coord, this.char_width, 16, this.current_map.background_color);
-      this.engine.text(p, coord, color);
+      this.draw_character(p, coord, color);
     }
+
+    this.draw_character('@',
+      this.to_screen_coord(this.hero_position.x, this.hero_position.y + consts.header_size), consts.pnj2color['@']);
   }
   draw_items() {
     for (const [item, positions] of this.current_map_data.item_positions) {
@@ -741,6 +754,11 @@ export class Labyrinth {
   }
   has_weapon_on_slot(slot: number) {
     return consts.weapon_items.indexOf(this.slots[slot].symbol) > -1;
+  }
+  has_weapon_equiped() {
+    return this.has_weapon_on_slot(0)
+        || this.has_weapon_on_slot(1)
+        || this.has_weapon_on_slot(2);
   }
   has_throwable_on_slot(slot: number) {
     return consts.throwable_items.indexOf(this.slots[slot].symbol) > -1;
