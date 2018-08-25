@@ -1228,12 +1228,12 @@ export class Labyrinth {
       this.persisted_data.hero_position = this.current_map.start;
       this.persisted_data.coins = 0;
       this.persisted_data.slots = new Array<Item>(3);
-      // this.persisted_data.slots[0] = new Item('', -1);
-      // this.persisted_data.slots[1] = new Item('', -1);
-      // this.persisted_data.slots[2] = new Item('', -1);
-      this.persisted_data.slots[0] = new Item('/', -1);
-      this.persisted_data.slots[1] = new Item('=', consts.spell_usage['=']);
-      this.persisted_data.slots[2] = new Item('*', 10);
+      this.persisted_data.slots[0] = new Item('', -1);
+      this.persisted_data.slots[1] = new Item('', -1);
+      this.persisted_data.slots[2] = new Item('', -1);
+      // this.persisted_data.slots[0] = new Item('/', -1);
+      // this.persisted_data.slots[1] = new Item('=', consts.spell_usage['=']);
+      // this.persisted_data.slots[2] = new Item('*', 10);
       // TODO: REMOVE, FOR DEBUGGING
   //    this.save_to_storage();
     } else {

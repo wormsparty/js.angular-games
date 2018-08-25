@@ -30,7 +30,6 @@ export const tile2text = {
 
 export const pnj2dialog = {
   'm': '> Achetez, achetez!',
-  'g': '> Je ne te laisserai pas passer sans épée',
 };
 
 export const teleport_symbols: Array<string> = [ '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '>', '<' ];

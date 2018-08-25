@@ -1,6 +1,6 @@
 import {LevelMap, Pos} from './map_logic';
 import {Labyrinth} from './labyrinth';
-import {Target, TargetSpawner} from './target';
+import {SpawnerState, Target, TargetSpawner} from './target';
 
 export const AllMaps: Map<string, LevelMap> = new Map([
   [ 'bateau', new LevelMap('' +
@@ -291,7 +291,7 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     '#####               ##                    ##            \n' +
     '5    ####        ###                        ###         \n' +
     '5        ########                              ###      \n' +
-    '5 @      g                                        ######\n' +
+    '5 @                                               ######\n' +
     '5    ######                                             \n' +
     '#####      #####                                        \n' +
     '                ##                                      \n' +
@@ -316,26 +316,16 @@ export const AllMaps: Map<string, LevelMap> = new Map([
     undefined,
     undefined,
     undefined,
-    new Map([
-      [ 'g', function(l: Labyrinth, pnj: Pos, hero_pos: Pos): Pos {
-        const guarded_position = new Pos(10, 6);
+    undefined,
+    new TargetSpawner(function(state: SpawnerState): void {
+      state.tick = state.tick % 20;
 
-        if (l.has_weapon_equiped()
-         || l.has_item_or_pnj_at(guarded_position, 'g')) {
-          return new Pos(11, 7);
-        } else {
-          return guarded_position;
-        }
-      }],
-    ]),
-    new TargetSpawner(function(tick: number): [number, Target] {
-      tick = tick % 20;
-
-      if (tick >= 16) {
-        return [ tick, undefined ];
+      if (state.tick >= 16) {
+        return;
       }
 
-      return [tick, new Target(new Pos(24 + tick, -1), 'O', 3, 3) ];
+      state.targets.push(new Target(new Pos(24 + 16 - state.tick, -1), 'O', 3, 3));
+      state.targets.push(new Target(new Pos(24 + 15 - state.tick, -1), 'O', 3, 3));
     }, function(): Pos {
       return new Pos(0, 1);
     }, function(pv: number): string {

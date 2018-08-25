@@ -73,23 +73,18 @@ export class SpawnerState {
 }
 
 export class TargetSpawner {
-  private readonly spawner_update: (number) => [number, Target];
+  private readonly spawner_update: (SpawnerState) => void;
   private readonly target_update: () => Pos;
   pv2color: (number) => string;
 
-  constructor(spawner_update: (number) => [number, Target], target_update: () => Pos, pv2color: (number) => string) {
+  constructor(spawner_update: (SpawnerState) => void, target_update: () => Pos, pv2color: (number) => string) {
     this.spawner_update = spawner_update;
     this.target_update = target_update;
     this.pv2color = pv2color;
   }
 
   update(l: Labyrinth, stateHolder: SpawnerState, hero_pos: Pos): Pos {
-    const [tick, new_target] = this.spawner_update(stateHolder.tick);
-    stateHolder.tick = tick;
-
-    if (new_target !== undefined) {
-      stateHolder.targets.push(new_target);
-    }
+    this.spawner_update(stateHolder);
 
     for (let i = 0; i < stateHolder.targets.length;) {
       const target = stateHolder.targets[i];
