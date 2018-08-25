@@ -340,6 +340,10 @@ export class Labyrinth {
                 current_status = '[5] Acheter ' + description.text + ' (' + consts.item2price[item] + '.-)';
               } else {
                 current_status = '[5] Prendre ' + description.text;
+
+                if (positions[i].usage > 1) {
+                  current_status += ' (x' + positions[i].usage + ')';
+                }
               }
             }
 
@@ -428,7 +432,7 @@ export class Labyrinth {
               if (consts.throwable_items.indexOf(item) > -1) {
                 for (let j = 0; j < 3 ; j++) {
                   if (this.persisted_data.slots[j].symbol === item) {
-                    this.persisted_data.slots[j].usage++;
+                    this.persisted_data.slots[j].usage += positions[i].usage;
                     found_slot = true;
                     break;
                   }
@@ -447,7 +451,13 @@ export class Labyrinth {
                 coins -= price;
                 current_status = '> ' + upper + consts.achete[description.genre] + ' pour ' + price + '.-';
               } else {
-                current_status = '> ' + upper + consts.pris[description.genre];
+                current_status = '> ' + upper;
+
+                if (positions[i].usage > 1) {
+                  current_status += ' (x' + positions[i].usage + ')';
+                }
+
+                current_status += consts.pris[description.genre];
               }
 
               positions.splice(i, 1);
@@ -1095,7 +1105,21 @@ export class Labyrinth {
       this.current_map_data.items.set(proj.symbol, []);
     }
 
-    this.current_map_data.items.get(proj.symbol).push(new ObjPos(proj.x, proj.y, 1, 0));
+    const items = this.current_map_data.items.get(proj.symbol);
+    let found_item = false;
+
+    for (let i = 0; i  < items.length; i++) {
+      if (items[i].equals(proj)) {
+        items[i].usage++;
+        found_item = true;
+        break;
+      }
+    }
+
+    if (!found_item) {
+      items.push(new ObjPos(proj.x, proj.y, 1, 0));
+    }
+
     this.current_map_data.projectiles.splice(projectile_position, 1);
   }
   draw_overlay() {

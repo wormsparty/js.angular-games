@@ -100,7 +100,7 @@ export class TargetSpawner {
       // The case below is if the two are separated by 1:
       // the target gets at the same position as the projectile
       // -> It needs to count as a hit too
-      /*let [hit, power] = l.hits_projectile(target.pos);
+      let [hit, power] = l.hits_projectile(target.pos);
 
       if (hit !== -1) {
         l.projectile2item(hit);
@@ -110,7 +110,7 @@ export class TargetSpawner {
           stateHolder.targets.splice(i, 1);
           continue;
         }
-      }*/
+      }
 
       target.pos.x += dp.x;
       target.pos.y += dp.y;
@@ -122,7 +122,7 @@ export class TargetSpawner {
         continue;
       }
 
-      const [hit, power] = l.hits_projectile(target.pos);
+      [hit, power] = l.hits_projectile(target.pos);
 
       if (hit !== -1) {
         l.projectile2item(hit);
