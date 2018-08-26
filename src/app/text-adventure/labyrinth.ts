@@ -264,6 +264,7 @@ export class Labyrinth {
   private current_status: string;
   private selected_slot: number;
   private action: string;
+  private game_over_message: string;
 
   last_save: PersistedData;
   persisted_data: PersistedData;
@@ -765,16 +766,26 @@ export class Labyrinth {
   }
   move_targets_or_die(hero_pos: Pos) {
     hero_pos = this.update_targets(hero_pos);
+    const lang = this.persisted_data.language;
+    const symbol = this.get_symbol_at(hero_pos);
 
-    if (consts.walkable_symbols.indexOf(this.get_symbol_at(hero_pos)) === -1) {
-      // TODO: Game over screen
-      this.load_last_save();
+    if (consts.walkable_symbols.indexOf(symbol) === -1) {
+      this.game_over_message = translations.symbol2gameover[lang][symbol];
     } else {
       this.persisted_data.hero_position = hero_pos;
     }
 
   }
   update_on_map() {
+    if (this.game_over_message !== '') {
+      if (this.pressed.get(' ')) {
+        this.game_over_message = '';
+        this.load_last_save();
+      }
+
+      return;
+    }
+
     if (this.pressed.get('a')) {
       this.selected_slot = 0;
       this.action = '';
@@ -1166,6 +1177,28 @@ export class Labyrinth {
       this.engine.text('q', this.to_screen_coord(29, h + 2), consts.OverlayNormal);
     }
   }
+  draw_message(): void {
+    if (this.game_over_message !== '') {
+      const lang = this.persisted_data.language;
+      const retry = translations.retry[lang];
+
+      this.engine.rect(this.to_screen_coord(consts.char_per_line / 2 - 15, 10),
+        30 * this.char_width, 16 * 7, consts.DefaultBackgroundColor);
+      this.engine.text(' **************************** ',
+        this.to_screen_coord(consts.char_per_line / 2 - 15, 10), consts.OverlayHighlight);
+
+      for (let i = 11; i < 16; i++) {
+        this.engine.text('*                            *',
+          this.to_screen_coord(consts.char_per_line / 2 - 15, i), consts.OverlayHighlight);
+      }
+
+      this.engine.text(this.game_over_message,
+        this.to_screen_coord(consts.char_per_line / 2 - this.game_over_message.length / 2, 12), consts.OverlayHighlight);
+      this.engine.text(retry, this.to_screen_coord(consts.char_per_line / 2 - retry.length / 2, 14), consts.OverlayHighlight);
+      this.engine.text(' **************************** ',
+        this.to_screen_coord(consts.char_per_line / 2 - 15, 16), consts.OverlayHighlight);
+    }
+  }
   draw_all(): void {
     this.draw_map();
     this.draw_items();
@@ -1173,6 +1206,7 @@ export class Labyrinth {
     this.draw_projectiles();
     this.draw_targets();
     this.draw_overlay();
+    this.draw_message();
   }
   resize(width, height): void {
     this.engine.resize(width, height);
@@ -1208,11 +1242,12 @@ export class Labyrinth {
     this.char_width = this.engine.get_char_width();
     this.selected_slot = 0;
     this.action = '';
+    this.game_over_message = '';
 
     this.parse_all_maps();
 
     // TODO: FOR DEBUGGING
-    this.clear_storage();
+//    this.clear_storage();
 
     if (!this.load_from_storage()) {
       // If there is no save

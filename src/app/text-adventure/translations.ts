@@ -82,3 +82,19 @@ export const item2description = {
     '' : { text: 'rien', genre: 'M' }
   }
 };
+
+export const symbol2gameover = {
+  'en': {
+    '#': 'Crushed!',
+    '~': 'Drown!',
+  },
+  'fr': {
+    '#': 'Écrasé!',
+    '~': 'Noyé!',
+  }
+};
+
+export const retry = {
+  'en': 'Space to retry',
+  'fr': 'Espace pour reessayer',
+};
