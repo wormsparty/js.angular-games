@@ -73,6 +73,10 @@ export class SpawnerState {
 
     return cpy;
   }
+  reset(): void {
+    this.tick = 0;
+    this.targets.splice(0, this.targets.length);
+  }
 }
 
 export class TargetSpawner {
@@ -91,7 +95,7 @@ export class TargetSpawner {
     const lang = l.personal_info.lang;
 
     if (hit !== -1) {
-      l.projectile2item(hit);
+      l.projectile2item(l.current_map_data, target.pos, hit);
       target.pv -= power;
 
       if (target.pv <= 0) {

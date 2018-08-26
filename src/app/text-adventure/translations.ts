@@ -76,10 +76,10 @@ export const epuise = {
 
 export const pnj2dialog = {
   'en': {
-    'm': '> Buy, buy!',
+    't': '> There\'s an item near by',
   },
   'fr': {
-    'm': '> Achetez, achetez!',
+    't': '> Il y a un objet pas loin',
   },
 };
 

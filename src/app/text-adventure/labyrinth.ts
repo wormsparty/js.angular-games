@@ -285,7 +285,7 @@ export class Labyrinth {
     l.is_main_menu = false;
     l.is_menu_open = false;
 
-    l.change_map(l.persisted_data.current_map_name);
+    l.change_map(l.persisted_data.current_map_name, false);
     l.is_menu_open = false;
 
     l.save_to_memory();
@@ -618,7 +618,7 @@ export class Labyrinth {
     const lang = this.personal_info.lang;
 
     if (ret[0]) {
-      this.change_map(ret[2]);
+      this.change_map(ret[2], true);
       hero_pos = ret[1];
       this.persisted_data.hero_position = ret[1];
       return [hero_pos, true];
@@ -696,17 +696,21 @@ export class Labyrinth {
       }
     }
   }
-  change_map(map_name: string): void {
+  change_map(map_name: string, reset_targets: boolean): void {
     this.current_map = AllMaps.get(map_name);
     this.persisted_data.current_map_name = map_name;
     this.current_map_data = this.persisted_data.map_data.get(map_name);
+
+    if (reset_targets) {
+      this.current_map_data.spawner.reset();
+    }
   }
   save_to_memory(): void {
     this.last_save = this.persisted_data.copy();
   }
   load_last_save() {
     this.persisted_data = this.last_save.copy();
-    this.change_map(this.persisted_data.current_map_name);
+    this.change_map(this.persisted_data.current_map_name, false);
   }
   try_teleport(hero_pos, future_pos): [boolean, Pos, string] {
     for (const [chr, teleports_for_char] of this.current_map.teleports) {
@@ -810,10 +814,23 @@ export class Labyrinth {
       const newprojx = proj.x + proj.vx;
       const newprojy = proj.y + proj.vy;
 
+      // If we go outside of the room, teleport the item to it!
       if (newprojy >= consts.map_lines || newprojy < 0
-        || newprojx < 0 || newprojx >= consts.char_per_line
-        || consts.walkable_symbols.indexOf(this.current_map.get_symbol_at(newprojx, newprojy)) === -1) {
-        this.projectile2item(i);
+        || newprojx < 0 || newprojx >= consts.char_per_line)  {
+        const [can_teleport, where, map_name] = this.try_teleport(proj, proj);
+
+        if (can_teleport) {
+          const map_data = this.persisted_data.map_data.get(map_name);
+          this.projectile2item(map_data, new Pos(where.x + proj.vx, where.y + proj.vy), i);
+          continue;
+        }
+      }
+
+      // If we hit a wall or water in the same room
+      const symbol = this.current_map.get_symbol_at(newprojx, newprojy);
+
+      if (consts.walkable_symbols.indexOf(symbol) === -1) {
+        this.projectile2item(this.current_map_data, proj, i);
         continue;
       }
 
@@ -948,7 +965,7 @@ export class Labyrinth {
 
     if (ret !== undefined) {
       if (ret[0]) {
-        this.change_map(ret[2]);
+        this.change_map(ret[2], true);
         this.persisted_data.hero_position = ret[1];
         this.save_to_memory();
         return;
@@ -1195,14 +1212,14 @@ export class Labyrinth {
 
     return [-1, 0];
   }
-  projectile2item(projectile_position: number) {
+  projectile2item(map_data: PersistedMapData, where: Pos, projectile_position: number) {
     const proj = this.current_map_data.projectiles[projectile_position];
 
-    if (!this.current_map_data.items.has(proj.symbol)) {
-      this.current_map_data.items.set(proj.symbol, []);
+    if (!map_data.items.has(proj.symbol)) {
+      map_data.items.set(proj.symbol, []);
     }
 
-    const items = this.current_map_data.items.get(proj.symbol);
+    const items = map_data.items.get(proj.symbol);
     let found_item = false;
 
     for (let i = 0; i  < items.length; i++) {
@@ -1214,7 +1231,7 @@ export class Labyrinth {
     }
 
     if (!found_item) {
-      items.push(new ObjPos(proj.x, proj.y, 1, 0));
+      items.push(new ObjPos(where.x, where.y, 1, 0));
     }
 
     this.current_map_data.projectiles.splice(projectile_position, 1);

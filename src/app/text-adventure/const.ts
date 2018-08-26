@@ -27,10 +27,8 @@ export const shop_maps: Array<string> = [ 'outside' ];
  * PNJ
  */
 export const pnj2color = {
-  'g': '#0000FF',
-  'm': '#6699FF',
+  't': '#6699FF',
   '@': '#FF0000',
-  'O': '#FF7700',
 };
 
 export const mouvement_map = {
@@ -60,7 +58,7 @@ export const item2color = {
   '%': '#119900',
   // '!': '#555555',
   // '?': '#FFFFFF',
-  '/': '#222222',
+  '/': '#999999',
 };
 
 export const item2price = {
