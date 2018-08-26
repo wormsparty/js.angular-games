@@ -119,7 +119,6 @@ export class TargetSpawner {
   }
   update(l: Labyrinth, stateHolder: SpawnerState, hero_pos: Pos): Pos {
     this.spawner_update(stateHolder);
-    const lang = l.personal_info.lang;
 
     for (let i = 0; i < stateHolder.targets.length;) {
       const target = stateHolder.targets[i];

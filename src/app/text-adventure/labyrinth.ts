@@ -513,7 +513,7 @@ export class Labyrinth {
               // Take the item to weapon slot
               let found_slot = false;
 
-              if (consts.throwable_items.indexOf(item) > -1) {
+             // if (consts.throwable_items.indexOf(item) > -1) {
                 for (let j = 0; j < 3 ; j++) {
                   const slt = this.persisted_data.slots[j];
 
@@ -528,7 +528,7 @@ export class Labyrinth {
                     break;
                   }
                 }
-              }
+              // }
 
               if (!found_slot) {
                 this.drop_current_slot_item_at(positions[i]);
@@ -781,7 +781,7 @@ export class Labyrinth {
       const target = targets[i];
 
       if (target.pos.equals(aim_pos)) {
-        if (this.has_weapon_equiped()) {
+        if (this.has_weapon_equiped() && target.symbol === 'O') {
           target.pv--;
 
           if (target.pv <= 0) {
