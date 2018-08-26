@@ -283,11 +283,12 @@ export class Labyrinth {
 
     l.is_main_menu = false;
     l.is_menu_open = false;
+
+    l.change_map(l.persisted_data.current_map_name);
+    l.is_menu_open = false;
   }
   static load_from_storage(l: Labyrinth): void {
     Labyrinth.load_save(l, Labyrinth.get_from_storage());
-    l.change_map(l.persisted_data.current_map_name);
-    l.is_menu_open = false;
   }
   static save_to_storage(l: Labyrinth): void {
     const save_data = JSON.stringify(l.persisted_data.print());
