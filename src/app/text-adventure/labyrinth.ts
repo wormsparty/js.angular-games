@@ -265,6 +265,8 @@ export class Labyrinth {
   private selected_slot: number;
   private action: string;
   private game_over_message: string;
+  private is_menu_open: boolean;
+  private menu_position: number;
 
   last_save: PersistedData;
   persisted_data: PersistedData;
@@ -786,6 +788,32 @@ export class Labyrinth {
       return;
     }
 
+    if (this.is_menu_open) {
+      if (this.pressed.get('8')) {
+        if (this.menu_position > 0) {
+          this.menu_position--;
+        }
+      }
+
+      if (this.pressed.get('2')) {
+        if (this.menu_position < 2) {
+          this.menu_position++;
+        }
+      }
+
+      // TODO
+
+      if (this.pressed.get('Escape')) {
+        this.is_menu_open = false;
+      }
+
+      return;
+    } else if (this.pressed.get('Escape')) {
+      this.is_menu_open = true;
+      this.menu_position = 0;
+      return;
+    }
+
     if (this.pressed.get('a')) {
       this.selected_slot = 0;
       this.action = '';
@@ -1129,7 +1157,8 @@ export class Labyrinth {
     this.engine.text(this.current_status, this.to_screen_coord(2, 1), consts.White);
 
     const money = currencyFormatter.format(this.persisted_data.coins) + ' $';
-    this.engine.text(money, this.to_screen_coord(consts.char_per_line - money.length, 1), item2color['$']);
+    this.engine.text(money, this.to_screen_coord(consts.char_per_line - money.length - 7, 1), item2color['$']);
+    this.engine.text('[esc]', this.to_screen_coord(consts.char_per_line - 6, 1), consts.OverlayNormal);
 
     const h = consts.map_lines + consts.header_size + 1;
 
@@ -1189,14 +1218,53 @@ export class Labyrinth {
 
       for (let i = 11; i < 16; i++) {
         this.engine.text('*                            *',
-          this.to_screen_coord(consts.char_per_line / 2 - 15, i), consts.OverlayHighlight);
+           this.to_screen_coord(consts.char_per_line / 2 - 15, i), consts.OverlayHighlight);
       }
+
+      this.engine.text(' **************************** ',
+        this.to_screen_coord(consts.char_per_line / 2 - 15, 16), consts.OverlayHighlight);
 
       this.engine.text(this.game_over_message,
         this.to_screen_coord(consts.char_per_line / 2 - this.game_over_message.length / 2, 12), consts.OverlayHighlight);
       this.engine.text(retry, this.to_screen_coord(consts.char_per_line / 2 - retry.length / 2, 14), consts.OverlayHighlight);
+    }
+  }
+  draw_menu(): void {
+    if (this.is_menu_open) {
+      const lang = this.persisted_data.language;
+
+      this.engine.rect(this.to_screen_coord(consts.char_per_line / 2 - 15, 10),
+        30 * this.char_width, 16 * 7, consts.DefaultBackgroundColor);
+      this.engine.text(' **************************** ',
+        this.to_screen_coord(consts.char_per_line / 2 - 15, 10), consts.OverlayHighlight);
+
+      for (let i = 11; i < 16; i++) {
+        this.engine.text('*                            *',
+          this.to_screen_coord(consts.char_per_line / 2 - 15, i), consts.OverlayHighlight);
+      }
+
       this.engine.text(' **************************** ',
         this.to_screen_coord(consts.char_per_line / 2 - 15, 16), consts.OverlayHighlight);
+
+      // TODO: TRANSLATE
+      if (this.menu_position === 0) {
+        this.engine.text('> Sauver', this.to_screen_coord(consts.char_per_line / 2 - 5, 12), consts.OverlayHighlight);
+      } else {
+        this.engine.text('  Sauver', this.to_screen_coord(consts.char_per_line / 2 - 5, 12), consts.OverlayHighlight);
+      }
+
+      if (this.menu_position === 1) {
+        this.engine.text('> Charger', this.to_screen_coord(consts.char_per_line / 2 - 5, 13), consts.OverlayHighlight);
+      } else {
+        this.engine.text('  Charger', this.to_screen_coord(consts.char_per_line / 2 - 5, 13), consts.OverlayHighlight);
+      }
+
+      if (this.menu_position === 2) {
+        this.engine.text('> Quitter', this.to_screen_coord(consts.char_per_line / 2 - 5, 14), consts.OverlayHighlight);
+      } else {
+        this.engine.text('  Quitter', this.to_screen_coord(consts.char_per_line / 2 - 5, 14), consts.OverlayHighlight);
+      }
+
     }
   }
   draw_all(): void {
@@ -1207,6 +1275,7 @@ export class Labyrinth {
     this.draw_targets();
     this.draw_overlay();
     this.draw_message();
+    this.draw_menu();
   }
   resize(width, height): void {
     this.engine.resize(width, height);
@@ -1236,6 +1305,7 @@ export class Labyrinth {
       [ 'q', false ],
       [ ' ', false ],
       [ 'Shift', false ],
+      [ 'Escape', false ],
     ]);
 
     this.current_status = '';
@@ -1243,6 +1313,8 @@ export class Labyrinth {
     this.selected_slot = 0;
     this.action = '';
     this.game_over_message = '';
+    this.is_menu_open = false;
+    this.menu_position = 0;
 
     this.parse_all_maps();
 
