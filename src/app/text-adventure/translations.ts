@@ -44,6 +44,21 @@ export const not_enough = {
   'fr': '> Pas assez d\'argent',
 };
 
+export const lancer = {
+  'en': 'Throw',
+  'fr': 'Lancer',
+};
+
+export const use = {
+  'en': 'Use',
+  'fr': 'Utiliser',
+};
+
+export const drop = {
+  'en': 'Drop',
+  'fr': 'Déposer',
+};
+
 export const lance = {
   'en': {
     'M': ' thrown',
@@ -97,4 +112,30 @@ export const symbol2gameover = {
 export const retry = {
   'en': 'Space to retry',
   'fr': 'Espace pour reessayer',
+};
+
+export const new_game = {
+  'en': 'New game',
+  'fr': 'Nouvelle partie'
+};
+
+
+export const load = {
+  'en': 'Load',
+  'fr': 'Charger',
+};
+
+export const lang = {
+  'en': 'Language',
+  'fr': 'Langue',
+};
+
+export const save = {
+  'en': 'Save',
+  'fr': 'Sauver',
+};
+
+export const exit = {
+  'en': 'Exit',
+  'fr': 'Quitter',
 };

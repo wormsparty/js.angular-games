@@ -44,6 +44,9 @@ export class TextAdventureComponent implements OnInit {
         } else if (event.key === 'ArrowDown') {
           labyrinth.pressed.set('2', true);
           update = true;
+        } else if (event.key === 'Enter') {
+          labyrinth.pressed.set('5', true);
+          update = true;
         }
       }
 

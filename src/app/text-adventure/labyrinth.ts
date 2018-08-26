@@ -177,7 +177,6 @@ class PersistedData {
   hero_position: Pos;
   map_data: Map<string, PersistedMapData>;
   current_map_name: string;
-  language: string;
 
   static parse(json): PersistedData {
     if (json === null) {
@@ -194,8 +193,6 @@ class PersistedData {
 
     p.coins = json.coins;
     p.hero_position = new Pos(json.hero_position.x, json.hero_position.y);
-    p.language = json.language;
-
     p.map_data = new Map<string, PersistedMapData>();
 
     for (const map in json.map_data) {
@@ -211,7 +208,6 @@ class PersistedData {
     const p = {
       slots: [],
       coins: this.coins,
-      language: this.language,
       hero_position: {
         x: this.hero_position.x,
         y: this.hero_position.y
@@ -243,7 +239,6 @@ class PersistedData {
     }
 
     cpy.coins = this.coins;
-    cpy.language = this.language;
     cpy.hero_position = this.hero_position.copy();
 
     cpy.map_data = new Map<string, PersistedMapData>();
@@ -257,6 +252,11 @@ class PersistedData {
   }
 }
 
+class PersonalInfos {
+  lang: string;
+  // visa?
+}
+
 export class Labyrinth {
   public pressed: Map<string, boolean>;
   private readonly engine: Engine;
@@ -266,14 +266,86 @@ export class Labyrinth {
   private action: string;
   private game_over_message: string;
   private is_menu_open: boolean;
+  private is_main_menu: boolean;
   private menu_position: number;
+  private main_menu: Array<any>;
+  private game_menu: Array<any>;
 
+  personal_info: PersonalInfos;
   last_save: PersistedData;
   persisted_data: PersistedData;
 
   current_map: LevelMap;
   current_map_data: PersistedMapData;
 
+  static load_save(l: Labyrinth, save: PersistedData) {
+    l.persisted_data = save;
+
+    l.is_main_menu = false;
+    l.is_menu_open = false;
+  }
+  static load_from_storage(l: Labyrinth): void {
+    Labyrinth.load_save(l, Labyrinth.get_from_storage());
+    l.change_map(l.persisted_data.current_map_name);
+    l.is_menu_open = false;
+  }
+  static save_to_storage(l: Labyrinth): void {
+    const save_data = JSON.stringify(l.persisted_data.print());
+    window.localStorage.setItem('save', save_data);
+    l.is_menu_open = false;
+  }
+  static clear_storage() {
+    window.localStorage.clear();
+  }
+  static get_from_storage(): PersistedData {
+    const save_data = window.localStorage.getItem('save');
+
+    if (save_data === undefined) {
+      return null;
+    }
+
+    const persisted_data = PersistedData.parse(JSON.parse(save_data));
+
+    if (persisted_data === null) {
+      return null;
+    }
+
+    return persisted_data;
+  }
+  static toggle_language(l: Labyrinth): void {
+    if (l.personal_info.lang === 'en') {
+      l.personal_info.lang = 'fr';
+    } else {
+      l.personal_info.lang = 'en';
+    }
+
+    l.save_personal_infos();
+    l.refresh_menu(false);
+    l.draw();
+  }
+  static open_main_menu(l: Labyrinth) {
+    l.refresh_menu(true);
+    l.is_main_menu = true;
+  }
+  static clear_and_start(l: Labyrinth): void {
+    Labyrinth.clear_storage();
+
+    // Create new save with default values
+    l.change_map('bateau');
+    l.persisted_data.hero_position = l.current_map.start;
+    l.persisted_data.coins = 0;
+    l.persisted_data.slots = new Array<Item>(3);
+    l.persisted_data.slots[0] = new Item('', -1);
+    l.persisted_data.slots[1] = new Item('', -1);
+    l.persisted_data.slots[2] = new Item('', -1);
+    // l.persisted_data.slots[0] = new Item('/', -1);
+    // l.persisted_data.slots[1] = new Item('=', consts.spell_usage['=']);
+    // l.persisted_data.slots[2] = new Item('*', 10);
+
+    l.is_main_menu = false;
+    l.is_menu_open = false;
+    l.save_to_memory();
+  }
   parse_all_maps(): void {
     this.persisted_data = new PersistedData();
     this.persisted_data.map_data = new Map<string, PersistedMapData>();
@@ -308,11 +380,20 @@ export class Labyrinth {
     }
   }
   draw(): void {
-    this.engine.clear(this.current_map.background_color);
-    this.draw_all();
+    if (this.is_main_menu) {
+      this.engine.clear(consts.DefaultBackgroundColor);
+      this.draw_main_menu();
+    } else {
+      this.engine.clear(this.current_map.background_color);
+      this.draw_all();
+    }
   }
   do_update(): void {
-    this.update_on_map();
+    if (this.is_menu_open || this.is_main_menu) {
+      this.update_menu();
+    } else {
+      this.update_on_map();
+    }
   }
   get_string_from(x, y, length): string {
     return this.current_map.map.substr(y * (consts.char_per_line + 1) + x, length);
@@ -323,7 +404,7 @@ export class Labyrinth {
   update_current_status(hero_pos): void {
     let status_set = false;
     let current_status = this.current_status;
-    const lang = this.persisted_data.language;
+    const lang = this.personal_info.lang;
 
     for (const [item, positions] of this.current_map_data.items) {
       for (let i = 0 ; i < positions.length; i++) {
@@ -375,7 +456,7 @@ export class Labyrinth {
     }
   }
   try_pick_or_drop_item(hero_pos): boolean {
-    const lang = this.persisted_data.language;
+    const lang = this.personal_info.lang;
 
     if (this.pressed.get('q')) {
       const selected_slot = this.persisted_data.slots[this.selected_slot];
@@ -504,9 +585,11 @@ export class Labyrinth {
     return this.do_teleport(symbol, hero_pos, hero_pos, hero_pos);
   }
   try_talk(future_pos: Pos): boolean {
+    const lang = this.personal_info.lang;
+
     for (const [pnj, pnj_pos] of this.current_map_data.pnjs) {
       if (pnj_pos.equals(future_pos)) {
-        this.current_status = translations.pnj2dialog[this.persisted_data.language][pnj];
+        this.current_status = translations.pnj2dialog[lang][pnj];
         return true;
       }
     }
@@ -535,8 +618,6 @@ export class Labyrinth {
       hero_pos = ret[1];
       this.persisted_data.hero_position = ret[1];
       this.save_to_memory();
-      // TODO: REMOVE, FOR DEBUGGING
-      this.save_to_storage();
     } else {
       const evt = this.try_hit_target(hero_pos, aim_pos);
 
@@ -576,7 +657,7 @@ export class Labyrinth {
 
     const future_pos: Pos = new Pos(x, y);
     const allowed_walking_symbols = consts.walkable_symbols;
-    const lang = this.persisted_data.language;
+    const lang = this.personal_info.lang;
 
     let symbol = this.get_symbol_at(future_pos);
 
@@ -615,37 +696,8 @@ export class Labyrinth {
     this.persisted_data.current_map_name = map_name;
     this.current_map_data = this.persisted_data.map_data.get(map_name);
   }
-  save_to_memory() {
+  save_to_memory(): void {
     this.last_save = this.persisted_data.copy();
-  }
-  load_from_storage(): boolean {
-    const save_data = window.localStorage.getItem('save');
-
-    if (save_data === undefined) {
-      return false;
-    }
-
-    // console.log('Data = ' + save_data);
-
-    const persisted_data = PersistedData.parse(JSON.parse(save_data));
-
-    if (persisted_data === null) {
-      return false;
-    }
-
-    this.persisted_data = persisted_data;
-
-    return true;
-  }
-  save_to_storage() {
-    // TODO: Use this!
-    const save_data = JSON.stringify(this.persisted_data.print());
-    // console.log('Saved : ' + save_data);
-    window.localStorage.setItem('save', save_data);
-  }
-  clear_storage() {
-    // TODO: Use this!
-    window.localStorage.clear();
   }
   load_last_save() {
     this.persisted_data = this.last_save.copy();
@@ -768,7 +820,7 @@ export class Labyrinth {
   }
   move_targets_or_die(hero_pos: Pos) {
     hero_pos = this.update_targets(hero_pos);
-    const lang = this.persisted_data.language;
+    const lang = this.personal_info.lang;
     const symbol = this.get_symbol_at(hero_pos);
 
     if (consts.walkable_symbols.indexOf(symbol) === -1) {
@@ -778,6 +830,53 @@ export class Labyrinth {
     }
 
   }
+  update_menu() {
+    let current_menu: Array<any>;
+
+    if (this.is_main_menu) {
+      current_menu = this.main_menu;
+    } else {
+      current_menu = this.game_menu;
+    }
+
+    if (this.pressed.get('8')) {
+      let new_p = this.menu_position;
+
+      if (new_p > 0) {
+        do {
+          new_p--;
+        }
+        while (new_p !== -1 && !current_menu[new_p][2]);
+      }
+
+      if (new_p !== -1) {
+        this.menu_position = new_p;
+      }
+    }
+
+    if (this.pressed.get('2')) {
+      let new_p = this.menu_position;
+
+      if (new_p < current_menu.length) {
+        do {
+          new_p++;
+        }
+        while (new_p !== current_menu.length && !current_menu[new_p][2]);
+      }
+
+      if (new_p !== current_menu.length) {
+        this.menu_position = new_p;
+      }
+    }
+
+    if (this.pressed.get('5')) {
+      current_menu[this.menu_position][1](this);
+    }
+
+    if (!this.is_main_menu && this.pressed.get('Escape')) {
+      this.is_menu_open = false;
+    }
+  }
   update_on_map() {
     if (this.game_over_message !== '') {
       if (this.pressed.get(' ')) {
@@ -785,32 +884,6 @@ export class Labyrinth {
         this.load_last_save();
       }
 
-      return;
-    }
-
-    if (this.is_menu_open) {
-      if (this.pressed.get('8')) {
-        if (this.menu_position > 0) {
-          this.menu_position--;
-        }
-      }
-
-      if (this.pressed.get('2')) {
-        if (this.menu_position < 2) {
-          this.menu_position++;
-        }
-      }
-
-      // TODO
-
-      if (this.pressed.get('Escape')) {
-        this.is_menu_open = false;
-      }
-
-      return;
-    } else if (this.pressed.get('Escape')) {
-      this.is_menu_open = true;
-      this.menu_position = 0;
       return;
     }
 
@@ -842,6 +915,12 @@ export class Labyrinth {
       return;
     }
 
+    if (this.pressed.get('Escape')) {
+      this.is_menu_open = true;
+      this.menu_position = 0;
+      return;
+    }
+
     const selected_slot = this.persisted_data.slots[this.selected_slot];
 
     if (this.pressed.get(' ') && this.has_usable_item_on_slot(this.selected_slot)) {
@@ -864,7 +943,7 @@ export class Labyrinth {
     }
 
     const future_pos = this.get_future_position(this.persisted_data.hero_position);
-    const lang = this.persisted_data.language;
+    const lang = this.personal_info.lang;
 
     const ret = this.try_enter_or_exit(future_pos[0]);
 
@@ -873,8 +952,6 @@ export class Labyrinth {
         this.change_map(ret[2]);
         this.persisted_data.hero_position = ret[1];
         this.save_to_memory();
-        // TODO: REMOVE, FOR DEBUGGING
-        this.save_to_storage();
         return;
       }
     }
@@ -1000,7 +1077,8 @@ export class Labyrinth {
     }
 
     if (this.current_map.texts !== undefined) {
-      const texts = this.current_map.texts[this.persisted_data.language];
+      const lang = this.personal_info.lang;
+      const texts = this.current_map.texts[lang];
 
       for (const key in texts) {
         if (texts.hasOwnProperty(key)) {
@@ -1066,7 +1144,7 @@ export class Labyrinth {
     }
 
     const slot = this.persisted_data.slots[idx];
-    const lang = this.persisted_data.language;
+    const lang = this.personal_info.lang;
     let text = chr + '. ' + make_first_letter_upper(translations.item2description[lang][slot.symbol].text);
 
     if (slot.usage > 1) {
@@ -1154,6 +1232,8 @@ export class Labyrinth {
     this.current_map_data.projectiles.splice(projectile_position, 1);
   }
   draw_overlay() {
+    const lang = this.personal_info.lang;
+
     this.engine.text(this.current_status, this.to_screen_coord(2, 1), consts.White);
 
     const money = currencyFormatter.format(this.persisted_data.coins) + ' $';
@@ -1177,22 +1257,26 @@ export class Labyrinth {
     this.print_slot(2, 'd', this.to_screen_coord(3, h + 2));
 
     if (this.has_throwable_item_on_slot(this.selected_slot)) {
+      const txt = '⇧ ' + translations.lancer[lang];
+
       if (this.action === 'throw') {
-        this.engine.text('⇧ Lancer', this.to_screen_coord(29, h, -2), consts.OverlaySelected);
+        this.engine.text(txt, this.to_screen_coord(29, h, -2), consts.OverlaySelected);
       } else {
-        this.engine.text('⇧ Lancer', this.to_screen_coord(29, h, -2), consts.OverlayHighlight);
+        this.engine.text(txt, this.to_screen_coord(29, h, -2), consts.OverlayHighlight);
       }
     } else {
       this.engine.text('⇧', this.to_screen_coord(29, h, -2), consts.OverlayNormal);
     }
 
     if (this.has_usable_item_on_slot(this.selected_slot)) {
+      const use = translations.use[lang];
+
       if (this.action === 'use') {
         this.engine.text('␣', this.to_screen_coord(29, h + 1, -3, -2), consts.OverlaySelected);
-        this.engine.text('Utiliser', this.to_screen_coord(31, h + 1), consts.OverlaySelected);
+        this.engine.text(use, this.to_screen_coord(31, h + 1), consts.OverlaySelected);
       } else {
         this.engine.text('␣', this.to_screen_coord(29, h + 1, -3, -2), consts.OverlayHighlight);
-        this.engine.text('Utiliser', this.to_screen_coord(31, h + 1), consts.OverlayHighlight);
+        this.engine.text(use, this.to_screen_coord(31, h + 1), consts.OverlayHighlight);
       }
     } else {
       this.engine.text('␣', this.to_screen_coord(29, h + 1, -3, -2), consts.OverlayNormal);
@@ -1201,14 +1285,15 @@ export class Labyrinth {
     const current_symbol = this.get_symbol_at(this.persisted_data.hero_position);
 
     if (this.persisted_data.slots[this.selected_slot].symbol !== '' && current_symbol !== '>' && current_symbol !== '<') {
-      this.engine.text('q Déposer', this.to_screen_coord(29, h + 2), consts.OverlayHighlight);
+      const drop = translations.drop[lang];
+      this.engine.text('q ' + drop, this.to_screen_coord(29, h + 2), consts.OverlayHighlight);
     } else {
       this.engine.text('q', this.to_screen_coord(29, h + 2), consts.OverlayNormal);
     }
   }
   draw_message(): void {
     if (this.game_over_message !== '') {
-      const lang = this.persisted_data.language;
+      const lang = this.personal_info.lang;
       const retry = translations.retry[lang];
 
       this.engine.rect(this.to_screen_coord(consts.char_per_line / 2 - 15, 10),
@@ -1229,16 +1314,41 @@ export class Labyrinth {
       this.engine.text(retry, this.to_screen_coord(consts.char_per_line / 2 - retry.length / 2, 14), consts.OverlayHighlight);
     }
   }
+  draw_main_menu(): void {
+    let i = 0;
+
+    for (const [text, func, enabled] of this.main_menu) {
+      let txt: string;
+      let x = consts.char_per_line / 2 - 7;
+      let color: string;
+
+      if (this.menu_position === i) {
+        txt = '> ' + text;
+      } else {
+        txt = text;
+        x += 2;
+      }
+
+      if (enabled) {
+        color = consts.OverlayHighlight;
+      } else {
+        color = consts.OverlayNormal;
+      }
+
+      this.engine.text(txt, this.to_screen_coord(x, 12 + i), color);
+      i++;
+    }
+  }
   draw_menu(): void {
     if (this.is_menu_open) {
-      const lang = this.persisted_data.language;
+      let i;
 
       this.engine.rect(this.to_screen_coord(consts.char_per_line / 2 - 15, 10),
         30 * this.char_width, 16 * 7, consts.DefaultBackgroundColor);
       this.engine.text(' **************************** ',
         this.to_screen_coord(consts.char_per_line / 2 - 15, 10), consts.OverlayHighlight);
 
-      for (let i = 11; i < 16; i++) {
+      for (i = 11; i < 16; i++) {
         this.engine.text('*                            *',
           this.to_screen_coord(consts.char_per_line / 2 - 15, i), consts.OverlayHighlight);
       }
@@ -1246,25 +1356,29 @@ export class Labyrinth {
       this.engine.text(' **************************** ',
         this.to_screen_coord(consts.char_per_line / 2 - 15, 16), consts.OverlayHighlight);
 
-      // TODO: TRANSLATE
-      if (this.menu_position === 0) {
-        this.engine.text('> Sauver', this.to_screen_coord(consts.char_per_line / 2 - 5, 12), consts.OverlayHighlight);
-      } else {
-        this.engine.text('  Sauver', this.to_screen_coord(consts.char_per_line / 2 - 5, 12), consts.OverlayHighlight);
-      }
+      i = 0;
 
-      if (this.menu_position === 1) {
-        this.engine.text('> Charger', this.to_screen_coord(consts.char_per_line / 2 - 5, 13), consts.OverlayHighlight);
-      } else {
-        this.engine.text('  Charger', this.to_screen_coord(consts.char_per_line / 2 - 5, 13), consts.OverlayHighlight);
-      }
+      for (const [text, func, enabled] of this.game_menu) {
+        let txt: string;
+        let x = consts.char_per_line / 2 - 5;
+        let color: string;
 
-      if (this.menu_position === 2) {
-        this.engine.text('> Quitter', this.to_screen_coord(consts.char_per_line / 2 - 5, 14), consts.OverlayHighlight);
-      } else {
-        this.engine.text('  Quitter', this.to_screen_coord(consts.char_per_line / 2 - 5, 14), consts.OverlayHighlight);
-      }
+        if (this.menu_position === i) {
+          txt = '> ' + text;
+        } else {
+          txt = text;
+          x += 2;
+        }
 
+        if (enabled) {
+          color = consts.OverlayHighlight;
+        } else {
+          color = consts.OverlayNormal;
+        }
+
+        this.engine.text(txt, this.to_screen_coord(x, 12 + i), color);
+        i++;
+      }
     }
   }
   draw_all(): void {
@@ -1280,6 +1394,41 @@ export class Labyrinth {
   resize(width, height): void {
     this.engine.resize(width, height);
     this.draw();
+  }
+  refresh_menu(reset_position: boolean): void {
+    const save = Labyrinth.get_from_storage();
+    const lang = this.personal_info.lang;
+
+    this.main_menu = [
+      [ translations.new_game[lang], (l: Labyrinth) => Labyrinth.clear_and_start(l), true ],
+      [ translations.load[lang], (l: Labyrinth) => Labyrinth.load_save(l, save), save !== null ],
+      [ translations.lang[lang], (l: Labyrinth) => Labyrinth.toggle_language(l), true ],
+    ];
+
+    this.game_menu = [
+      [ translations.save[lang], (l: Labyrinth) => Labyrinth.save_to_storage(l), true ],
+      [ translations.load[lang], (l: Labyrinth) => Labyrinth.load_from_storage(l), true],
+      [ translations.exit[lang], (l: Labyrinth) => Labyrinth.open_main_menu(l), true],
+    ];
+
+    if (reset_position) {
+      if (this.main_menu[1][2]) {
+        this.menu_position = 1;
+      } else {
+        this.menu_position = 0;
+      }
+    }
+  }
+  load_personal_infos() {
+    this.personal_info = JSON.parse(window.localStorage.getItem('personal'));
+
+    if (this.personal_info === null) {
+      this.personal_info = new PersonalInfos();
+      this.personal_info.lang = 'en';
+    }
+  }
+  save_personal_infos() {
+    window.localStorage.setItem('personal', JSON.stringify(this.personal_info));
   }
   constructor() {
     this.engine = new Engine(
@@ -1314,32 +1463,10 @@ export class Labyrinth {
     this.action = '';
     this.game_over_message = '';
     this.is_menu_open = false;
-    this.menu_position = 0;
+    this.is_main_menu = true;
 
+    this.load_personal_infos();
     this.parse_all_maps();
-
-    // TODO: FOR DEBUGGING
-//    this.clear_storage();
-
-    if (!this.load_from_storage()) {
-      // If there is no save
-      this.change_map('bateau');
-      this.persisted_data.hero_position = this.current_map.start;
-      this.persisted_data.coins = 0;
-      this.persisted_data.language = 'en';
-      this.persisted_data.slots = new Array<Item>(3);
-      this.persisted_data.slots[0] = new Item('', -1);
-      this.persisted_data.slots[1] = new Item('', -1);
-      this.persisted_data.slots[2] = new Item('', -1);
-      // this.persisted_data.slots[0] = new Item('/', -1);
-      // this.persisted_data.slots[1] = new Item('=', consts.spell_usage['=']);
-      // this.persisted_data.slots[2] = new Item('*', 10);
-      // TODO: REMOVE, FOR DEBUGGING
-  //    this.save_to_storage();
-    } else {
-      this.change_map(this.persisted_data.current_map_name);
-    }
-
-    this.save_to_memory();
+    this.refresh_menu(true);
   }
 }
