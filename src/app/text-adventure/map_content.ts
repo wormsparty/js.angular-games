@@ -262,7 +262,7 @@ const training = new LevelMap('' +
     [ '~', '#0000FF'],
   ]),
   undefined,
-  undefined,
+  '#020302',
   undefined,
   undefined,
   new TargetSpawner(function(state: SpawnerState): void {
