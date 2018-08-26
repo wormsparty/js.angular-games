@@ -50,8 +50,8 @@ export const lancer = {
 };
 
 export const use = {
-  'en': 'Use',
-  'fr': 'Utiliser',
+  'en': 'Cast',
+  'fr': 'Lancer sort',
 };
 
 export const drop = {

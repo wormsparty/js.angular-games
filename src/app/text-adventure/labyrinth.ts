@@ -329,7 +329,7 @@ export class Labyrinth {
     l.is_main_menu = true;
   }
   static clear_and_start(l: Labyrinth): void {
-    Labyrinth.clear_storage();
+    // Labyrinth.clear_storage();
 
     // Create new save with default values
     l.change_map('bateau');
@@ -926,17 +926,10 @@ export class Labyrinth {
     const selected_slot = this.persisted_data.slots[this.selected_slot];
 
     if (this.pressed.get(' ') && this.has_usable_item_on_slot(this.selected_slot)) {
-      if (this.has_consumable_on_slot(this.selected_slot)) {
-        this.current_status = '> TODO: Utiliser consomable';
-        selected_slot.symbol = '';
-        selected_slot.usage = -1;
-        this.action = '';
+      if (this.action !== 'use') {
+        this.action = 'use';
       } else {
-        if (this.action !== 'use') {
-          this.action = 'use';
-        } else {
-          this.action = '';
-        }
+        this.action = '';
       }
 
       this.move_projectiles();
@@ -1169,31 +1162,11 @@ export class Labyrinth {
   has_spell_on_slot(slot: number) {
     return consts.spell_items.indexOf(this.persisted_data.slots[slot].symbol) > -1;
   }
-  has_consumable_on_slot(slot: number) {
-    return consts.consumable_items.indexOf(this.persisted_data.slots[slot].symbol) > -1;
-  }
   has_usable_item_on_slot(slot: number) {
-    return this.has_consumable_on_slot(slot) || this.has_spell_on_slot(slot);
+    return this.has_spell_on_slot(slot);
   }
   has_throwable_item_on_slot(slot: number) {
     return this.has_weapon_on_slot(slot) || this.has_throwable_on_slot(slot);
-  }
-  has_item_or_pnj_at(pos: Pos, current_pnj: string) {
-    for (const [item, positions] of this.current_map_data.items) {
-      for (let i = 0; i < positions.length; i++) {
-        if (positions[i].equals(pos)) {
-          return true;
-        }
-      }
-    }
-
-    for (const [pnj, pnj_pos] of this.current_map_data.pnjs) {
-      if (pnj !== current_pnj && pnj_pos.equals(pos)) {
-        return true;
-      }
-    }
-
-    return false;
   }
   get_symbol_at(pos: Pos): string {
     return this.current_map.get_symbol_at(pos.x, pos.y);

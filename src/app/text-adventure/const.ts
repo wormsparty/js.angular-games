@@ -72,7 +72,6 @@ export const item2price = {
 export const weapon_items = [ '/' ];
 export const throwable_items = [ '*' ];
 export const spell_items = [ '=' ];
-export const consumable_items = []; // [ '?' ];
 
 export const spell_usage = {
   '=': 10,
