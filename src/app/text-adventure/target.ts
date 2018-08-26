@@ -1,6 +1,7 @@
 import {Pos} from './map_logic';
 import {Labyrinth} from './labyrinth';
 import * as consts from './const';
+import * as translations from './translations';
 
 export class Target {
   pos: Pos;
@@ -87,6 +88,7 @@ export class TargetSpawner {
 
   update(l: Labyrinth, stateHolder: SpawnerState, hero_pos: Pos): Pos {
     this.spawner_update(stateHolder);
+    const lang = l.personal_info.lang;
 
     for (let i = 0; i < stateHolder.targets.length;) {
       const target = stateHolder.targets[i];
@@ -132,8 +134,14 @@ export class TargetSpawner {
       }
 
       if (stateHolder.targets[i].pos.equals(hero_pos)) {
-        hero_pos.x += dp.x;
-        hero_pos.y += dp.y;
+        if (target.symbol === 'O') {
+          // TODO: Check for teleports here??
+          hero_pos.x += dp.x;
+          hero_pos.y += dp.y;
+        } else {
+          l.game_over_message = translations.symbol2gameover[lang][target.symbol];
+          return hero_pos;
+        }
       }
 
       i++;

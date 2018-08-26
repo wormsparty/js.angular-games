@@ -102,11 +102,30 @@ export const symbol2gameover = {
   'en': {
     '#': 'Crushed!',
     '~': 'Drown!',
+    'v': 'Impaled!',
   },
   'fr': {
     '#': 'Écrasé!',
     '~': 'Noyé!',
+    'v': 'Empalé!',
   }
+};
+
+export const hit = {
+  'en': {
+    'O': '> Target destroyed!',
+    'v': '> Spike destroyed!',
+    '<': '> Spike destroyed!',
+    '>': '> Spike destroyed!',
+    '^': '> Spike destroyed!',
+  },
+  'fr': {
+    'O': '> Cible détruite!',
+    'v': '> Pique détruit!',
+    '<': '> Pique détruit!',
+    '>': '> Pique détruit!',
+    '^': '> Pique détruit!',
+  },
 };
 
 export const retry = {

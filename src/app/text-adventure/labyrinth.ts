@@ -264,16 +264,17 @@ export class Labyrinth {
   private current_status: string;
   private selected_slot: number;
   private action: string;
-  private game_over_message: string;
   private is_menu_open: boolean;
   private is_main_menu: boolean;
   private menu_position: number;
   private main_menu: Array<any>;
   private game_menu: Array<any>;
 
+  game_over_message: string;
   personal_info: PersonalInfos;
   last_save: PersistedData;
   persisted_data: PersistedData;
+  initial_persisted_data: PersistedData;
 
   current_map: LevelMap;
   current_map_data: PersistedMapData;
@@ -295,9 +296,9 @@ export class Labyrinth {
     window.localStorage.setItem('save', save_data);
     l.is_menu_open = false;
   }
-  static clear_storage() {
+/*  static clear_storage() {
     window.localStorage.clear();
-  }
+  }*/
   static get_from_storage(): PersistedData {
     const save_data = window.localStorage.getItem('save');
 
@@ -329,27 +330,18 @@ export class Labyrinth {
     l.is_main_menu = true;
   }
   static clear_and_start(l: Labyrinth): void {
-    // Labyrinth.clear_storage();
+    Labyrinth.load_save(l, l.initial_persisted_data.copy());
 
-    // Create new save with default values
-    l.change_map('bateau');
-    l.persisted_data.hero_position = l.current_map.start;
-    l.persisted_data.coins = 0;
-    l.persisted_data.slots = new Array<Item>(3);
-    l.persisted_data.slots[0] = new Item('', -1);
-    l.persisted_data.slots[1] = new Item('', -1);
-    l.persisted_data.slots[2] = new Item('', -1);
+    // We can override default values for debugging here
     // l.persisted_data.slots[0] = new Item('/', -1);
     // l.persisted_data.slots[1] = new Item('=', consts.spell_usage['=']);
     // l.persisted_data.slots[2] = new Item('*', 10);
 
-    l.is_main_menu = false;
-    l.is_menu_open = false;
     l.save_to_memory();
   }
   parse_all_maps(): void {
-    this.persisted_data = new PersistedData();
-    this.persisted_data.map_data = new Map<string, PersistedMapData>();
+    this.initial_persisted_data = new PersistedData();
+    this.initial_persisted_data.map_data = new Map<string, PersistedMapData>();
 
     for (const [key, map] of AllMaps) {
       map.parse(key); // TODO: Pourquoi map.parse est détectée comme non utilisée??
@@ -377,8 +369,18 @@ export class Labyrinth {
         map_data.items.set(item, item_positions);
       }
 
-      this.persisted_data.map_data.set(key, map_data);
+      this.initial_persisted_data.map_data.set(key, map_data);
     }
+
+    this.initial_persisted_data.coins = 0;
+    this.initial_persisted_data.slots = new Array<Item>(3);
+    this.initial_persisted_data.slots[0] = new Item('', -1);
+    this.initial_persisted_data.slots[1] = new Item('', -1);
+    this.initial_persisted_data.slots[2] = new Item('', -1);
+
+    const initial_map = 'bateau';
+    this.initial_persisted_data.current_map_name = initial_map;
+    this.initial_persisted_data.hero_position = AllMaps.get(initial_map).start;
   }
   draw(): void {
     if (this.is_main_menu) {
@@ -613,6 +615,7 @@ export class Labyrinth {
   }
   move_hero(hero_pos: Pos, walkable_pos: Pos, aim_pos: Pos): Pos {
     const ret = this.try_teleport(hero_pos, walkable_pos);
+    const lang = this.personal_info.lang;
 
     if (ret[0]) {
       this.change_map(ret[2]);
@@ -620,13 +623,13 @@ export class Labyrinth {
       this.persisted_data.hero_position = ret[1];
       this.save_to_memory();
     } else {
-      const evt = this.try_hit_target(hero_pos, aim_pos);
+      const [evt, symbol] = this.try_hit_target(hero_pos, aim_pos);
 
       if (evt === '') {
         hero_pos = walkable_pos;
         this.update_current_status(hero_pos);
       } else if (evt === 'hit') {
-        this.current_status = '> Cible détruite!';
+        this.current_status = translations.hit[lang][symbol];
       }
     }
 
@@ -762,9 +765,9 @@ export class Labyrinth {
       new_map_name,
     ];
   }
-  try_hit_target(hero_pos: Pos, aim_pos: Pos): string {
+  try_hit_target(hero_pos: Pos, aim_pos: Pos): [string, string] {
     if (this.current_map.target_spawner === undefined) {
-      return '';
+      return [ '', '' ];
     }
 
     const targets = this.current_map_data.spawner.targets;
@@ -778,19 +781,19 @@ export class Labyrinth {
 
           if (target.pv <= 0) {
             targets.splice(i, 1);
-            return 'hit';
+            return [ 'hit', target.symbol ];
           } else {
-            return 'push';
+            return [ 'push', target.symbol ];
           }
         } else {
-          return 'push';
+          return [ 'push', target.symbol ];
         }
       }
 
       i++;
     }
 
-    return '';
+    return [ '', '' ];
   }
   update_targets(hero_pos: Pos): Pos {
     if (this.current_map.target_spawner !== undefined) {
@@ -1272,7 +1275,7 @@ export class Labyrinth {
       const retry = translations.retry[lang];
 
       this.engine.rect(this.to_screen_coord(consts.char_per_line / 2 - 15, 10),
-        30 * this.char_width, 16 * 7, consts.DefaultBackgroundColor);
+        30 * this.char_width, 16 * 7, this.current_map.background_color);
       this.engine.text(' **************************** ',
         this.to_screen_coord(consts.char_per_line / 2 - 15, 10), consts.OverlayHighlight);
 
