@@ -130,7 +130,7 @@ export const hit = {
 
 export const retry = {
   'en': 'Space to retry',
-  'fr': 'Espace pour reessayer',
+  'fr': 'Espace pour réessayer',
 };
 
 export const new_game = {
