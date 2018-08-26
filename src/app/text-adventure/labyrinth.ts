@@ -919,6 +919,7 @@ export class Labyrinth {
     if (this.pressed.get('Escape')) {
       this.is_menu_open = true;
       this.menu_position = 0;
+      this.refresh_menu(false); // This is to update the availability of Load()
       return;
     }
 
@@ -1345,7 +1346,7 @@ export class Labyrinth {
       let i;
 
       this.engine.rect(this.to_screen_coord(consts.char_per_line / 2 - 15, 10),
-        30 * this.char_width, 16 * 7, consts.DefaultBackgroundColor);
+        30 * this.char_width, 16 * 7, this.current_map.background_color);
       this.engine.text(' **************************** ',
         this.to_screen_coord(consts.char_per_line / 2 - 15, 10), consts.OverlayHighlight);
 
@@ -1408,7 +1409,7 @@ export class Labyrinth {
 
     this.game_menu = [
       [ translations.save[lang], (l: Labyrinth) => Labyrinth.save_to_storage(l), true ],
-      [ translations.load[lang], (l: Labyrinth) => Labyrinth.load_from_storage(l), true],
+      [ translations.load[lang], (l: Labyrinth) => Labyrinth.load_from_storage(l), save !== null ],
       [ translations.exit[lang], (l: Labyrinth) => Labyrinth.open_main_menu(l), true],
     ];
 

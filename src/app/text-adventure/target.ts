@@ -56,6 +56,8 @@ export class SpawnerState {
           y: this.targets[i].pos.y,
         },
         symbol: this.targets[i].symbol,
+        pv: this.targets[i].pv,
+        pv_max: this.targets[i].pv_max,
       };
     }
 
