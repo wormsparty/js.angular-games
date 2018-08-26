@@ -613,7 +613,7 @@ export class Labyrinth {
       }
     }
   }
-  move_hero(hero_pos: Pos, walkable_pos: Pos, aim_pos: Pos): Pos {
+  move_hero(hero_pos: Pos, walkable_pos: Pos, aim_pos: Pos): [Pos, boolean] {
     const ret = this.try_teleport(hero_pos, walkable_pos);
     const lang = this.personal_info.lang;
 
@@ -621,7 +621,7 @@ export class Labyrinth {
       this.change_map(ret[2]);
       hero_pos = ret[1];
       this.persisted_data.hero_position = ret[1];
-      this.save_to_memory();
+      return [hero_pos, true];
     } else {
       const [evt, symbol] = this.try_hit_target(hero_pos, aim_pos);
 
@@ -631,9 +631,10 @@ export class Labyrinth {
       } else if (evt === 'hit') {
         this.current_status = translations.hit[lang][symbol];
       }
+
+      return [hero_pos, false];
     }
 
-    return hero_pos;
   }
   // We get:
   // (1) The walkable future position,
@@ -1026,10 +1027,19 @@ export class Labyrinth {
       return;
     }
 
-    this.persisted_data.hero_position = this.move_hero(this.persisted_data.hero_position, future_pos[0], future_pos[1]);
-    this.move_pnjs(this.persisted_data.hero_position);
-    this.move_projectiles();
+    const [new_pos, map_changed] = this.move_hero(this.persisted_data.hero_position, future_pos[0], future_pos[1]);
+    this.persisted_data.hero_position = new_pos;
+
+    if (!map_changed) {
+      this.move_pnjs(this.persisted_data.hero_position);
+      this.move_projectiles();
+    }
+
     this.move_targets_or_die(this.persisted_data.hero_position);
+
+    if (map_changed && this.game_over_message === '') {
+      this.save_to_memory();
+    }
   }
   draw_map() {
     for (let y = 0; y < consts.map_lines; y++) {
