@@ -287,6 +287,8 @@ export class Labyrinth {
 
     l.change_map(l.persisted_data.current_map_name);
     l.is_menu_open = false;
+
+    l.save_to_memory();
   }
   static load_from_storage(l: Labyrinth): void {
     Labyrinth.load_save(l, Labyrinth.get_from_storage());
@@ -336,8 +338,6 @@ export class Labyrinth {
     // l.persisted_data.slots[0] = new Item('/', -1);
     // l.persisted_data.slots[1] = new Item('=', consts.spell_usage['=']);
     // l.persisted_data.slots[2] = new Item('*', 10);
-
-    l.save_to_memory();
   }
   parse_all_maps(): void {
     this.initial_persisted_data = new PersistedData();

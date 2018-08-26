@@ -86,6 +86,33 @@ export class TargetSpawner {
     this.pv2color = pv2color;
   }
 
+  inner_update(l: Labyrinth, i: number, target: Target, stateHolder: SpawnerState, hero_pos: Pos, dp: Pos): [boolean, Pos] {
+    const [hit, power] = l.hits_projectile(target.pos);
+    const lang = l.personal_info.lang;
+
+    if (hit !== -1) {
+      l.projectile2item(hit);
+      target.pv -= power;
+
+      if (target.pv <= 0) {
+        stateHolder.targets.splice(i, 1);
+        return [ false, null ];
+      }
+    }
+
+    if (target.pos.equals(hero_pos)) {
+      if (target.symbol === 'O') {
+        // TODO: Check for teleports here??
+        hero_pos.x += dp.x;
+        hero_pos.y += dp.y;
+      } else {
+        l.game_over_message = translations.symbol2gameover[lang][target.symbol];
+        return [ true, hero_pos ];
+      }
+    }
+
+    return [ true, null ];
+  }
   update(l: Labyrinth, stateHolder: SpawnerState, hero_pos: Pos): Pos {
     this.spawner_update(stateHolder);
     const lang = l.personal_info.lang;
@@ -99,16 +126,14 @@ export class TargetSpawner {
       // The case below is if the two are separated by 1:
       // the target gets at the same position as the projectile
       // -> It needs to count as a hit too
-      let [hit, power] = l.hits_projectile(target.pos);
+      let [cont, new_pos] = this.inner_update(l, i, target, stateHolder, hero_pos, dp);
 
-      if (hit !== -1) {
-        l.projectile2item(hit);
-        target.pv -= power;
+      if (!cont) {
+        continue;
+      }
 
-        if (target.pv <= 0) {
-          stateHolder.targets.splice(i, 1);
-          continue;
-        }
+      if (new_pos !== null) {
+        return new_pos;
       }
 
       target.pos.x += dp.x;
@@ -121,27 +146,14 @@ export class TargetSpawner {
         continue;
       }
 
-      [hit, power] = l.hits_projectile(target.pos);
+      [cont, new_pos] = this.inner_update(l, i, target, stateHolder, hero_pos, dp);
 
-      if (hit !== -1) {
-        l.projectile2item(hit);
-        target.pv -= power;
-
-        if (target.pv <= 0) {
-          stateHolder.targets.splice(i, 1);
-          continue;
-        }
+      if (!cont) {
+        continue;
       }
 
-      if (stateHolder.targets[i].pos.equals(hero_pos)) {
-        if (target.symbol === 'O') {
-          // TODO: Check for teleports here??
-          hero_pos.x += dp.x;
-          hero_pos.y += dp.y;
-        } else {
-          l.game_over_message = translations.symbol2gameover[lang][target.symbol];
-          return hero_pos;
-        }
+      if (new_pos !== null) {
+        return new_pos;
       }
 
       i++;
