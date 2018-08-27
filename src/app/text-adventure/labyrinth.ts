@@ -642,6 +642,19 @@ export class Labyrinth {
     }
 
   }
+  collides_with_obstacle(hero_pos: Pos): boolean {
+    for (const [chr, positions] of this.current_map.obstacles) {
+      if (this.current_map.obstacle_visible(this, chr)) {
+        for (const pos of positions) {
+          if (hero_pos.equals(pos)) {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
+  }
   // We get:
   // (1) The walkable future position,
   // (2) The real future direction (for aiming) and
@@ -668,7 +681,6 @@ export class Labyrinth {
 
     const future_pos: Pos = new Pos(x, y);
     const allowed_walking_symbols = consts.walkable_symbols;
-    const lang = this.personal_info.lang;
 
     let symbol = this.get_symbol_at(future_pos);
 
@@ -1050,6 +1062,10 @@ export class Labyrinth {
       return;
     }
 
+    if (this.collides_with_obstacle(future_pos[0])) {
+      return;
+    }
+
     const [new_pos, map_changed] = this.move_hero(this.persisted_data.hero_position, future_pos[0], future_pos[1]);
     this.persisted_data.hero_position = new_pos;
 
@@ -1134,6 +1150,17 @@ export class Labyrinth {
 
         this.engine.rect(coord, this.char_width, 16, this.current_map.background_color);
         this.engine.text(target.symbol, coord, this.current_map.target_spawner.pv2color(target.pv));
+      }
+    }
+  }
+  draw_obstacles() {
+    for (const [ chr, positions ] of this.current_map.obstacles) {
+      if (this.current_map.obstacle_visible(this, chr)) {
+        for (const pos of positions) {
+          const coord = this.to_screen_coord(pos.x, pos.y + consts.header_size);
+          this.engine.rect(coord, this.char_width, 16, this.current_map.background_color);
+          this.engine.text(chr, coord, this.current_map.obstacle_color);
+        }
       }
     }
   }
@@ -1398,6 +1425,7 @@ export class Labyrinth {
     this.draw_pnjs();
     this.draw_projectiles();
     this.draw_targets();
+    this.draw_obstacles();
     this.draw_overlay();
     this.draw_message();
     this.draw_menu();

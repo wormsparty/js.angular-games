@@ -75,6 +75,8 @@ export class LevelMap {
   texts: {};
   teleports: Map<string, Array<TeleportPos>>;
   teleport_count: Map<string, number>;
+  obstacles: Map<string, Array<Pos>>;
+  obstacle_color: string;
   initial_pnj_positions: Map<string, Array<Pos>>;
   initial_item_positions: Map<string, Array<ObjPos>>;
   start: Pos;
@@ -82,11 +84,13 @@ export class LevelMap {
   text_color: string;
   pnj2position: Map<string, (l: Labyrinth, p1: Pos, p2: Pos) => Pos>;
   target_spawner: TargetSpawner;
+  obstacle_visible: (Labyrinth, string) => boolean;
 
   constructor(map: string, meta: string, teleport_map: Map<string, string>,
               tile2color: Map<string, string>, texts: {}, background: string,
               text_color: string, pnj2position: Map<string, (l: Labyrinth, p1: Pos, p2: Pos) => Pos>,
-              target_spawner: TargetSpawner) {
+              target_spawner: TargetSpawner, obstacle_visible: (Labyrinth, string) => boolean,
+              obstacle_color: string) {
     this.map = map;
     this.meta = meta;
     this.teleport_map = teleport_map;
@@ -99,6 +103,8 @@ export class LevelMap {
     this.start = new Pos(0, 0);
     this.pnj2position = pnj2position;
     this.target_spawner = target_spawner;
+    this.obstacles = new Map<string, Array<Pos>>();
+    this.obstacle_visible = obstacle_visible;
 
     if (background !== undefined) {
       this.background_color = background;
@@ -110,6 +116,12 @@ export class LevelMap {
       this.text_color = text_color;
     } else {
       this.text_color = consts.DefaultTextColor;
+    }
+
+    if (obstacle_color !== undefined) {
+      this.obstacle_color = obstacle_color;
+    } else {
+      this.obstacle_color = consts.DefaultTextColor;
     }
   }
 
@@ -143,7 +155,7 @@ export class LevelMap {
           if (visual_map[y][x] !== '#') {
             console.log('Les murs ne marchent pas en (' + x + ', ' + y + '), carte = ' + name);
           }
-        }  else if (consts.teleport_symbols.indexOf(chr) > -1) {
+        } else if (consts.teleport_symbols.indexOf(chr) > -1) {
           if (!this.teleports.has(chr)) {
             this.teleports.set(chr, []);
             this.teleport_count.set(chr, 0);
@@ -168,6 +180,12 @@ export class LevelMap {
           }
 
           this.initial_item_positions.get(chr).push(new ObjPos(x, y, usage, price));
+        } else if (consts.obstacle_symbols.indexOf(chr) > -1) {
+          if (!this.obstacles.has(chr)) {
+            this.obstacles.set(chr, []);
+          }
+
+          this.obstacles.get(chr).push(new Pos(x, y));
         } else if (chr !== ' ' && chr !== undefined) {
           if (chr === '@') {
             this.start = new Pos(x, y);

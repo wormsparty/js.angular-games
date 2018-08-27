@@ -77,6 +77,8 @@ const bateau = new LevelMap('' +
   '#000005',
   undefined,
   undefined,
+  undefined,
+  undefined,
   undefined);
 
 const mission = new LevelMap('' +
@@ -137,6 +139,8 @@ const mission = new LevelMap('' +
   ]),
   undefined,
   '#000005',
+  undefined,
+  undefined,
   undefined,
   undefined,
   undefined,
@@ -204,6 +208,8 @@ const outside = new LevelMap('' +
   ]),
   undefined,
   '#050505',
+  undefined,
+  undefined,
   undefined,
   undefined,
   undefined,
@@ -286,6 +292,8 @@ const training = new LevelMap('' +
       return '#FF0000';
     }
   }),
+  undefined,
+  undefined,
 );
 
 const spike = new LevelMap('' +
@@ -361,6 +369,8 @@ const spike = new LevelMap('' +
   }, function(pv: number): string {
     return '#00FF00';
   }),
+  undefined,
+  undefined,
 );
 
 const spike2 = new LevelMap('' +
@@ -437,6 +447,8 @@ const spike2 = new LevelMap('' +
   }, function(pv: number): string {
     return '#00FF00';
   }),
+  undefined,
+  undefined,
 );
 
 const sword_treasure = new LevelMap('' +
@@ -498,6 +510,8 @@ const sword_treasure = new LevelMap('' +
   undefined,
   undefined,
   undefined,
+  undefined,
+  undefined,
 );
 
 const leave_rock = new LevelMap('' +
@@ -526,8 +540,8 @@ const leave_rock = new LevelMap('' +
   '' +
   '                       #                #               \n' +
   '                       #                #               \n' +
-  '                      #   xxxxxxxx       #              \n' +
-  '                    ##                    ##            \n' +
+  '                      #                  #              \n' +
+  '                    ##xxxxxxxxxxxxxxxxxxxx##            \n' +
   '                 ###                        ###         \n' +
   '         ########                              ##       \n' +
   '#########                                        #      \n' +
@@ -574,6 +588,10 @@ const leave_rock = new LevelMap('' +
   }, function(pv: number): string {
     return '#00FF00';
   }),
+  function(l: Labyrinth, symbol: string): boolean {
+    return l.current_map_data.spawner.targets.length !== 0;
+  },
+  '#0088FF'
 );
 
 export const AllMaps: Map<string, LevelMap> = new Map([

@@ -21,6 +21,7 @@ export const globalTile2color = {
 export const teleport_symbols: Array<string> = [ '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '>', '<' ];
 export const item_symbols: Array<string> = [ '*', '$', '/', '=' ];
 export const walkable_symbols: Array<string> = [ '.', '<', '>' ];
+export const obstacle_symbols: Array<string> = [ 'x' ];
 export const shop_maps: Array<string> = [ 'outside' ];
 
 /*
