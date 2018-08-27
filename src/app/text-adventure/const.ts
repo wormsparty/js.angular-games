@@ -19,10 +19,9 @@ export const globalTile2color = {
 };
 
 export const teleport_symbols: Array<string> = [ '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '>', '<' ];
-export const item_symbols: Array<string> = [ '*', '$', '/', '=' ];
+export const item_symbols: Array<string> = [ '*', '$', '/', '\\' ];
 export const walkable_symbols: Array<string> = [ '.', '<', '>' ];
 export const obstacle_symbols: Array<string> = [ 'x' ];
-export const shop_maps: Array<string> = [ 'outside' ];
 
 /*
  * PNJ
@@ -48,35 +47,23 @@ export const mouvement_map = {
  */
 export const item2color = {
   '$': '#FFFF00',
-  // '(': '#FF8800',
   '=': '#FF0000',
-  // '[': '#FF0088',
-  // ']': '#FF00FF',
   '*': '#dd99FF',
-  // '{': '#00FFFF',
-  // ')': '#0000FF',
-  // '}': '#00FF00',
   '%': '#119900',
-  // '!': '#555555',
-  // '?': '#FFFFFF',
   '/': '#999999',
+  '\\': '#FFFFFF',
 };
 
-export const item2price = {
-  '*': 1,
-  //  '?': 20,
-  '/': 500,
-};
-
-export const weapon_items = [ '/' ];
+export const weapon_items = [ '/', '\\' ];
 export const throwable_items = [ '*' ];
-export const spell_items = [ '=' ];
-
-export const spell_usage = {
-  '=': 10,
-};
 
 export const projectile2color = {
   '*': '#999999',
   '&': '#FF0000',
+};
+
+export const weapon2damage = {
+  '/': 1,
+  '\\': 3,
+  '': 0,
 };

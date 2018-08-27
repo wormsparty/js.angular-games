@@ -9,54 +9,14 @@ export const pris = {
   },
 };
 
-export const depose = {
-  'en': {
-    'M': ' dropped',
-  },
-  'fr': {
-    'M': ' déposé',
-    'F': ' déposée',
-  },
-};
-
-export const buy = {
-  'en': '[5] Buy ',
-  'fr': '[5] Acheter ',
-};
-
-export const achete = {
-  'en': {
-    'M': ' bought for ',
-  },
-  'fr': {
-    'M': ' acheté ',
-    'F': ' achetée '
-  },
-};
-
 export const take = {
   'en': '[5] Take ',
   'fr': '[5] Prendre ',
 };
 
-export const not_enough = {
-  'en': '> Not enough money',
-  'fr': '> Pas assez d\'argent',
-};
-
 export const lancer = {
   'en': 'Throw',
   'fr': 'Lancer',
-};
-
-export const use = {
-  'en': 'Cast',
-  'fr': 'Lancer sort',
-};
-
-export const drop = {
-  'en': 'Drop',
-  'fr': 'Déposer',
 };
 
 export const lance = {
@@ -67,11 +27,6 @@ export const lance = {
     'M': ' lancé',
     'F': ' lancée',
   },
-};
-
-export const epuise = {
-  'en': '> Spell exhausted',
-  'fr': '> Sort épuisé',
 };
 
 export const pnj2dialog = {
@@ -87,12 +42,14 @@ export const item2description = {
   'en': {
     '*': { text: 'rock', genre: 'M' },
     '/': { text: 'sword', genre: 'M' },
+    '\\': { text: 'sword lvl.2', genre: 'M' },
     '=': { text: 'fire spell', genre: 'M' },
     '' : { text: 'nothing', genre: 'M' }
   },
   'fr': {
     '*': { text: 'caillou', genre: 'M' },
     '/': { text: 'épée', genre: 'F' },
+    '\\': { text: 'épée lvl.2', genre: 'F' },
     '=': { text: 'sort de feu', genre: 'M' },
     '' : { text: 'rien', genre: 'M' }
   }
@@ -103,29 +60,18 @@ export const symbol2gameover = {
     '#': 'Crushed!',
     '~': 'Drown!',
     'v': 'Impaled!',
+    '>': 'Impaled!',
+    '<': 'Impaled!',
+    '^': 'Impaled!',
   },
   'fr': {
     '#': 'Écrasé!',
     '~': 'Noyé!',
     'v': 'Empalé!',
+    '<': 'Empalé!',
+    '>': 'Empalé!',
+    '^': 'Empalé!',
   }
-};
-
-export const hit = {
-  'en': {
-    'O': '> Target destroyed!',
-    'v': '> Spike destroyed!',
-    '<': '> Spike destroyed!',
-    '>': '> Spike destroyed!',
-    '^': '> Spike destroyed!',
-  },
-  'fr': {
-    'O': '> Cible détruite!',
-    'v': '> Pique détruit!',
-    '<': '> Pique détruit!',
-    '>': '> Pique détruit!',
-    '^': '> Pique détruit!',
-  },
 };
 
 export const retry = {

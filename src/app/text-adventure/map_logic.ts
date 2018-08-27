@@ -1,5 +1,4 @@
 import * as consts from './const';
-import {Labyrinth} from './labyrinth';
 import {TargetSpawner} from './target';
 
 export class Pos {
@@ -33,16 +32,14 @@ export class ObjPos extends Pos {
   x: number;
   y: number;
   usage: number;
-  price: number;
 
-  constructor(x: number, y: number, usage: number, price: number) {
+  constructor(x: number, y: number, usage: number) {
     super(x, y);
     this.usage = usage;
-    this.price = price;
   }
 
   copy(): ObjPos {
-    return new ObjPos(this.x, this.y, this.usage, this.price);
+    return new ObjPos(this.x, this.y, this.usage);
   }
 }
 
@@ -77,20 +74,17 @@ export class LevelMap {
   teleport_count: Map<string, number>;
   obstacles: Map<string, Array<Pos>>;
   obstacle_color: string;
-  initial_pnj_positions: Map<string, Array<Pos>>;
   initial_item_positions: Map<string, Array<ObjPos>>;
   start: Pos;
   background_color: string;
   text_color: string;
-  pnj2position: Map<string, (l: Labyrinth, p1: Pos, p2: Pos) => Pos>;
   target_spawner: TargetSpawner;
   obstacle_visible: (Labyrinth, string) => boolean;
 
   constructor(map: string, meta: string, teleport_map: Map<string, string>,
               tile2color: Map<string, string>, texts: {}, background: string,
-              text_color: string, pnj2position: Map<string, (l: Labyrinth, p1: Pos, p2: Pos) => Pos>,
-              target_spawner: TargetSpawner, obstacle_visible: (Labyrinth, string) => boolean,
-              obstacle_color: string) {
+              text_color: string, target_spawner: TargetSpawner,
+              obstacle_visible: (Labyrinth, string) => boolean, obstacle_color: string) {
     this.map = map;
     this.meta = meta;
     this.teleport_map = teleport_map;
@@ -98,10 +92,8 @@ export class LevelMap {
     this.texts = texts;
     this.teleports = new Map<string, Array<TeleportPos>>();
     this.teleport_count = new Map<string, number>();
-    this.initial_pnj_positions = new Map<string, Array<Pos>>();
     this.initial_item_positions = new Map<string, Array<ObjPos>>();
     this.start = new Pos(0, 0);
-    this.pnj2position = pnj2position;
     this.target_spawner = target_spawner;
     this.obstacles = new Map<string, Array<Pos>>();
     this.obstacle_visible = obstacle_visible;
@@ -168,18 +160,7 @@ export class LevelMap {
             this.initial_item_positions.set(chr, []);
           }
 
-          let usage = consts.spell_usage[chr];
-          let price = 0;
-
-          if (usage === undefined) {
-            usage = 1;
-          }
-
-          if (consts.shop_maps.indexOf(name) > -1) {
-            price = consts.item2price[chr];
-          }
-
-          this.initial_item_positions.get(chr).push(new ObjPos(x, y, usage, price));
+          this.initial_item_positions.get(chr).push(new ObjPos(x, y, 1));
         } else if (consts.obstacle_symbols.indexOf(chr) > -1) {
           if (!this.obstacles.has(chr)) {
             this.obstacles.set(chr, []);
@@ -190,11 +171,7 @@ export class LevelMap {
           if (chr === '@') {
             this.start = new Pos(x, y);
           } else {
-            if (!this.initial_pnj_positions.has(chr)) {
-              this.initial_pnj_positions.set(chr, []);
-            }
-
-            this.initial_pnj_positions.get(chr).push(new Pos(x, y));
+            console.log('Unknown char: ' + chr);
           }
         }
       }

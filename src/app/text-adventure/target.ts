@@ -81,10 +81,10 @@ export class SpawnerState {
 
 export class TargetSpawner {
   private readonly spawner_update: (SpawnerState) => void;
-  private readonly target_update: () => Pos;
+  private readonly target_update: (string) => Pos;
   pv2color: (number) => string;
 
-  constructor(spawner_update: (SpawnerState) => void, target_update: () => Pos, pv2color: (number) => string) {
+  constructor(spawner_update: (SpawnerState) => void, target_update: (string) => Pos, pv2color: (number) => string) {
     this.spawner_update = spawner_update;
     this.target_update = target_update;
     this.pv2color = pv2color;
@@ -122,7 +122,7 @@ export class TargetSpawner {
 
     for (let i = 0; i < stateHolder.targets.length;) {
       const target = stateHolder.targets[i];
-      const dp = this.target_update();
+      const dp = this.target_update(target.symbol);
 
       // We need to make the test twice (see below).
       // This case is if the projectile hits directly
