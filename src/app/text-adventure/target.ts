@@ -162,7 +162,6 @@ export class TargetSpawner {
       i++;
     }
 
-    stateHolder.tick++;
     return hero_pos;
   }
 }

@@ -372,13 +372,19 @@ export class Labyrinth {
       this.initial_persisted_data.map_data.set(key, map_data);
     }
 
+    // Default values for production
+    let initial_map = 'bateau';
     this.initial_persisted_data.coins = 0;
     this.initial_persisted_data.slots = new Array<Item>(3);
     this.initial_persisted_data.slots[0] = new Item('', -1);
     this.initial_persisted_data.slots[1] = new Item('', -1);
     this.initial_persisted_data.slots[2] = new Item('', -1);
 
-    const initial_map = 'bateau';
+    // TODO: Remove, here are debugging values
+    initial_map = 'leave_rock';
+    this.initial_persisted_data.slots[0] = new Item('*', 1);
+    this.initial_persisted_data.slots[1] = new Item('/', -1);
+
     this.initial_persisted_data.current_map_name = initial_map;
     this.initial_persisted_data.hero_position = AllMaps.get(initial_map).start;
   }
