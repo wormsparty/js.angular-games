@@ -394,6 +394,11 @@ export class Labyrinth {
     } else {
       this.current_status = current_status;
     }
+
+    if (this.persisted_data.current_map_name === 'treasure') {
+      this.current_status = '> Merci d\'avoir joué!';
+      return;
+    }
   }
   drop_current_slot_item_at(pos: Pos, symbol: string, usage: number) {
     // Drop item on the ground if any
