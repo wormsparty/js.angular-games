@@ -154,6 +154,7 @@ class PersistedData {
   hero_position: Pos;
   map_data: Map<string, PersistedMapData>;
   current_map_name: string;
+  is_rt: boolean;
 
   static parse(json): PersistedData {
     if (json === null) {
@@ -167,6 +168,7 @@ class PersistedData {
     p.coins = json.coins;
     p.hero_position = new Pos(json.hero_position.x, json.hero_position.y);
     p.map_data = new Map<string, PersistedMapData>();
+    p.is_rt = json.is_rt;
 
     for (const map in json.map_data) {
       if (json.map_data.hasOwnProperty(map)) {
@@ -188,6 +190,7 @@ class PersistedData {
       },
       map_data: {},
       current_map_name: this.current_map_name,
+      is_rt: this.is_rt,
     };
 
     for (const [i, data] of this.map_data) {
@@ -203,6 +206,7 @@ class PersistedData {
     cpy.rocks = this.rocks;
     cpy.coins = this.coins;
     cpy.hero_position = this.hero_position.copy();
+    cpy.is_rt = this.is_rt;
 
     cpy.map_data = new Map<string, PersistedMapData>();
 
@@ -237,6 +241,7 @@ export class Labyrinth {
   last_save: PersistedData;
   persisted_data: PersistedData;
   initial_persisted_data: PersistedData;
+  fps: number;
 
   current_map: LevelMap;
   current_map_data: PersistedMapData;
@@ -260,9 +265,9 @@ export class Labyrinth {
     window.localStorage.setItem('save', save_data);
     l.is_menu_open = false;
   }
-/*  static clear_storage() {
+  static clear_storage() {
     window.localStorage.clear();
-  }*/
+  }
   static get_from_storage(): PersistedData {
     const save_data = window.localStorage.getItem('save');
 
@@ -293,8 +298,15 @@ export class Labyrinth {
     l.refresh_menu(true);
     l.is_main_menu = true;
   }
-  static clear_and_start(l: Labyrinth): void {
-    Labyrinth.load_save(l, l.initial_persisted_data.copy());
+  static clear_and_start_tt(l: Labyrinth): void {
+    const new_save = l.initial_persisted_data.copy();
+    new_save.is_rt = false;
+    Labyrinth.load_save(l, new_save);
+  }
+  static clear_and_start_rt(l: Labyrinth): void {
+    const new_save = l.initial_persisted_data.copy();
+    new_save.is_rt = true;
+    Labyrinth.load_save(l, new_save);
   }
   parse_all_maps(): void {
     this.initial_persisted_data = new PersistedData();
@@ -322,7 +334,7 @@ export class Labyrinth {
     }
 
     // Default values for production
-    let initial_map = 'bateau';
+    const initial_map = 'bateau';
     this.initial_persisted_data.coins = 0;
     this.initial_persisted_data.weapon = '';
     this.initial_persisted_data.rocks = 0;
@@ -785,6 +797,14 @@ export class Labyrinth {
       return;
     }
 
+    if (this.pressed.get('+')) {
+      this.fps++;
+    }
+
+    if (this.pressed.get('-')) {
+      this.fps--;
+    }
+
     if (this.pressed.get('Shift') && this.persisted_data.rocks > 0) {
       this.is_throwing = !this.is_throwing;
       return;
@@ -829,12 +849,15 @@ export class Labyrinth {
         const vx = future_pos[1].x - x;
         const vy = future_pos[1].y - y;
 
-        this.current_map_data.projectiles.push(new ProjPos(x, y, vx, vy, '*', 1));
-        this.persisted_data.rocks--;
+        if (vx !== 0 || vy !== 0) {
+          this.current_map_data.projectiles.push(new ProjPos(x, y, vx, vy, '*', 1));
+          this.persisted_data.rocks--;
 
-        this.is_throwing = false;
-        this.move_projectiles();
-        this.move_targets_or_die(this.persisted_data.hero_position);
+          this.is_throwing = false;
+          this.move_projectiles();
+          this.move_targets_or_die(this.persisted_data.hero_position);
+        }
+
         return;
       }
     }
@@ -1018,9 +1041,15 @@ export class Labyrinth {
 
     this.engine.text(this.current_status, this.to_screen_coord(2, 1), consts.White);
 
+    const speed = 'FPS: ' + this.fps;
+
     const money = currencyFormatter.format(this.persisted_data.coins) + ' $';
     this.engine.text(money, this.to_screen_coord(consts.char_per_line - money.length - 7, 1), item2color['$']);
     this.engine.text('[esc]', this.to_screen_coord(consts.char_per_line - 6, 1), consts.OverlayNormal);
+
+    if (this.persisted_data.is_rt) {
+      this.engine.text(speed, this.to_screen_coord(consts.char_per_line - speed.length, 0), consts.OverlayNormal);
+    }
 
     const h = consts.map_lines + consts.header_size + 1;
 
@@ -1084,7 +1113,7 @@ export class Labyrinth {
 
     for (const [text, func, enabled] of this.main_menu) {
       let txt: string;
-      let x = consts.char_per_line / 2 - 7;
+      let x = consts.char_per_line / 2 - 18;
       let color: string;
 
       if (this.menu_position === i) {
@@ -1162,11 +1191,17 @@ export class Labyrinth {
     this.draw();
   }
   refresh_menu(reset_position: boolean): void {
-    const save = Labyrinth.get_from_storage();
+    let save = Labyrinth.get_from_storage();
     const lang = this.personal_info.lang;
 
+    // Throw away incompatible saves :)
+    if (save !== null && save.is_rt === undefined) {
+      save = null;
+    }
+
     this.main_menu = [
-      [ translations.new_game[lang], (l: Labyrinth) => Labyrinth.clear_and_start(l), true ],
+      [ translations.new_game_tt[lang], (l: Labyrinth) => Labyrinth.clear_and_start_tt(l), true ],
+      [ translations.new_game_rt[lang], (l: Labyrinth) => Labyrinth.clear_and_start_rt(l), true ],
       [ translations.load[lang], (l: Labyrinth) => Labyrinth.load_save(l, save), save !== null ],
       // [ translations.lang[lang], (l: Labyrinth) => Labyrinth.toggle_language(l), true ],
     ];
@@ -1179,7 +1214,7 @@ export class Labyrinth {
 
     if (reset_position) {
       if (this.main_menu[1][2]) {
-        this.menu_position = 1;
+        this.menu_position = 2;
       } else {
         this.menu_position = 0;
       }
@@ -1217,6 +1252,8 @@ export class Labyrinth {
       [ ' ', false ],
       [ 'Shift', false ],
       [ 'Escape', false ],
+      [ '+', false],
+      [ '-', false],
     ]);
 
     this.current_status = '';
@@ -1225,6 +1262,7 @@ export class Labyrinth {
     this.game_over_message = '';
     this.is_menu_open = false;
     this.is_main_menu = true;
+    this.fps = 6;
 
     this.load_personal_infos();
     this.parse_all_maps();

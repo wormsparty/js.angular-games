@@ -9,7 +9,7 @@ import * as FontFaceObserver from 'fontfaceobserver';
   styleUrls: ['./text-adventure.component.css'],
 })
 export class TextAdventureComponent implements OnInit {
-  private labyrinth;
+  private labyrinth: Labyrinth;
 
   ngOnInit() {
     document.body.style.overflow = 'hidden';
@@ -23,10 +23,17 @@ export class TextAdventureComponent implements OnInit {
 
     this.labyrinth.resize($(window).width(), $(window).height());
 
+    function do_update() {
+      labyrinth.do_update();
+      labyrinth.draw();
+
+      for (const [key, pressed] of labyrinth.pressed) {
+        labyrinth.pressed.set(key, false);
+      }
+    }
+
     $(document).on('keydown', function (event) {
       let update = false;
-
-      // console.log('key: ' + event.key);
 
       if (labyrinth.pressed.has(event.key)) {
         labyrinth.pressed.set(event.key, true);
@@ -50,15 +57,20 @@ export class TextAdventureComponent implements OnInit {
         }
       }
 
-      if (update) {
-        labyrinth.do_update();
-        labyrinth.draw();
-
-        for (const [key, pressed] of labyrinth.pressed) {
-          labyrinth.pressed.set(key, false);
-        }
+      if (update && (labyrinth.persisted_data === undefined || !labyrinth.persisted_data.is_rt)) {
+        do_update();
       }
     });
+
+    function timeout_func() {
+      if (labyrinth.persisted_data !== undefined && labyrinth.persisted_data.is_rt) {
+        do_update();
+      }
+
+      setTimeout(timeout_func, 1000 / labyrinth.fps);
+    }
+
+    setTimeout(timeout_func, 1000 / labyrinth.fps);
 
     const font = new FontFaceObserver('Inconsolata');
 

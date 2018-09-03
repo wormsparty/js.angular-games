@@ -136,9 +136,9 @@ export class BoccaliCarteComponent implements OnInit {
 
     i++;
     for (; i < allInput.length; i++) {
-      if (!allInput[i].checked) {
-        continue;
-      }
+      //if (!allInput[i].checked) {
+    //    continue;
+   //   }
 
       nbChecked++;
       const dv = $('#' + allInput[i].classList[0]).text().split(',');
