@@ -122,7 +122,7 @@ export class BoccaliCarteComponent implements OnInit {
     const allInput = $(':input');
     let i = 0;
 
-    while (i < allInput.length && !allInput[i].checked) {
+    while (i < allInput.length && !(<HTMLInputElement>allInput[i]).checked) {
       i++;
     }
 
@@ -136,9 +136,9 @@ export class BoccaliCarteComponent implements OnInit {
 
     i++;
     for (; i < allInput.length; i++) {
-      //if (!allInput[i].checked) {
-    //    continue;
-   //   }
+      if (!(<HTMLInputElement>allInput[i]).checked) {
+        continue;
+      }
 
       nbChecked++;
       const dv = $('#' + allInput[i].classList[0]).text().split(',');
