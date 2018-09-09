@@ -6,15 +6,33 @@ import {LevelMap, Pos, ObjPos, ProjPos} from './map_logic';
 import {item2color} from './const';
 import {SpawnerState} from './target';
 
+function get_random_mouvement(pnj): Pos {
+  const new_pnj = new Pos(pnj.x, pnj.y);
+  const r = Math.floor(Math.random() * 16);
+  const mouvement = consts.mouvement_map[r];
+
+  if (mouvement !== undefined) {
+    new_pnj.x += mouvement.x;
+    new_pnj.y += mouvement.y;
+  }
+
+  return new_pnj;
+}
+
 function make_first_letter_upper(str): string {
   return str.charAt(0).toUpperCase() + str.substr(1);
 }
 
-const charToCommand = new Map<string, [string, Pos]>([
-  [ 'ArrowUp', [ '^', new Pos(consts.char_per_line - 8, 0) ] ],
-  [ 'ArrowLeft', [ '<', new Pos(consts.char_per_line - 11, 1) ] ],
-  [ 'ArrowDown', [ 'v', new Pos(consts.char_per_line - 8, 1) ] ],
-  [ 'ArrowRight', [ '>', new Pos(consts.char_per_line - 5, 1) ] ],
+const charToCommand = new Map<string, Pos>([
+  [ '7', new Pos(consts.char_per_line - 11, 0) ],
+  [ '8', new Pos(consts.char_per_line - 8, 0) ],
+  [ '9', new Pos(consts.char_per_line - 5, 0) ],
+  [ '4', new Pos(consts.char_per_line - 11, 1) ],
+  [ '5', new Pos(consts.char_per_line - 8, 1) ],
+  [ '6', new Pos(consts.char_per_line - 5, 1) ],
+  [ '1', new Pos(consts.char_per_line - 11, 2) ],
+  [ '2', new Pos(consts.char_per_line - 8, 2) ],
+  [ '3', new Pos(consts.char_per_line - 5, 2) ],
 ]);
 
 const currencyFormatter = new Intl.NumberFormat('fr-CH', {
@@ -136,6 +154,7 @@ class PersistedData {
   hero_position: Pos;
   map_data: Map<string, PersistedMapData>;
   current_map_name: string;
+  is_rt: boolean;
 
   static parse(json): PersistedData {
     if (json === null) {
@@ -149,6 +168,7 @@ class PersistedData {
     p.coins = json.coins;
     p.hero_position = new Pos(json.hero_position.x, json.hero_position.y);
     p.map_data = new Map<string, PersistedMapData>();
+    p.is_rt = json.is_rt;
 
     for (const map in json.map_data) {
       if (json.map_data.hasOwnProperty(map)) {
@@ -170,6 +190,7 @@ class PersistedData {
       },
       map_data: {},
       current_map_name: this.current_map_name,
+      is_rt: this.is_rt,
     };
 
     for (const [i, data] of this.map_data) {
@@ -185,6 +206,7 @@ class PersistedData {
     cpy.rocks = this.rocks;
     cpy.coins = this.coins;
     cpy.hero_position = this.hero_position.copy();
+    cpy.is_rt = this.is_rt;
 
     cpy.map_data = new Map<string, PersistedMapData>();
 
@@ -276,8 +298,14 @@ export class Labyrinth {
     l.refresh_menu(true);
     l.is_main_menu = true;
   }
+  static clear_and_start_tt(l: Labyrinth): void {
+    const new_save = l.initial_persisted_data.copy();
+    new_save.is_rt = false;
+    Labyrinth.load_save(l, new_save);
+  }
   static clear_and_start_rt(l: Labyrinth): void {
     const new_save = l.initial_persisted_data.copy();
+    new_save.is_rt = true;
     Labyrinth.load_save(l, new_save);
   }
   parse_all_maps(): void {
@@ -397,7 +425,7 @@ export class Labyrinth {
   try_pick_or_drop_item(hero_pos): boolean {
     const lang = this.personal_info.lang;
 
-    if (this.pressed.get('Enter')) {
+    if (this.pressed.get('5')) {
       let item_picked = false;
       let current_status = this.current_status;
 
@@ -503,19 +531,19 @@ export class Labyrinth {
     let x = hero_pos.x;
     let y = hero_pos.y;
 
-    if (this.pressed.get('ArrowDown')) {
+    if (this.pressed.get('1') || this.pressed.get('2') || this.pressed.get('3')) {
       y++;
     }
 
-    if (this.pressed.get('ArrowUp')) {
+    if (this.pressed.get('7') || this.pressed.get('8') || this.pressed.get('9')) {
       y--;
     }
 
-    if (this.pressed.get('ArrowLeft')) {
+    if (this.pressed.get('1') || this.pressed.get('4') || this.pressed.get('7')) {
       x--;
     }
 
-    if (this.pressed.get('ArrowRight')) {
+    if (this.pressed.get('3') || this.pressed.get('6') || this.pressed.get('9')) {
       x++;
     }
 
@@ -721,7 +749,7 @@ export class Labyrinth {
       current_menu = this.game_menu;
     }
 
-    if (this.pressed.get('ArrowUp')) {
+    if (this.pressed.get('8')) {
       let new_p = this.menu_position;
 
       if (new_p > 0) {
@@ -736,7 +764,7 @@ export class Labyrinth {
       }
     }
 
-    if (this.pressed.get('ArrowDown')) {
+    if (this.pressed.get('2')) {
       let new_p = this.menu_position;
 
       if (new_p < current_menu.length) {
@@ -751,7 +779,7 @@ export class Labyrinth {
       }
     }
 
-    if (this.pressed.get('Enter')) {
+    if (this.pressed.get('5')) {
       current_menu[this.menu_position][1](this);
     }
 
@@ -767,6 +795,14 @@ export class Labyrinth {
       }
 
       return;
+    }
+
+    if (this.pressed.get('+')) {
+      this.fps++;
+    }
+
+    if (this.pressed.get('-')) {
+      this.fps--;
     }
 
     if (this.pressed.get('Shift') && this.persisted_data.rocks > 0) {
@@ -807,6 +843,7 @@ export class Labyrinth {
 
         this.current_status = '> ' + make_first_letter_upper(item.text + translations.lance[lang][item.genre]);
 
+        // TODO: REFACTOR
         const x = this.persisted_data.hero_position.x;
         const y = this.persisted_data.hero_position.y;
         const vx = future_pos[1].x - x;
@@ -1010,15 +1047,19 @@ export class Labyrinth {
     this.engine.text(money, this.to_screen_coord(consts.char_per_line - money.length - 7, 1), item2color['$']);
     this.engine.text('[esc]', this.to_screen_coord(consts.char_per_line - 6, 1), consts.OverlayNormal);
 
+    if (this.persisted_data.is_rt) {
+      this.engine.text(speed, this.to_screen_coord(consts.char_per_line - speed.length, 0), consts.OverlayNormal);
+    }
+
     const h = consts.map_lines + consts.header_size + 1;
 
     for (const [chr, pos] of charToCommand) {
       if (this.is_throwing) {
-        this.engine.text(pos[0], this.to_screen_coord(pos[1].x, pos[1].y + h), consts.OverlaySelected);
+        this.engine.text(chr, this.to_screen_coord(pos.x, pos.y + h), consts.OverlaySelected);
       } else if (this.pressed.get(chr)) {
-        this.engine.text(pos[0], this.to_screen_coord(pos[1].x, pos[1].y + h), consts.OverlayHighlight);
+        this.engine.text(chr, this.to_screen_coord(pos.x, pos.y + h), consts.OverlayHighlight);
       } else {
-        this.engine.text(pos[0], this.to_screen_coord(pos[1].x, pos[1].y + h), consts.OverlayNormal);
+        this.engine.text(chr, this.to_screen_coord(pos.x, pos.y + h), consts.OverlayNormal);
       }
     }
 
@@ -1072,7 +1113,7 @@ export class Labyrinth {
 
     for (const [text, func, enabled] of this.main_menu) {
       let txt: string;
-      let x = consts.char_per_line / 2 - 7;
+      let x = consts.char_per_line / 2 - 18;
       let color: string;
 
       if (this.menu_position === i) {
@@ -1150,13 +1191,16 @@ export class Labyrinth {
     this.draw();
   }
   refresh_menu(reset_position: boolean): void {
-    const save = Labyrinth.get_from_storage();
+    let save = Labyrinth.get_from_storage();
     const lang = this.personal_info.lang;
 
     // Throw away incompatible saves :)
-    // TODO
+    if (save !== null && save.is_rt === undefined) {
+      save = null;
+    }
 
     this.main_menu = [
+      [ translations.new_game_tt[lang], (l: Labyrinth) => Labyrinth.clear_and_start_tt(l), true ],
       [ translations.new_game_rt[lang], (l: Labyrinth) => Labyrinth.clear_and_start_rt(l), true ],
       [ translations.load[lang], (l: Labyrinth) => Labyrinth.load_save(l, save), save !== null ],
       // [ translations.lang[lang], (l: Labyrinth) => Labyrinth.toggle_language(l), true ],
@@ -1170,7 +1214,7 @@ export class Labyrinth {
 
     if (reset_position) {
       if (this.main_menu[1][2]) {
-        this.menu_position = 1;
+        this.menu_position = 2;
       } else {
         this.menu_position = 0;
       }
@@ -1196,14 +1240,20 @@ export class Labyrinth {
       'Inconsolata, monospace');
 
     this.pressed = new Map([
-      [ 'ArrowUp', false ],
-      [ 'ArrowDown', false ],
-      [ 'ArrowLeft', false ],
-      [ 'ArrowRight', false ],
-      [ 'Enter', false ],
+      [ '1', false ],
+      [ '2', false ],
+      [ '3', false ],
+      [ '4', false ],
+      [ '5', false ],
+      [ '6', false ],
+      [ '7', false ],
+      [ '8', false ],
+      [ '9', false ],
       [ ' ', false ],
       [ 'Shift', false ],
       [ 'Escape', false ],
+      [ '+', false],
+      [ '-', false],
     ]);
 
     this.current_status = '';
@@ -1212,7 +1262,7 @@ export class Labyrinth {
     this.game_over_message = '';
     this.is_menu_open = false;
     this.is_main_menu = true;
-    this.fps = 30;
+    this.fps = 6;
 
     this.load_personal_infos();
     this.parse_all_maps();

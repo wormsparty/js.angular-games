@@ -79,9 +79,14 @@ export const retry = {
   'fr': 'Espace pour réessayer',
 };
 
+export const new_game_tt = {
+  'en': 'New game (turn by turn)',
+  'fr': 'Nouvelle partie (tour par tour)'
+};
+
 export const new_game_rt = {
-  'en': 'New game',
-  'fr': 'Nouvelle partie'
+  'en': 'New game (real time)',
+  'fr': 'Nouvelle partie (temps réél)'
 };
 
 export const load = {
