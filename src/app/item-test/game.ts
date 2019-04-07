@@ -7,6 +7,7 @@ export class Game {
   fps: number;
 
   draw(): void {
+    this.engine.clear('#111111');
     this.engine.rect({x: 100, y: 100}, 100, 100, '#FF0000');
   }
   do_update(): void {
