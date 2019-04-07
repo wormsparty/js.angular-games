@@ -1,4 +1,4 @@
-﻿import {Engine} from './engine';
+﻿import {Engine} from '../common/engine';
 import {AllMaps} from './map_content';
 import * as consts from './const';
 import * as translations from './translations';
