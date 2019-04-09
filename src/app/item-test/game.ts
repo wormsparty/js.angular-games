@@ -1,8 +1,11 @@
 ﻿import {Engine} from '../common/engine';
+import {Tileset} from './tileset';
 
 export class Game {
   public pressed: Map<string, boolean>;
+
   private readonly engine: Engine;
+  private readonly tileset: Tileset;
 
   fps: number;
 
@@ -37,5 +40,7 @@ export class Game {
     ]);
 
     this.fps = 30;
+
+    this.tileset = new Tileset('celianna_TileA1.png', 32, 32);
   }
 }

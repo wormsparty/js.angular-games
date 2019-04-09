@@ -17,7 +17,7 @@ import { ItemTestComponent } from './item-test/item-test.component';
     RouterModule.forRoot([
         { path: 'item-test', component: ItemTestComponent },
         { path: 'text-adventure', component: TextAdventureComponent },
-        { path: '**', component: TextAdventureComponent }
+        { path: '**', component: ItemTestComponent }
       ],
     ),
     BrowserModule,
