@@ -1,22 +1,19 @@
-
 export class Tileset {
-  private readonly filename: string;
   private readonly tilesizeX: number;
   private readonly tilesizeY: number;
-  private readonly data;
+  public readonly image: HTMLImageElement;
 
-  constructor(filename: string, tilesizeX: number, tilesizeY: number) {
-    this.filename = filename;
-
-    /*readFile(filename, function(err, assets) {
-      if (err !== null) {
-        console.log('Error while loading ' + filename + ': ' + err);
-      }
-
-      this.assets = assets;
-    });*/
-
+  constructor(filename: string, tilesizeX: number, tilesizeY: number, texture_loaded: () => void) {
     this.tilesizeX = tilesizeX;
     this.tilesizeY = tilesizeY;
+
+    const img: HTMLImageElement = new Image();
+
+    img.onload = () => {
+      texture_loaded();
+    };
+
+    img.src = filename;
+    this.image = img;
   }
 }

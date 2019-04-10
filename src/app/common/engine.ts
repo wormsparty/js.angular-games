@@ -1,4 +1,5 @@
 import { Canvas2D } from './canvas2d';
+import {Tileset} from '../item-test/tileset';
 // import { WebAudio } from './webaudio';
 
 function get_zoom(width, height, reference_width, reference_height) {
@@ -33,6 +34,9 @@ export class Engine {
   get_char_width() {
     return this.graphics.get_char_width();
   }
+  img(tileset: Tileset, pos) {
+    this.graphics.img(tileset, pos);
+  }
   /*load_sound(file, onload, onfailure) {
     this.audio.load(file, onload, onfailure);
   }
@@ -52,47 +56,6 @@ export class Engine {
 
     this.graphics.resize(zoom, borderx + ajustementx, borderx, bordery + ajustementy, bordery, width, height);
   }
-  /*load_image(desc, onload, onfailure) {
-    const imageSrc = new Image();
-    imageSrc.src = desc.url;
-
-    const sprite = {
-      imageSrc: imageSrc,
-      frame_current: 0,
-      frame_count: desc.frame_count,
-      frame_width: 0,
-      frame_height: 0,
-      variant_count: 1, // TODO: We leave one variant for images for now
-      variant_current: 0,
-      x: desc.x,
-      y: desc.y,
-      render: function(frame) {},
-      move: function(dx, dy) {}
-    };
-
-    imageSrc.onload = function() {
-      sprite.frame_width = imageSrc.width / sprite.frame_count;
-      sprite.frame_height = imageSrc.height / sprite.variant_count;
-
-      sprite.render = function(frame) {
-        sprite.frame_current = frame;
-        sprite.render(frame);
-      };
-
-      sprite.move = function(dx, dy) {
-        sprite.x += dx;
-        sprite.y += dy;
-      };
-
-      onload(desc.url);
-    };
-
-    imageSrc.onerror = function() {
-      onfailure();
-    };
-
-    return sprite;
-  }*/
   constructor(canvasId, width, height, font_size, font_family) {
     this.canvas = document.getElementById(canvasId);
     this.graphics = new Canvas2D(this.canvas, width, height, font_size, font_family);

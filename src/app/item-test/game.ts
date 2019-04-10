@@ -5,13 +5,16 @@ export class Game {
   public pressed: Map<string, boolean>;
 
   private readonly engine: Engine;
-  private readonly tileset: Tileset;
+  private readonly tilesets: Tileset[];
+  private loaded_tilesets = 0;
+  private tilesets_loaded = false;
 
   fps: number;
 
   draw(): void {
-    this.engine.clear('#111111');
-    this.engine.rect({x: 100, y: 100}, 100, 100, '#FF0000');
+    this.engine.clear('#888888');
+    this.engine.img(this.tilesets[0], {x: 100, y: 100});
+    this.engine.img(this.tilesets[1], {x: 200, y: 200});
   }
   do_update(): void {
     // TODO
@@ -41,6 +44,33 @@ export class Game {
 
     this.fps = 30;
 
-    this.tileset = new Tileset('celianna_TileA1.png', 32, 32);
+    const all_tilesets_loaded = () => {
+      this.loaded_tilesets++;
+
+      if (this.tilesets_loaded && this.loaded_tilesets === this.tilesets.length) {
+        this.loop();
+      }
+    };
+
+    this.tilesets = [];
+    this.tilesets[0] = new Tileset('../../assets/celianna_TileA1.png', 32, 32, all_tilesets_loaded);
+    this.tilesets[1] = new Tileset('../../assets/celianna_TileA2.png', 32, 32, all_tilesets_loaded);
+    this.tilesets_loaded = true;
+
+    if (this.tilesets.length === this.loaded_tilesets) {
+      all_tilesets_loaded();
+    }
+  }
+  loop() {
+    const that = this;
+
+    function timeout_func() {
+      that.do_update();
+      that.draw();
+
+      setTimeout(timeout_func, 1000 / that.fps);
+    }
+
+    setTimeout(timeout_func, 1000 / this.fps);
   }
 }

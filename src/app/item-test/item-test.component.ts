@@ -1,6 +1,5 @@
 import { Component, OnInit} from '@angular/core';
 import * as $ from 'jquery';
-import * as FontFaceObserver from 'fontfaceobserver';
 import {Game} from './game';
 
 @Component({
@@ -23,11 +22,6 @@ export class ItemTestComponent implements OnInit {
 
     this.game.resize($(window).width(), $(window).height());
 
-    function do_update() {
-      game.do_update();
-      game.draw();
-    }
-
     $(document).on('keydown', function (event) {
       if (game.pressed.has(event.key)) {
         game.pressed.set(event.key, true);
@@ -40,17 +34,6 @@ export class ItemTestComponent implements OnInit {
       }
     });
 
-    function timeout_func() {
-      do_update();
-      setTimeout(timeout_func, 1000 / game.fps);
-    }
-
-    setTimeout(timeout_func, 1000 / game.fps);
-
-    const font = new FontFaceObserver('Inconsolata');
-
-    font.load().then(function () {
-      game.draw();
-    });
+    // game.loop();
   }
 }

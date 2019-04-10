@@ -1,3 +1,5 @@
+import {Tileset} from '../item-test/tileset';
+
 export class Canvas2D {
   private readonly ctx;
   private readonly reference_width: number;
@@ -97,6 +99,11 @@ export class Canvas2D {
           (pos.h - cutTop - cutBottom) * this.handle.scaleFactor);
     }
   }*/
+  img(tileset: Tileset, pos) {
+    this.ctx.drawImage(
+      tileset.image,
+      pos.x, pos.y);
+  }
   rect (pos, w, h, color) {
     this.ctx.fillStyle = color;
 
