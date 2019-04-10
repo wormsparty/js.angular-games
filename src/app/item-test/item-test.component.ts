@@ -16,7 +16,7 @@ export class ItemTestComponent implements OnInit {
     const game = new Game();
     this.game = game;
 
-    $(window).resize(function () {
+    $(window).on('resize', () => {
       game.resize($(window).width(), $(window).height());
     });
 
@@ -34,6 +34,6 @@ export class ItemTestComponent implements OnInit {
       }
     });
 
-    // game.loop();
+    game.loop();
   }
 }

@@ -31,6 +31,11 @@ export class Engine {
   text(str, coord, color) {
     this.graphics.text(str, coord, color);
   }
+  textCentered(text: string, y: number, color: string) {
+    const coord = {x: this.reference_width / 2 - this.get_char_width() * text.length / 2, y: y};
+    this.text(text, coord, color);
+  }
+
   get_char_width() {
     return this.graphics.get_char_width();
   }
