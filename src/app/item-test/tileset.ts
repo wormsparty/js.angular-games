@@ -1,8 +1,8 @@
 import {TextureLoader} from './textureloader';
 
 export class Tileset {
-  private readonly tilesizeX: number;
-  private readonly tilesizeY: number;
+  public readonly tilesizeX: number;
+  public readonly tilesizeY: number;
   public readonly image: HTMLImageElement;
 
   constructor(filename: string, tilesizeX: number, tilesizeY: number, loader: TextureLoader) {

@@ -45,64 +45,57 @@ export class Canvas2D {
     this.ctx.msImageSmoothingEnabled = false;
     this.ctx.oImageSmoothingEnabled = false;
   }
-  /*render (sprite, pos) {
-    const sx = sprite.frame_width * sprite.frame_current;
-    const sy = sprite.frame_height * sprite.variant_current;
-    const w = sprite.frame_width;
-    const h = sprite.frame_height;
+  img(tileset: Tileset, pos, i: number, j: number) {
+    const w = tileset.tilesizeX;
+    const h = tileset.tilesizeY;
 
-      let cutLeft = 0;
-      let cutRight = 0;
-      let cutTop = 0;
-      let cutBottom = 0;
+    const sx = w * i;
+    const sy = h * j;
 
-      if (pos.x !== Math.floor(pos.x)) {
-        console.error('x should be an integer! x=' + pos.x);
-      }
+    let cutLeft = 0;
+    let cutRight = 0;
+    let cutTop = 0;
+    let cutBottom = 0;
 
-      if (pos.y !== Math.floor(pos.y)) {
-        console.error('y should be an integer! y=' + pos.y);
-      }
-
-      if (pos.x < 0) {
-        cutLeft = -pos.x;
-      }
-
-      if (pos.y < 0) {
-        cutTop = -pos.y;
-      }
-
-      if (pos.x + w > this.handle.reference_width) {
-        cutRight = pos.x + w - this.handle.reference_width;
-      }
-
-      if (pos.y + h > this.handle.reference_height) {
-        cutBottom = pos.y + h - this.handle.reference_height;
-      }
-
-      if (cutLeft < w
-        && cutRight < w
-        && cutTop < h
-        && cutBottom < h) {
-        const target_x = (pos.x + cutLeft) * this.handle.scaleFactor + this.handle.margin_left;
-        const target_y = (pos.y + cutTop) * this.handle.scaleFactor + this.handle.margin_top;
-
-        this.handle.ctx.drawImage(
-          sprite.imageSrc,
-          sx + cutLeft,
-          sy + cutTop,
-          sprite.frame_width - cutLeft - cutRight,
-          sprite.frame_height - cutTop - cutBottom,
-          target_x,
-          target_y,
-          (pos.w - cutLeft - cutRight) * this.handle.scaleFactor,
-          (pos.h - cutTop - cutBottom) * this.handle.scaleFactor);
+    if (pos.x < 0) {
+      cutLeft = -pos.x;
     }
-  }*/
-  img(tileset: Tileset, pos) {
-    this.ctx.drawImage(
-      tileset.image,
-      pos.x, pos.y);
+
+    if (pos.y < 0) {
+      cutTop = -pos.y;
+    }
+
+    if (pos.x + w > this.reference_width) {
+      cutRight = pos.x + w - this.reference_width;
+    }
+
+    if (pos.y + h > this.reference_height) {
+      cutBottom = pos.y + h - this.reference_height;
+    }
+
+    if (cutLeft < w
+      && cutRight < w
+      && cutTop < h
+      && cutBottom < h) {
+      const target_x = (pos.x + cutLeft) * this.scaleFactor + this.margin_left;
+      const target_y = (pos.y + cutTop) * this.scaleFactor + this.margin_top;
+
+      /*console.log('s = ' + sx + ', ' + sy);
+      console.log('w = ' + w + ', h = ' + h);
+      console.log('cut = ' + cutLeft + ', ' + cutRight + ', ' + cutTop + ', ' + cutBottom);
+      console.log('target = ' + target_x + ',' + target_y);*/
+
+      this.ctx.drawImage(
+        tileset.image,
+        sx + cutLeft,
+        sy + cutTop,
+        w - cutLeft - cutRight,
+        h - cutTop - cutBottom,
+        target_x,
+        target_y,
+        (w - cutLeft - cutRight) * this.scaleFactor,
+        (h - cutTop - cutBottom) * this.scaleFactor);
+    }
   }
   rect (pos, w, h, color) {
     this.ctx.fillStyle = color;

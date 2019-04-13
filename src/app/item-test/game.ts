@@ -17,8 +17,8 @@ export class Game {
     if (!this.textureLoader.isInitialized) {
       this.engine.textCentered('Loading...', 40, '#FFFFFF');
     } else {
-      this.engine.img(this.tilesets[0], {x: 100, y: 100});
-      this.engine.img(this.tilesets[1], {x: 200, y: 200});
+      this.engine.img(this.tilesets[0], {x: 0, y: 0}, 0, 0);
+      this.engine.img(this.tilesets[1], {x: 32, y: 32}, 0, 0);
     }
   }
   doUpdate(): void {

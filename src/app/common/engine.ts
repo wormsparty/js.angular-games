@@ -39,8 +39,8 @@ export class Engine {
   get_char_width() {
     return this.graphics.get_char_width();
   }
-  img(tileset: Tileset, pos) {
-    this.graphics.img(tileset, pos);
+  img(tileset: Tileset, pos, x: number, y: number) {
+    this.graphics.img(tileset, pos, x, y);
   }
   /*load_sound(file, onload, onfailure) {
     this.audio.load(file, onload, onfailure);
