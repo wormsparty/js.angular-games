@@ -34,6 +34,10 @@ export class ItemTestComponent implements OnInit {
       }
     });
 
+    $(document).on('mousemove', function(e) {
+      game.engine.setMousePos(e.pageX, e.pageY);
+    });
+
     game.loop();
   }
 }

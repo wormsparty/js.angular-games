@@ -5,7 +5,7 @@ import {TextureLoader} from './textureloader';
 export class Game {
   public pressed: Map<string, boolean>;
 
-  private readonly engine: Engine;
+  public readonly engine: Engine;
   private textureLoader: TextureLoader;
   private tilesets: Tileset[];
 
@@ -17,8 +17,28 @@ export class Game {
     if (!this.textureLoader.isInitialized) {
       this.engine.textCentered('Loading...', 40, '#FFFFFF');
     } else {
-      this.engine.img(this.tilesets[0], {x: 0, y: 0}, 0, 0);
-      this.engine.img(this.tilesets[1], {x: 32, y: 32}, 0, 0);
+      const width = this.tilesets[0].image.width;
+      const height = this.tilesets[0].image.height;
+
+      const tileSizeX = this.tilesets[0].tilesizeX;
+      const tileSizeY = this.tilesets[0].tilesizeY;
+
+      for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+          const xx = x * tileSizeX;
+          const yy = y * tileSizeY;
+
+          if (this.engine.mousePosX >= xx && this.engine.mousePosX < xx + tileSizeX
+           &&  this.engine.mousePosY >= yy &&  this.engine.mousePosY < yy + tileSizeY) {
+            // NOP
+          } else {
+            this.engine.img(this.tilesets[0], {x: xx, y: yy}, x, y);
+          }
+        }
+      }
+
+//      this.engine.img(this.tilesets[0], {x: 0, y: 0}, 0, 0);
+  //    this.engine.img(this.tilesets[1], {x: 32, y: 32}, 0, 0);
     }
   }
   doUpdate(): void {

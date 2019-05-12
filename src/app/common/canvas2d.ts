@@ -7,13 +7,13 @@ export class Canvas2D {
   private readonly font_size: number;
   private readonly font: string;
   private readonly font_family: string;
-  private scaleFactor: number;
-  private margin_left: number;
-  private margin_right: number;
-  private margin_top: number;
-  private margin_bottom: number;
   private window_width: number;
   private window_height: number;
+  public margin_left: number;
+  public margin_right: number;
+  public margin_top: number;
+  public margin_bottom: number;
+  public scaleFactor: number;
 
   constructor(canvas, reference_width, reference_height, font_size, font_family) {
     this.ctx = canvas.getContext('2d');

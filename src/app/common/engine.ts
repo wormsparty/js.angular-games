@@ -22,6 +22,13 @@ export class Engine {
   readonly reference_width: number;
   readonly reference_height: number;
 
+  public mousePosX: number;
+  public mousePosY: number;
+
+  setMousePos(x, y) {
+    this.mousePosX = (x - this.graphics.margin_left) / this.graphics.scaleFactor;
+    this.mousePosY = (y - this.graphics.margin_top) / this.graphics.scaleFactor;
+  }
   clear(color) {
     this.graphics.clear(color);
   }
@@ -35,7 +42,6 @@ export class Engine {
     const coord = {x: this.reference_width / 2 - this.get_char_width() * text.length / 2, y: y};
     this.text(text, coord, color);
   }
-
   get_char_width() {
     return this.graphics.get_char_width();
   }
