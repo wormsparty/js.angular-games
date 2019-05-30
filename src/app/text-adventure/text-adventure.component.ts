@@ -1,5 +1,4 @@
 import { Component, OnInit} from '@angular/core';
-import * as $ from 'jquery';
 import { Labyrinth } from './labyrinth';
 import * as FontFaceObserver from 'fontfaceobserver';
 
@@ -11,71 +10,66 @@ import * as FontFaceObserver from 'fontfaceobserver';
 export class TextAdventureComponent implements OnInit {
   private labyrinth: Labyrinth;
 
+  doUpdate() {
+    this.labyrinth.do_update();
+    this.labyrinth.draw();
+
+    for (const [key, pressed] of this.labyrinth.pressed) {
+      this.labyrinth.pressed.set(key, false);
+    }
+  }
+
   ngOnInit() {
     document.body.style.overflow = 'hidden';
 
     const labyrinth = new Labyrinth();
     this.labyrinth = labyrinth;
+    this.labyrinth.resize(window.innerWidth, window.innerHeight);
 
-    $(window).resize(function () {
-      labyrinth.resize($(window).width(), $(window).height());
-    });
-
-    this.labyrinth.resize($(window).width(), $(window).height());
-
-    function do_update() {
-      labyrinth.do_update();
-      labyrinth.draw();
-
-      for (const [key, pressed] of labyrinth.pressed) {
-        labyrinth.pressed.set(key, false);
-      }
-    }
-
-    $(document).on('keydown', function (event) {
-      let update = false;
-
-      if (labyrinth.pressed.has(event.key)) {
-        labyrinth.pressed.set(event.key, true);
-        update = true;
-      } else {
-        if (event.key === 'ArrowLeft') {
-          labyrinth.pressed.set('4', true);
-          update = true;
-        } else if (event.key === 'ArrowRight') {
-          labyrinth.pressed.set('6', true);
-          update = true;
-        } else if (event.key === 'ArrowUp') {
-          labyrinth.pressed.set('8', true);
-          update = true;
-        } else if (event.key === 'ArrowDown') {
-          labyrinth.pressed.set('2', true);
-          update = true;
-        } else if (event.key === 'Enter') {
-          labyrinth.pressed.set('5', true);
-          update = true;
-        }
-      }
-
-      if (update && (labyrinth.persisted_data === undefined || !labyrinth.persisted_data.is_rt)) {
-        do_update();
-      }
-    });
-
-    function timeout_func() {
+    setInterval(() => {
       if (labyrinth.persisted_data !== undefined && labyrinth.persisted_data.is_rt) {
-        do_update();
+        this.doUpdate();
       }
-
-      setTimeout(timeout_func, 1000 / labyrinth.fps);
-    }
-
-    setTimeout(timeout_func, 1000 / labyrinth.fps);
+    }, 1000 / labyrinth.fps);
 
     const font = new FontFaceObserver('Inconsolata');
 
     font.load().then(function () {
       labyrinth.draw();
     });
+  }
+
+  onResize(event) {
+    this.labyrinth.resize(event.target.innerWidth, event.target.innerHeight);
+  }
+
+  onKeydown(event) {
+    let update = false;
+
+    if (this.labyrinth.pressed.has(event.key)) {
+      this.labyrinth.pressed.set(event.key, true);
+      update = true;
+    } else {
+      if (event.key === 'ArrowLeft') {
+        this.labyrinth.pressed.set('4', true);
+        update = true;
+      } else if (event.key === 'ArrowRight') {
+        this.labyrinth.pressed.set('6', true);
+        update = true;
+      } else if (event.key === 'ArrowUp') {
+        this.labyrinth.pressed.set('8', true);
+        update = true;
+      } else if (event.key === 'ArrowDown') {
+        this.labyrinth.pressed.set('2', true);
+        update = true;
+      } else if (event.key === 'Enter') {
+        this.labyrinth.pressed.set('5', true);
+        update = true;
+      }
+    }
+
+    if (update && (this.labyrinth.persisted_data === undefined || !this.labyrinth.persisted_data.is_rt)) {
+      this.doUpdate();
+    }
   }
 }

@@ -29,15 +29,12 @@
     "codelyzer": "^5.0.1",
     "core-js": "^2.6.9",
     "fontfaceobserver": "^2.1.0",
-    "jquery": "^3.4.1",
     "rxjs": "^6.5.2",
     "zone.js": "^0.9.1"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^0.800.0",
     "@angular/cli": "^8.0.0",
-    "@types/fontfaceobserver": "0.0.6",
-    "@types/jquery": "^3.3.29",
     "jasmine-core": "^3.4.0",
     "jasmine-spec-reporter": "~4.2.1",
     "karma": "^4.1.0",
