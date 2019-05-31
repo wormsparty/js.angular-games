@@ -83,15 +83,11 @@ export class Level {
   }
 
   onMouseMove(editor: Editor) {
-    if (!this.isClicking) {
+    if (!this.isClicking || editor == null) {
       return;
     }
 
-    let editorWidth = 0;
-
-    if (editor != null) {
-      editorWidth = editor.outerWidth();
-    }
+    const editorWidth = editor.outerWidth();
 
     const xx = Math.floor((this.engine.mousePosX - editorWidth) / this.tileset.tilesizeX);
     const yy = Math.floor(this.engine.mousePosY / this.tileset.tilesizeY);

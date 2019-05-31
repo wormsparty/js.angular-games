@@ -92,7 +92,7 @@ export class Game {
     this.draw();
   }
   setMousePos(x, y) {
-    if (this.engine !== undefined) {
+    if (this.engine !== undefined && this.engine != null) {
       this.engine.setMousePos(x, y);
       this.level.onMouseMove(this.editor);
     }
@@ -100,7 +100,7 @@ export class Game {
   mouseDown(x, y) {
     this.engine.click(x, y);
 
-    if (!this.editor.onClick()) {
+    if (this.editor == null || !this.editor.onClick()) {
       this.level.mouseDown(this.editor);
     }
   }
