@@ -12,7 +12,7 @@ export class ItemTestComponent implements OnInit {
   ngOnInit() {
     document.body.style.overflow = 'hidden';
 
-    const game = new Game();
+    const game = new Game(true);
     this.game = game;
     this.game.resize(window.innerWidth, window.innerHeight);
     game.loop();
@@ -38,7 +38,11 @@ export class ItemTestComponent implements OnInit {
     this.game.setMousePos(event.pageX, event.pageY);
   }
 
-  onClick(event) {
-    this.game.click(event.pageX, event.pageY);
+  mouseDown(event) {
+    this.game.mouseDown(event.pageX, event.pageY);
+  }
+
+  mouseUp(event) {
+    this.game.mouseUp();
   }
 }

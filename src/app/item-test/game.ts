@@ -1,6 +1,8 @@
 ﻿import {Engine} from '../common/engine';
 import {Tileset} from './tileset';
 import {TextureLoader} from './textureloader';
+import {Level} from './level';
+import {Editor} from './editor';
 
 export class Game {
   public pressed: Map<string, boolean>;
@@ -9,18 +11,26 @@ export class Game {
   private textureLoader: TextureLoader;
   private tileset: Tileset;
 
-  private currentTileIndexX = 0;
-  private currentTileIndexY = 0;
-
-  private readonly leftPanelWidth = 110;
-  private readonly panelMargin = 10;
+  private editor: Editor;
+  private level: Level;
 
   fps: number;
 
-  constructor() {
+  constructor(enableEditor: boolean) {
+    let width = 448;
+
+    if (enableEditor) {
+      this.editor = new Editor();
+      width += this.editor.outerWidth();
+    } else {
+      this.editor = null;
+    }
+
+    this.level = new Level();
+
     this.engine = new Engine(
       'canvas',
-      460 + this.leftPanelWidth + this.panelMargin,
+      width,
       480,
       16,
       'monospace');
@@ -46,6 +56,13 @@ export class Game {
 
     this.textureLoader.setLoadedFunction(allTilesetsLoaded);
     this.tileset = new Tileset('../../assets/tileset.png', 16, 16, this.textureLoader);
+
+    if (this.editor != null) {
+      this.editor.setHandles(this.engine, this.tileset);
+    }
+
+    this.level.setHandles(this.engine, this.tileset, this.editor);
+
     this.textureLoader.waitLoaded();
   }
   updateAndDraw() {
@@ -60,35 +77,11 @@ export class Game {
     if (!this.textureLoader.isInitialized) {
       this.engine.textCentered('Loading...', 40, '#FFFFFF');
     } else {
-      const width = this.tileset.image.width;
-      const height = this.tileset.image.height;
-
-      const tileSizeX = this.tileset.tilesizeX;
-      const tileSizeY = this.tileset.tilesizeY;
-
-      const maxX = width / tileSizeX;
-      const maxY = height / tileSizeY;
-
-      for (let x = 0; x < maxX; x++) {
-        for (let y = 0; y < maxY; y++) {
-          const xx = x * tileSizeX;
-          const yy = y * tileSizeY;
-
-          this.engine.img(this.tileset, {x: xx, y: yy}, x, y);
-
-          if (x === this.currentTileIndexX && y === this.currentTileIndexY) {
-            this.engine.rect({x: xx, y: yy}, 16, 16, 'rgba(25, 25, 25, 0.5)');
-          } else if (this.engine.mousePosX >= xx && this.engine.mousePosX < xx + tileSizeX
-           &&  this.engine.mousePosY >= yy &&  this.engine.mousePosY < yy + tileSizeY) {
-            this.engine.rect({x: xx, y: yy}, 16, 16, 'rgba(55, 55, 55, 0.5)');
-          }
-        }
+      if (this.editor != null) {
+        this.editor.draw();
       }
 
-      this.engine.rect({x: this.leftPanelWidth, y: 0}, this.panelMargin, 480, '#000000');
-
-//      this.engine.img(this.tilesets[0], {x: 0, y: 0}, 0, 0);
-  //    this.engine.img(this.tilesets[1], {x: 32, y: 32}, 0, 0);
+      this.level.draw(this.editor);
     }
   }
   doUpdate(): void {
@@ -99,22 +92,19 @@ export class Game {
     this.draw();
   }
   setMousePos(x, y) {
-    this.engine.setMousePos(x, y);
+    if (this.engine !== undefined) {
+      this.engine.setMousePos(x, y);
+      this.level.onMouseMove(this.editor);
+    }
   }
-  click(x, y) {
+  mouseDown(x, y) {
     this.engine.click(x, y);
 
-    if (this.engine.mousePosX < this.leftPanelWidth) {
-      const xx = Math.floor(this.engine.mousePosX / this.tileset.tilesizeX);
-      const yy = Math.floor(this.engine.mousePosY / this.tileset.tilesizeY);
-
-      const horizTiles = this.tileset.image.width / this.tileset.tilesizeX;
-      const vertTiles = this.tileset.image.height / this.tileset.tilesizeY;
-
-      if (xx >= 0 && yy >= 0 && xx < horizTiles && yy < vertTiles) {
-        this.currentTileIndexX = xx;
-        this.currentTileIndexY = yy;
-      }
+    if (!this.editor.onClick()) {
+      this.level.mouseDown(this.editor);
     }
+  }
+  mouseUp() {
+    this.level.mouseUp();
   }
 }
