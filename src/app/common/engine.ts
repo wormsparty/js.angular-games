@@ -26,12 +26,11 @@ export class Engine {
   public mousePosY: number;
 
   setMousePos(x, y) {
-    this.mousePosX = Math.trunc((x - this.graphics.margin_left) / this.graphics.scaleFactor);
-    this.mousePosY = Math.trunc((y - this.graphics.margin_top) / this.graphics.scaleFactor);
+    this.mousePosX = Math.floor((x - this.graphics.margin_left) / this.graphics.scaleFactor);
+    this.mousePosY = Math.floor((y - this.graphics.margin_top) / this.graphics.scaleFactor);
   }
   click(x, y) {
     this.setMousePos(x, y);
-    console.log('clicked at (' + this.mousePosX + ', ' + this.mousePosY + ')');
   }
   clear(color) {
     this.graphics.clear(color);

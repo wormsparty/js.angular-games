@@ -35,10 +35,10 @@ export class ItemTestComponent implements OnInit {
   }
 
   onMouseMove(event) {
-    this.game.engine.setMousePos(event.pageX, event.pageY);
+    this.game.setMousePos(event.pageX, event.pageY);
   }
 
   onClick(event) {
-    this.game.engine.click(event.pageX, event.pageY);
+    this.game.click(event.pageX, event.pageY);
   }
 }
