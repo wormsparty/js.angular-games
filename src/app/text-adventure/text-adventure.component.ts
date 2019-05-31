@@ -14,7 +14,7 @@ export class TextAdventureComponent implements OnInit {
     this.labyrinth.do_update();
     this.labyrinth.draw();
 
-    for (const [key, pressed] of this.labyrinth.pressed) {
+    for (const [key] of this.labyrinth.pressed) {
       this.labyrinth.pressed.set(key, false);
     }
   }
