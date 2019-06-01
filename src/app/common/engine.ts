@@ -57,7 +57,13 @@ export class Engine {
     }
 
     if (this.integerZoom) {
-      return Math.floor(zoom);
+      zoom = Math.floor(zoom);
+
+      if (zoom < 1) {
+        zoom = 1;
+      }
+
+      return zoom;
     } else {
       return zoom;
     }
