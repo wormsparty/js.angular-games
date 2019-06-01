@@ -58,14 +58,14 @@ const bateau = new LevelMap('' +
     ['>', '#FFFFFF'],
   ]),
   {
-    'en': {
+    en: {
       'Thirsty for adventure,': new Pos(4, 3),
       'you sailed to new lands.': new Pos(4, 4),
       'After quiet and storm,': new Pos(4, 6),
       'filled with hope, you': new Pos(4, 7),
       'finally land.': new Pos(4, 8),
     },
-    'fr': {
+    fr: {
       'En soif de nouvelles aventures,': new Pos(4, 3),
       'vous avez pris le large.': new Pos(4, 4),
       'Après calme et tempêtes,': new Pos(4, 6),
@@ -259,7 +259,7 @@ const training = new LevelMap('' +
   '       #                                ##              \n' +
   '       #                                  #             ',
   new Map([
-    [ '1', 'leave_rock' ],
+    [ '1', 'leaveRock' ],
     [ '3', 'outside' ],
   ]),
   new Map([
@@ -268,7 +268,7 @@ const training = new LevelMap('' +
   undefined,
   '#020302',
   undefined,
-  new TargetSpawner(function(state: SpawnerState): void {
+  new TargetSpawner((state: SpawnerState): void => {
     state.tick = (state.tick + 1) % 20;
 
     if (state.tick >= 16) {
@@ -277,9 +277,9 @@ const training = new LevelMap('' +
 
     state.targets.push(new Target(new Pos(24 + 16 - state.tick, -1), 'O', 3, 3));
     state.targets.push(new Target(new Pos(24 + 15 - state.tick, -1), 'O', 3, 3));
-  }, function(): Pos {
+  }, () => {
     return new Pos(0, 1);
-  }, function(pv: number): string {
+  }, (pv: number): string => {
     if (pv === 3) {
       return '#00FF00';
     } else if (pv === 2) {
@@ -349,7 +349,7 @@ const spike = new LevelMap('' +
   undefined,
   '#050505',
   undefined,
-  new TargetSpawner(function(state: SpawnerState): void {
+  new TargetSpawner((state: SpawnerState): void => {
     const m = 34;
     state.tick = (state.tick + 1) % (m - 2);
     let n = state.tick;
@@ -359,9 +359,9 @@ const spike = new LevelMap('' +
     }
 
     state.targets.push(new Target(new Pos(23 + n, -1), 'v', 1, 1));
-  }, function(): Pos {
+  }, (): Pos => {
     return new Pos(0, 1);
-  }, function(pv: number): string {
+  }, (pv: number): string => {
     return '#00FF00';
   }),
   undefined,
@@ -415,7 +415,7 @@ const spike2 = new LevelMap('' +
   '                       #                 #              \n' +
   '                       #22222222222222222#              ',
   new Map([
-    [ '1', 'sword_treasure' ],
+    [ '1', 'swordTreasure' ],
     [ '2', 'spike' ],
   ]),
   new Map([
@@ -425,7 +425,7 @@ const spike2 = new LevelMap('' +
   undefined,
   '#050505',
   undefined,
-  new TargetSpawner(function(state: SpawnerState): void {
+  new TargetSpawner((state: SpawnerState): void => {
     const m = 34;
     state.tick = (state.tick + 1) % (m - 2);
     let n = state.tick;
@@ -436,16 +436,16 @@ const spike2 = new LevelMap('' +
 
     state.targets.push(new Target(new Pos(23 + n, -1), 'v', 1, 1));
     state.targets.push(new Target(new Pos(22 + n, -1), 'v', 1, 1));
-  }, function(): Pos {
+  }, (): Pos => {
     return new Pos(0, 1);
-  }, function(pv: number): string {
+  }, (pv: number): string => {
     return '#00FF00';
   }),
   undefined,
   undefined,
 );
 
-const sword_treasure = new LevelMap('' +
+const swordTreasure = new LevelMap('' +
   '                                                        \n' +
   '                                             ~~~~       \n' +
   '    ~~~~                                       ~~~~     \n' +
@@ -506,7 +506,7 @@ const sword_treasure = new LevelMap('' +
   undefined,
 );
 
-const leave_rock = new LevelMap('' +
+const leaveRock = new LevelMap('' +
   '                       #~~~~.~~~~~~~~~~~#               \n' +
   '     """               #~~~...~~~~~~~~~~#       """     \n' +
   '       """            #~........~~~~~~~~~#       """"   \n' +
@@ -554,7 +554,7 @@ const leave_rock = new LevelMap('' +
   '                                                        ',
   new Map([
     [ '1', 'training' ],
-    [ '2', 'sword_only' ],
+    [ '2', 'swordOnly' ],
   ]),
   new Map([
     [ '~', '#0000FF'],
@@ -563,7 +563,7 @@ const leave_rock = new LevelMap('' +
   undefined,
   '#020302',
   undefined,
-  new TargetSpawner(function(state: SpawnerState): void {
+  new TargetSpawner((state: SpawnerState): void => {
     if (state.targets.length > 0) {
       state.tick = 9;
       return;
@@ -575,19 +575,18 @@ const leave_rock = new LevelMap('' +
       state.targets.push(new Target(new Pos(31, 13), 'O', 1, 1));
       state.tick = 9;
     }
-
-  }, function(): Pos {
+  }, (): Pos => {
     return new Pos(0, 0);
-  }, function(pv: number): string {
+  }, (pv: number): string => {
     return '#00FF00';
   }),
-  function(l: Labyrinth, symbol: string): boolean {
-    return l.current_map_data.spawner.targets.length !== 0 && l.persisted_data.coins !== 1090;
+  (l: Labyrinth, symbol: string): boolean => {
+    return l.currentMapData.spawner.targets.length !== 0 && l.persistedData.coins !== 1090;
   },
   '#FF8800'
 );
 
-const sword_only = new LevelMap('' +
+const swordOnly = new LevelMap('' +
   '                       #~~~~.~~~~~~~~~~#                \n' +
   '          """          #~~.....~~~~~~~~~#    """        \n' +
   '        """           #~~~........~~~~~~~#    """"      \n' +
@@ -634,8 +633,8 @@ const sword_only = new LevelMap('' +
   '                      #                  #              \n' +
   '                       #2222222222222222#               ',
   new Map([
-    [ '1', 'hit_sword' ],
-    [ '2', 'leave_rock' ],
+    [ '1', 'hitSword' ],
+    [ '2', 'leaveRock' ],
     [ '3', 'rotating' ],
   ]),
   new Map([
@@ -645,18 +644,18 @@ const sword_only = new LevelMap('' +
   undefined,
   '#020302',
   undefined,
-  new TargetSpawner(function(state: SpawnerState): void {
+  new TargetSpawner((state: SpawnerState): void => {
     state.targets.push(new Target(new Pos(26 + state.tick, -1), 'v', 1, 1));
     state.targets.push(new Target(new Pos(-1, 7 + state.tick), '>', 1, 1));
 
     state.tick = (state.tick + 1) % 4;
-  }, function(symbol: string): Pos {
+  }, (symbol: string): Pos => {
     if (symbol === 'v') {
       return new Pos(0, 1);
     } else {
       return new Pos(1, 0);
     }
-  }, function(pv: number): string {
+  }, (pv: number): string => {
     return '#00FFFF';
   }),
   undefined,
@@ -710,8 +709,8 @@ const rotating = new LevelMap('' +
   '                       #                 #              \n' +
   '                       #                #               ',
   new Map([
-    [ '1', 'sword_treasure2' ],
-    [ '3', 'sword_only' ],
+    [ '1', 'swordTreasure2' ],
+    [ '3', 'swordOnly' ],
   ]),
   new Map([
     [ '~', '#0000FF'],
@@ -720,22 +719,22 @@ const rotating = new LevelMap('' +
   undefined,
   '#020302',
   undefined,
-  new TargetSpawner(function(state: SpawnerState): void {
+  new TargetSpawner((state: SpawnerState): void => {
     if (state.tick !== 2) {
       state.targets.push(new Target(new Pos(56, 7 + state.tick), '<', 1, 1));
       state.targets.push(new Target(new Pos(56, 9 + state.tick), '<', 1, 1));
     }
     state.tick = (state.tick + 1) % 3;
-  }, function(symbol: string): Pos {
+  }, (symbol: string): Pos => {
     return new Pos(-1, 0);
-  }, function(pv: number): string {
+  }, (pv: number): string => {
     return '#00FFFF';
   }),
   undefined,
   undefined,
 );
 
-const sword_treasure2 = new LevelMap('' +
+const swordTreasure2 = new LevelMap('' +
   '                                                        \n' +
   '                                             ~~~~       \n' +
   '    ~~~~                                       ~~~~     \n' +
@@ -796,7 +795,7 @@ const sword_treasure2 = new LevelMap('' +
   undefined,
 );
 
-const hit_sword = new LevelMap('' +
+const hitSword = new LevelMap('' +
   '                           #~~...~~#                    \n' +
   '                           #~~...~~#                    \n' +
   '        ~~~                #~~...~~#                    \n' +
@@ -843,8 +842,8 @@ const hit_sword = new LevelMap('' +
   '                        #             #                 \n' +
   '                       #111111111111111#                ',
   new Map([
-    [ '1', 'sword_only' ],
-    [ '2', 'last_challenge' ],
+    [ '1', 'swordOnly' ],
+    [ '2', 'lastChallenge' ],
   ]),
   new Map([
     [ '~', '#0000FF'],
@@ -853,7 +852,7 @@ const hit_sword = new LevelMap('' +
   undefined,
   '#020302',
   undefined,
-  new TargetSpawner(function(state: SpawnerState): void {
+  new TargetSpawner((state: SpawnerState): void => {
     if (state.tick === 0) {
       state.targets.push(new Target(new Pos(30, -1), 'O', 3, 3));
       state.targets.push(new Target(new Pos(31, -1), 'O', 3, 3));
@@ -861,9 +860,9 @@ const hit_sword = new LevelMap('' +
     }
 
     state.tick = (state.tick + 1) % 3;
-  }, function(symbol: string): Pos {
+  }, (symbol: string): Pos => {
     return new Pos(0, 1);
-  }, function(pv: number): string {
+  }, (pv: number): string => {
     if (pv === 3) {
       return '#00FF00';
     } else if (pv === 2) {
@@ -876,7 +875,7 @@ const hit_sword = new LevelMap('' +
   undefined,
 );
 
-const last_challenge = new LevelMap('' +
+const lastChallenge = new LevelMap('' +
   '                                                        \n' +
   '                                                        \n' +
   '##################################                      \n' +
@@ -923,7 +922,7 @@ const last_challenge = new LevelMap('' +
   '                            #       ##                  \n' +
   '                           #2222222#                    ',
   new Map([
-    [ '2', 'hit_sword' ],
+    [ '2', 'hitSword' ],
     [ '1', 'treasure' ],
   ]),
   new Map([
@@ -933,7 +932,7 @@ const last_challenge = new LevelMap('' +
   undefined,
   '#020302',
   undefined,
-  new TargetSpawner(function(state: SpawnerState): void {
+  new TargetSpawner((state: SpawnerState): void => {
     if (state.tick % 8 === 0 || state.tick % 8 === 1) {
       state.targets.push(new Target(new Pos(-1, 3), 'O', 1, 1));
       state.targets.push(new Target(new Pos(-1, 4), 'O', 1, 1));
@@ -956,9 +955,9 @@ const last_challenge = new LevelMap('' +
     state.targets.push(new Target(new Pos(-1, 13 + (state.tick % 2)), '>', 1, 1));
 
     state.tick = (state.tick + 1) % 8;
-  }, function(symbol: string): Pos {
+  }, (symbol: string): Pos => {
     return new Pos(1, 0);
-  }, function(pv: number): string {
+  }, (pv: number): string => {
     return '#00FFFF';
   }),
   undefined,
@@ -1012,7 +1011,7 @@ const treasure = new LevelMap('' +
   '#$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#\n' +
   '########################################################',
   new Map([
-    [ '1', 'last_challenge' ],
+    [ '1', 'lastChallenge' ],
   ]),
   new Map([
     ['#', '#555555'],
@@ -1033,12 +1032,12 @@ export const AllMaps: Map<string, LevelMap> = new Map([
   [ 'training', training ],
   [ 'spike', spike ],
   [ 'spike2', spike2 ],
-  [ 'sword_treasure', sword_treasure ],
-  [ 'leave_rock', leave_rock ],
-  [ 'sword_only', sword_only ],
+  [ 'swordTreasure', swordTreasure ],
+  [ 'leaveRock', leaveRock ],
+  [ 'swordOnly', swordOnly ],
   [ 'rotating', rotating ],
-  [ 'sword_treasure2', sword_treasure2 ],
-  [ 'hit_sword', hit_sword ],
-  [ 'last_challenge', last_challenge ],
+  [ 'swordTreasure2', swordTreasure2 ],
+  [ 'hitSword', hitSword ],
+  [ 'lastChallenge', lastChallenge ],
   [ 'treasure', treasure ],
 ]);

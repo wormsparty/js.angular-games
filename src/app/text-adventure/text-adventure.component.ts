@@ -27,14 +27,14 @@ export class TextAdventureComponent implements OnInit {
     this.labyrinth.resize(window.innerWidth, window.innerHeight);
 
     setInterval(() => {
-      if (labyrinth.persisted_data !== undefined && labyrinth.persisted_data.is_rt) {
+      if (labyrinth.persistedData !== undefined && labyrinth.persistedData.isRt) {
         this.doUpdate();
       }
     }, 1000 / labyrinth.fps);
 
     const font = new FontFaceObserver('Inconsolata');
 
-    font.load().then(function () {
+    font.load().then(() => {
       labyrinth.draw();
     });
   }
@@ -68,7 +68,7 @@ export class TextAdventureComponent implements OnInit {
       }
     }
 
-    if (update && (this.labyrinth.persisted_data === undefined || !this.labyrinth.persisted_data.is_rt)) {
+    if (update && (this.labyrinth.persistedData === undefined || !this.labyrinth.persistedData.isRt)) {
       this.doUpdate();
     }
   }

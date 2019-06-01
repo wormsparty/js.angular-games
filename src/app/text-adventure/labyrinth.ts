@@ -6,33 +6,20 @@ import {LevelMap, Pos, ObjPos, ProjPos} from './map_logic';
 import {item2color} from './const';
 import {SpawnerState} from './target';
 
-function get_random_mouvement(pnj): Pos {
-  const new_pnj = new Pos(pnj.x, pnj.y);
-  const r = Math.floor(Math.random() * 16);
-  const mouvement = consts.mouvement_map[r];
-
-  if (mouvement !== undefined) {
-    new_pnj.x += mouvement.x;
-    new_pnj.y += mouvement.y;
-  }
-
-  return new_pnj;
-}
-
 function make_first_letter_upper(str): string {
   return str.charAt(0).toUpperCase() + str.substr(1);
 }
 
 const charToCommand = new Map<string, Pos>([
-  [ '7', new Pos(consts.char_per_line - 11, 0) ],
-  [ '8', new Pos(consts.char_per_line - 8, 0) ],
-  [ '9', new Pos(consts.char_per_line - 5, 0) ],
-  [ '4', new Pos(consts.char_per_line - 11, 1) ],
-  [ '5', new Pos(consts.char_per_line - 8, 1) ],
-  [ '6', new Pos(consts.char_per_line - 5, 1) ],
-  [ '1', new Pos(consts.char_per_line - 11, 2) ],
-  [ '2', new Pos(consts.char_per_line - 8, 2) ],
-  [ '3', new Pos(consts.char_per_line - 5, 2) ],
+  [ '7', new Pos(consts.charPerLine - 11, 0) ],
+  [ '8', new Pos(consts.charPerLine - 8, 0) ],
+  [ '9', new Pos(consts.charPerLine - 5, 0) ],
+  [ '4', new Pos(consts.charPerLine - 11, 1) ],
+  [ '5', new Pos(consts.charPerLine - 8, 1) ],
+  [ '6', new Pos(consts.charPerLine - 5, 1) ],
+  [ '1', new Pos(consts.charPerLine - 11, 2) ],
+  [ '2', new Pos(consts.charPerLine - 8, 2) ],
+  [ '3', new Pos(consts.charPerLine - 5, 2) ],
 ]);
 
 const currencyFormatter = new Intl.NumberFormat('fr-CH', {
@@ -69,8 +56,8 @@ class PersistedMapData {
         const pss: Array<ObjPos> = [];
         const positions = json.items[item];
 
-        for (let i = 0; i < positions.length; i++) {
-          pss.push(new ObjPos(positions[i].x, positions[i].y, positions[i].usage));
+        for (const pos of positions) {
+          pss.push(new ObjPos(pos.x, pos.y, pos.usage));
         }
 
         p.items.set(item, pss);
@@ -79,8 +66,7 @@ class PersistedMapData {
 
     p.projectiles = [];
 
-    for (let i = 0 ; i < json.projectiles.length; i++) {
-      const proj = json.projectiles[i];
+    for (const proj of json.projectiles) {
       p.projectiles.push(new ProjPos(proj.x, proj.y, proj.vx, proj.vy, proj.symbol, proj.power));
     }
 
@@ -97,11 +83,11 @@ class PersistedMapData {
     for (const [item, positions] of this.items) {
       const pss = [];
 
-      for (let i = 0; i < positions.length; i++) {
+      for (const pos of positions) {
         pss.push({
-          x: positions[i].x,
-          y: positions[i].y,
-          usage: positions[i].usage,
+          x: pos.x,
+          y: pos.y,
+          usage: pos.usage,
         });
       }
 
@@ -151,13 +137,17 @@ class PersistedData {
   weapon: string;
   rocks: number;
   coins: number;
-  hero_position: Pos;
-  map_data: Map<string, PersistedMapData>;
-  current_map_name: string;
-  is_rt: boolean;
+  heroPosition: Pos;
+  mapData: Map<string, PersistedMapData>;
+  currentMapName: string;
+  isRt: boolean;
 
   static parse(json): PersistedData {
     if (json === null) {
+      return null;
+    }
+
+    if (json.heroPosition === undefined) {
       return null;
     }
 
@@ -166,17 +156,17 @@ class PersistedData {
     p.weapon = json.weapon;
     p.rocks = json.rocks;
     p.coins = json.coins;
-    p.hero_position = new Pos(json.hero_position.x, json.hero_position.y);
-    p.map_data = new Map<string, PersistedMapData>();
-    p.is_rt = json.is_rt;
+    p.heroPosition = new Pos(json.heroPosition.x, json.heroPosition.y);
+    p.mapData = new Map<string, PersistedMapData>();
+    p.isRt = json.isRt;
 
-    for (const map in json.map_data) {
-      if (json.map_data.hasOwnProperty(map)) {
-        p.map_data.set(map, PersistedMapData.parse(json.map_data[map]));
+    for (const map in json.mapData) {
+      if (json.mapData.hasOwnProperty(map)) {
+        p.mapData.set(map, PersistedMapData.parse(json.mapData[map]));
       }
     }
 
-    p.current_map_name = json.current_map_name;
+    p.currentMapName = json.currentMapName;
     return p;
   }
   print(): {} {
@@ -185,15 +175,15 @@ class PersistedData {
       rocks: this.rocks,
       coins: this.coins,
       hero_position: {
-        x: this.hero_position.x,
-        y: this.hero_position.y
+        x: this.heroPosition.x,
+        y: this.heroPosition.y
       },
       map_data: {},
-      current_map_name: this.current_map_name,
-      is_rt: this.is_rt,
+      current_map_name: this.currentMapName,
+      is_rt: this.isRt,
     };
 
-    for (const [i, data] of this.map_data) {
+    for (const [i, data] of this.mapData) {
       p.map_data[i] = data.print();
     }
 
@@ -205,16 +195,16 @@ class PersistedData {
     cpy.weapon = this.weapon;
     cpy.rocks = this.rocks;
     cpy.coins = this.coins;
-    cpy.hero_position = this.hero_position.copy();
-    cpy.is_rt = this.is_rt;
+    cpy.heroPosition = this.heroPosition.copy();
+    cpy.isRt = this.isRt;
 
-    cpy.map_data = new Map<string, PersistedMapData>();
+    cpy.mapData = new Map<string, PersistedMapData>();
 
-    for (const [name, data] of this.map_data) {
-      cpy.map_data.set(name, data.copy());
+    for (const [name, data] of this.mapData) {
+      cpy.mapData.set(name, data.copy());
     }
 
-    cpy.current_map_name = this.current_map_name;
+    cpy.currentMapName = this.currentMapName;
     return cpy;
   }
 }
@@ -227,33 +217,33 @@ class PersonalInfos {
 export class Labyrinth {
   public pressed: Map<string, boolean>;
   private readonly engine: Engine;
-  readonly char_width: number;
-  private current_status: string;
-  private is_throwing: boolean;
-  private is_menu_open: boolean;
-  private is_main_menu: boolean;
-  private menu_position: number;
-  private main_menu: Array<any>;
-  private game_menu: Array<any>;
+  readonly charWidth: number;
+  private currentStatus: string;
+  private isThrowing: boolean;
+  private isMenuOpen: boolean;
+  private isMainMenu: boolean;
+  private menuPosition: number;
+  private mainMenu: Array<any>;
+  private gameMenu: Array<any>;
 
-  game_over_message: string;
-  personal_info: PersonalInfos;
-  last_save: PersistedData;
-  persisted_data: PersistedData;
-  initial_persisted_data: PersistedData;
+  gameOverMessage: string;
+  personalInfo: PersonalInfos;
+  lastSave: PersistedData;
+  persistedData: PersistedData;
+  initialPersistedData: PersistedData;
   fps: number;
 
-  current_map: LevelMap;
-  current_map_data: PersistedMapData;
+  currentMap: LevelMap;
+  currentMapData: PersistedMapData;
 
   static load_save(l: Labyrinth, save: PersistedData) {
-    l.persisted_data = save;
+    l.persistedData = save;
 
-    l.is_main_menu = false;
-    l.is_menu_open = false;
+    l.isMainMenu = false;
+    l.isMenuOpen = false;
 
-    l.change_map(l.persisted_data.current_map_name, false);
-    l.is_menu_open = false;
+    l.change_map(l.persistedData.currentMapName, false);
+    l.isMenuOpen = false;
 
     l.save_to_memory();
   }
@@ -261,33 +251,33 @@ export class Labyrinth {
     Labyrinth.load_save(l, Labyrinth.get_from_storage());
   }
   static save_to_storage(l: Labyrinth): void {
-    const save_data = JSON.stringify(l.persisted_data.print());
-    window.localStorage.setItem('save', save_data);
-    l.is_menu_open = false;
+    const saveData = JSON.stringify(l.persistedData.print());
+    window.localStorage.setItem('save', saveData);
+    l.isMenuOpen = false;
   }
   static clear_storage() {
     window.localStorage.clear();
   }
   static get_from_storage(): PersistedData {
-    const save_data = window.localStorage.getItem('save');
+    const saveData = window.localStorage.getItem('save');
 
-    if (save_data === undefined) {
+    if (saveData === undefined) {
       return null;
     }
 
-    const persisted_data = PersistedData.parse(JSON.parse(save_data));
+    const persistedData = PersistedData.parse(JSON.parse(saveData));
 
-    if (persisted_data === null) {
+    if (persistedData === null) {
       return null;
     }
 
-    return persisted_data;
+    return persistedData;
   }
 /*  static toggle_language(l: Labyrinth): void {
-    if (l.personal_info.lang === 'en') {
-      l.personal_info.lang = 'fr';
+    if (l.personalInfo.lang === 'en') {
+      l.personalInfo.lang = 'fr';
     } else {
-      l.personal_info.lang = 'en';
+      l.personalInfo.lang = 'en';
     }
 
     l.save_personal_infos();
@@ -296,178 +286,178 @@ export class Labyrinth {
   }*/
   static open_main_menu(l: Labyrinth) {
     l.refresh_menu(true);
-    l.is_main_menu = true;
+    l.isMainMenu = true;
   }
   static clear_and_start_tt(l: Labyrinth): void {
-    const new_save = l.initial_persisted_data.copy();
-    new_save.is_rt = false;
-    Labyrinth.load_save(l, new_save);
+    const newSave = l.initialPersistedData.copy();
+    newSave.isRt = false;
+    Labyrinth.load_save(l, newSave);
   }
   static clear_and_start_rt(l: Labyrinth): void {
-    const new_save = l.initial_persisted_data.copy();
-    new_save.is_rt = true;
-    Labyrinth.load_save(l, new_save);
+    const newSave = l.initialPersistedData.copy();
+    newSave.isRt = true;
+    Labyrinth.load_save(l, newSave);
   }
   parse_all_maps(): void {
-    this.initial_persisted_data = new PersistedData();
-    this.initial_persisted_data.map_data = new Map<string, PersistedMapData>();
+    this.initialPersistedData = new PersistedData();
+    this.initialPersistedData.mapData = new Map<string, PersistedMapData>();
 
     for (const [key, map] of AllMaps) {
       map.parse(key);
 
-      const map_data = new PersistedMapData();
-      map_data.items = new Map<string, Array<ObjPos>>();
-      map_data.projectiles = [];
-      map_data.spawner = new SpawnerState([], 0);
+      const mapData = new PersistedMapData();
+      mapData.items = new Map<string, Array<ObjPos>>();
+      mapData.projectiles = [];
+      mapData.spawner = new SpawnerState([], 0);
 
-      for (const [item, positions] of map.initial_item_positions) {
-        const item_positions: Array<ObjPos> = [];
+      for (const [item, positions] of map.initialItemPositions) {
+        const itemPositions: Array<ObjPos> = [];
 
-        for (let i = 0; i < positions.length; i++) {
-          item_positions.push(positions[i].copy());
+        for (const pos of positions) {
+          itemPositions.push(pos.copy());
         }
 
-        map_data.items.set(item, item_positions);
+        mapData.items.set(item, itemPositions);
       }
 
-      this.initial_persisted_data.map_data.set(key, map_data);
+      this.initialPersistedData.mapData.set(key, mapData);
     }
 
     // Default values for production
-    const initial_map = 'bateau';
-    this.initial_persisted_data.coins = 0;
-    this.initial_persisted_data.weapon = '';
-    this.initial_persisted_data.rocks = 0;
+    const initialMap = 'bateau';
+    this.initialPersistedData.coins = 0;
+    this.initialPersistedData.weapon = '';
+    this.initialPersistedData.rocks = 0;
 
     // TODO: Remove, here are debugging values
-  //  initial_map = 'hit_sword';
-//    this.initial_persisted_data.weapon = '\\';
-   // this.initial_persisted_data.rocks = 0;
+  //  initialMap = 'hit_sword';
+//    this.initialPersistedData.weapon = '\\';
+   // this.initialPersistedData.rocks = 0;
     // TODO: END
 
-    this.initial_persisted_data.current_map_name = initial_map;
-    this.initial_persisted_data.hero_position = AllMaps.get(initial_map).start;
+    this.initialPersistedData.currentMapName = initialMap;
+    this.initialPersistedData.heroPosition = AllMaps.get(initialMap).start;
   }
   draw(): void {
-    if (this.is_main_menu) {
+    if (this.isMainMenu) {
       this.engine.clear(consts.DefaultBackgroundColor);
       this.draw_main_menu();
     } else {
-      this.engine.clear(this.current_map.background_color);
+      this.engine.clear(this.currentMap.backgroundColor);
       this.draw_all();
     }
   }
   do_update(): void {
-    if (this.is_menu_open || this.is_main_menu) {
+    if (this.isMenuOpen || this.isMainMenu) {
       this.update_menu();
     } else {
       this.update_on_map();
     }
   }
   get_string_from(x, y, length): string {
-    return this.current_map.map.substr(y * (consts.char_per_line + 1) + x, length);
+    return this.currentMap.map.substr(y * (consts.charPerLine + 1) + x, length);
   }
   to_screen_coord(x, y, dx = 0, dy = 0): Pos {
-    return new Pos(this.char_width * x + dx, 16 * y + dy);
+    return new Pos(this.charWidth * x + dx, 16 * y + dy);
   }
-  update_current_status(hero_pos): void {
-    let status_set = false;
-    let current_status = this.current_status;
-    const lang = this.personal_info.lang;
+  update_current_status(heroPos): void {
+    let statusSet = false;
+    let currentStatus = this.currentStatus;
+    const lang = this.personalInfo.lang;
 
-    for (const [item, positions] of this.current_map_data.items) {
+    for (const [item, positions] of this.currentMapData.items) {
       for (let i = 0 ; i < positions.length; i++) {
-        if (positions[i].equals(hero_pos)) {
+        if (positions[i].equals(heroPos)) {
           if (item === '$') {
-            this.persisted_data.coins++;
+            this.persistedData.coins++;
             positions.splice(i, 1);
-            current_status = '> 1 $' + translations.pris[lang]['M'];
+            currentStatus = '> 1 $' + translations.pris[lang].M;
           } else {
             const description = translations.item2description[lang][item];
-            current_status = translations.take[lang] + description.text;
+            currentStatus = translations.take[lang] + description.text;
 
             if (positions[i].usage > 1) {
-              current_status += ' (x' + positions[i].usage + ')';
+              currentStatus += ' (x' + positions[i].usage + ')';
             }
           }
 
-          status_set = true;
+          statusSet = true;
           break;
         }
       }
 
-      if (status_set) {
+      if (statusSet) {
         break;
       }
     }
 
-    if (!status_set) {
-      this.current_status = '';
+    if (!statusSet) {
+      this.currentStatus = '';
     } else {
-      this.current_status = current_status;
+      this.currentStatus = currentStatus;
     }
 
-    if (this.persisted_data.current_map_name === 'treasure') {
-      this.current_status = '> Merci d\'avoir joué!';
+    if (this.persistedData.currentMapName === 'treasure') {
+      this.currentStatus = '> Merci d\'avoir joué!';
       return;
     }
   }
   drop_current_slot_item_at(pos: Pos, symbol: string, usage: number) {
     // Drop item on the ground if any
     if (symbol !== '') {
-      if (!this.current_map_data.items.has(symbol)) {
-        this.current_map_data.items.set(symbol, []);
+      if (!this.currentMapData.items.has(symbol)) {
+        this.currentMapData.items.set(symbol, []);
       }
 
-      this.current_map_data.items.get(symbol).push(new ObjPos(pos.x, pos.y, usage));
+      this.currentMapData.items.get(symbol).push(new ObjPos(pos.x, pos.y, usage));
     }
   }
-  try_pick_or_drop_item(hero_pos): boolean {
-    const lang = this.personal_info.lang;
+  try_pick_or_drop_item(heroPos): boolean {
+    const lang = this.personalInfo.lang;
 
     if (this.pressed.get('5')) {
-      let item_picked = false;
-      let current_status = this.current_status;
+      let itemPicked = false;
+      let currentStatus = this.currentStatus;
 
-      for (const [item, positions] of this.current_map_data.items) {
+      for (const [item, positions] of this.currentMapData.items) {
         const description = translations.item2description[lang][item];
 
         for (let i = 0 ; i < positions.length; i++) {
-          if (positions[i].equals(hero_pos)) {
-            if (consts.weapon_items.indexOf(item) > -1) {
-              if (this.persisted_data.weapon !== '') {
-                this.drop_current_slot_item_at(positions[i], this.persisted_data.weapon, -1);
+          if (positions[i].equals(heroPos)) {
+            if (consts.weaponItems.indexOf(item) > -1) {
+              if (this.persistedData.weapon !== '') {
+                this.drop_current_slot_item_at(positions[i], this.persistedData.weapon, -1);
               }
 
-              this.persisted_data.weapon = item;
-            } else if (consts.throwable_items.indexOf(item) > -1) {
-              this.persisted_data.rocks++;
+              this.persistedData.weapon = item;
+            } else if (consts.throwableItems.indexOf(item) > -1) {
+              this.persistedData.rocks++;
             }
 
             const upper = make_first_letter_upper(description.text);
-            current_status = '> ' + upper;
+            currentStatus = '> ' + upper;
 
             if (positions[i].usage > 1) {
-              current_status += ' (x' + positions[i].usage + ')';
+              currentStatus += ' (x' + positions[i].usage + ')';
             }
 
-            current_status += translations.pris[lang][description.genre];
+            currentStatus += translations.pris[lang][description.genre];
             positions.splice(i, 1);
 
-            item_picked = true;
+            itemPicked = true;
             break;
           }
         }
 
-        if (item_picked) {
+        if (itemPicked) {
           break;
         }
       }
 
-      if (!item_picked) {
-        this.current_status = '';
+      if (!itemPicked) {
+        this.currentStatus = '';
       } else {
-        this.current_status = current_status;
+        this.currentStatus = currentStatus;
       }
 
       return true;
@@ -475,46 +465,46 @@ export class Labyrinth {
 
     return false;
   }
-  try_enter_or_exit(hero_pos): [boolean, Pos, string] {
-    const symbol = this.get_symbol_at(hero_pos);
+  try_enter_or_exit(heroPos): [boolean, Pos, string] {
+    const symbol = this.get_symbol_at(heroPos);
 
     if (symbol !== '>' && symbol !== '<') {
       return [false, undefined, undefined];
     }
 
-    return this.do_teleport(symbol, hero_pos, hero_pos, hero_pos);
+    return this.do_teleport(symbol, heroPos, heroPos, heroPos);
   }
-  move_hero(hero_pos: Pos, walkable_pos: Pos, aim_pos: Pos): [Pos, boolean] {
-    const ret = this.try_teleport(hero_pos, walkable_pos);
+  move_hero(heroPos: Pos, walkablePos: Pos, aimPos: Pos): [Pos, boolean] {
+    const ret = this.try_teleport(heroPos, walkablePos);
 
     if (ret[0]) {
       this.change_map(ret[2], true);
-      hero_pos = ret[1];
-      this.persisted_data.hero_position = ret[1];
-      return [hero_pos, true];
+      heroPos = ret[1];
+      this.persistedData.heroPosition = ret[1];
+      return [heroPos, true];
     } else {
-      const [evt, symbol] = this.try_hit_target(hero_pos, aim_pos);
+      const [evt] = this.try_hit_target(heroPos, aimPos);
 
       if (evt === '') {
-        hero_pos = walkable_pos;
-        this.update_current_status(hero_pos);
+        heroPos = walkablePos;
+        this.update_current_status(heroPos);
       } else if (evt === 'hit') {
-        // this.current_status = translations.hit[lang][symbol];
+        // this.currentStatus = translations.hit[lang][symbol];
       }
 
-      return [hero_pos, false];
+      return [heroPos, false];
     }
 
   }
-  collides_with_obstacle(hero_pos: Pos): boolean {
-    if (this.current_map.obstacle_visible === undefined) {
+  collides_with_obstacle(heroPos: Pos): boolean {
+    if (this.currentMap.obstacleVisible === undefined) {
       return false;
     }
 
-    for (const [chr, positions] of this.current_map.obstacles) {
-      if (this.current_map.obstacle_visible(this, chr)) {
+    for (const [chr, positions] of this.currentMap.obstacles) {
+      if (this.currentMap.obstacleVisible(this, chr)) {
         for (const pos of positions) {
-          if (hero_pos.equals(pos)) {
+          if (heroPos.equals(pos)) {
             return true;
           }
         }
@@ -527,9 +517,9 @@ export class Labyrinth {
   // (1) The walkable future position,
   // (2) The real future direction (for aiming) and
   // (3) the new status, if we hit something
-  get_future_position(hero_pos): [Pos, Pos, string] {
-    let x = hero_pos.x;
-    let y = hero_pos.y;
+  get_future_position(heroPos): [Pos, Pos, string] {
+    let x = heroPos.x;
+    let y = heroPos.y;
 
     if (this.pressed.get('1') || this.pressed.get('2') || this.pressed.get('3')) {
       y++;
@@ -547,68 +537,66 @@ export class Labyrinth {
       x++;
     }
 
-    const future_pos: Pos = new Pos(x, y);
-    const allowed_walking_symbols = consts.walkable_symbols;
+    const futurePos: Pos = new Pos(x, y);
+    const allowedWalkingSymbols = consts.walkableSymbols;
 
-    let symbol = this.get_symbol_at(future_pos);
+    let symbol = this.get_symbol_at(futurePos);
 
-    if (allowed_walking_symbols.indexOf(symbol) > -1) {
-      return [future_pos, future_pos, ''];
+    if (allowedWalkingSymbols.indexOf(symbol) > -1) {
+      return [futurePos, futurePos, ''];
     }
 
-    if (hero_pos.y !== future_pos.y) {
-      symbol = this.current_map.get_symbol_at(hero_pos.x, future_pos.y);
+    if (heroPos.y !== futurePos.y) {
+      symbol = this.currentMap.get_symbol_at(heroPos.x, futurePos.y);
 
-      if (allowed_walking_symbols.indexOf(symbol) > -1) {
-        return [new Pos(hero_pos.x, future_pos.y), future_pos, ''];
+      if (allowedWalkingSymbols.indexOf(symbol) > -1) {
+        return [new Pos(heroPos.x, futurePos.y), futurePos, ''];
       } else {
-        if (future_pos.x !== hero_pos.x) {
-          symbol = this.current_map.get_symbol_at(future_pos.x, hero_pos.y);
+        if (futurePos.x !== heroPos.x) {
+          symbol = this.currentMap.get_symbol_at(futurePos.x, heroPos.y);
         }
 
-        if (allowed_walking_symbols.indexOf(symbol) > -1) {
-          return [new Pos(future_pos.x, hero_pos.y), future_pos, ''];
+        if (allowedWalkingSymbols.indexOf(symbol) > -1) {
+          return [new Pos(futurePos.x, heroPos.y), futurePos, ''];
         } else {
-          return [hero_pos, future_pos, ''];
+          return [heroPos, futurePos, ''];
         }
       }
     } else {
-      symbol = this.current_map.get_symbol_at(future_pos.x, hero_pos.y);
+      symbol = this.currentMap.get_symbol_at(futurePos.x, heroPos.y);
 
-      if (allowed_walking_symbols.indexOf(symbol) > -1) {
-        return [new Pos(future_pos.x, hero_pos.y), future_pos, ''];
+      if (allowedWalkingSymbols.indexOf(symbol) > -1) {
+        return [new Pos(futurePos.x, heroPos.y), futurePos, ''];
       } else {
-        return [ hero_pos, future_pos, '' ];
+        return [ heroPos, futurePos, '' ];
       }
     }
   }
-  change_map(map_name: string, reset_targets: boolean): void {
-    this.current_map = AllMaps.get(map_name);
-    this.persisted_data.current_map_name = map_name;
-    this.current_map_data = this.persisted_data.map_data.get(map_name);
+  change_map(mapName: string, resetTargets: boolean): void {
+    this.currentMap = AllMaps.get(mapName);
+    this.persistedData.currentMapName = mapName;
+    this.currentMapData = this.persistedData.mapData.get(mapName);
 
-    if (reset_targets) {
-      this.current_map_data.spawner.reset();
+    if (resetTargets) {
+      this.currentMapData.spawner.reset();
     }
   }
   save_to_memory(): void {
-    this.last_save = this.persisted_data.copy();
+    this.lastSave = this.persistedData.copy();
   }
   load_last_save() {
-    this.persisted_data = this.last_save.copy();
-    this.change_map(this.persisted_data.current_map_name, false);
+    this.persistedData = this.lastSave.copy();
+    this.change_map(this.persistedData.currentMapName, false);
   }
-  try_teleport(hero_pos, future_pos): [boolean, Pos, string] {
-    for (const [chr, teleports_for_char] of this.current_map.teleports) {
+  try_teleport(heroPos, futurePos): [boolean, Pos, string] {
+    for (const [chr, teleportsForChar] of this.currentMap.teleports) {
       if (chr === '<' || chr === '>') { // These are treated separately
         continue;
       }
 
-      for (let j = 0; j < teleports_for_char.length; j++) {
-        const pos = teleports_for_char[j];
-
-        if (pos.equals(future_pos)) {
-          return this.do_teleport(chr, pos, hero_pos, future_pos);
+      for (const pos of teleportsForChar) {
+        if (pos.equals(futurePos)) {
+          return this.do_teleport(chr, pos, heroPos, futurePos);
         }
       }
     }
@@ -619,54 +607,54 @@ export class Labyrinth {
       undefined,
     ];
   }
-  do_teleport(chr, pos, hero_pos, future_pos): [boolean, Pos, string] {
-    const new_map_name = this.current_map.teleport_map.get(chr);
-    const new_map = AllMaps.get(new_map_name);
-    let teleports_of_other_map;
+  do_teleport(chr, pos, heroPos, futurePos): [boolean, Pos, string] {
+    const newMapName = this.currentMap.teleportMap.get(chr);
+    const newMap = AllMaps.get(newMapName);
+    let teleportsOfOtherMap;
     let id;
 
     if (chr === '>') {
-      teleports_of_other_map = new_map.teleports.get('<');
+      teleportsOfOtherMap = newMap.teleports.get('<');
       id = 0;
     } else if (chr === '<') {
-      teleports_of_other_map = new_map.teleports.get('>');
+      teleportsOfOtherMap = newMap.teleports.get('>');
       id = 0;
     } else {
-      teleports_of_other_map = new_map.teleports.get(chr);
+      teleportsOfOtherMap = newMap.teleports.get(chr);
       id = pos.id;
     }
 
-    const tp = teleports_of_other_map[id];
+    const tp = teleportsOfOtherMap[id];
 
-    let new_x = tp.x + (future_pos.x - hero_pos.x);
-    let new_y = tp.y + (future_pos.y - hero_pos.y);
+    let newX = tp.x + (futurePos.x - heroPos.x);
+    let newY = tp.y + (futurePos.y - heroPos.y);
 
     // Fix the case where teleport + mouvement ends up in a wall!
-    if (new_map.get_symbol_at(new_x, new_y) === '#') {
-      if (new_map.get_symbol_at(tp.x, new_y) === '#') {
-        new_y = tp.y;
+    if (newMap.get_symbol_at(newX, newY) === '#') {
+      if (newMap.get_symbol_at(tp.x, newY) === '#') {
+        newY = tp.y;
       } else {
-        new_x = tp.x;
+        newX = tp.x;
       }
     }
 
     return [
       true,
-      new Pos(new_x, new_y),
-      new_map_name,
+      new Pos(newX, newY),
+      newMapName,
     ];
   }
-  try_hit_target(hero_pos: Pos, aim_pos: Pos): [string, string] {
-    if (this.current_map.target_spawner === undefined) {
+  try_hit_target(heroPos: Pos, aimPos: Pos): [string, string] {
+    if (this.currentMap.targetSpawner === undefined) {
       return [ '', '' ];
     }
 
-    const targets = this.current_map_data.spawner.targets;
+    const targets = this.currentMapData.spawner.targets;
 
     for (let i = 0; i < targets.length;) {
       const target = targets[i];
 
-      if (target.pos.equals(aim_pos)) {
+      if (target.pos.equals(aimPos)) {
         const dmg = this.get_weapon_damage();
 
         if (target.symbol === 'O' && dmg !== 0) {
@@ -688,37 +676,37 @@ export class Labyrinth {
 
     return [ '', '' ];
   }
-  update_targets(hero_pos: Pos): Pos {
-    if (this.current_map.target_spawner !== undefined) {
-      return this.current_map.target_spawner.update(this, this.current_map_data.spawner, hero_pos);
+  update_targets(heroPos: Pos): Pos {
+    if (this.currentMap.targetSpawner !== undefined) {
+      return this.currentMap.targetSpawner.update(this, this.currentMapData.spawner, heroPos);
     }
 
-    return hero_pos;
+    return heroPos;
   }
   move_projectiles() {
-    for (let i = 0; i < this.current_map_data.projectiles.length;) {
-      const proj = this.current_map_data.projectiles[i];
+    for (let i = 0; i < this.currentMapData.projectiles.length;) {
+      const proj = this.currentMapData.projectiles[i];
 
       const newprojx = proj.x + proj.vx;
       const newprojy = proj.y + proj.vy;
 
       // If we go outside of the room, teleport the item to it!
-      if (newprojy >= consts.map_lines || newprojy < 0
-        || newprojx < 0 || newprojx >= consts.char_per_line)  {
-        const [can_teleport, where, map_name] = this.try_teleport(proj, proj);
+      if (newprojy >= consts.mapLines || newprojy < 0
+        || newprojx < 0 || newprojx >= consts.charPerLine)  {
+        const [canTeleport, where, mapName] = this.try_teleport(proj, proj);
 
-        if (can_teleport) {
-          const map_data = this.persisted_data.map_data.get(map_name);
-          this.projectile2item(map_data, new Pos(where.x + proj.vx, where.y + proj.vy), i);
+        if (canTeleport) {
+          const mapData = this.persistedData.mapData.get(mapName);
+          this.projectile2item(mapData, new Pos(where.x + proj.vx, where.y + proj.vy), i);
           continue;
         }
       }
 
       // If we hit a wall or water in the same room
-      const symbol = this.current_map.get_symbol_at(newprojx, newprojy);
+      const symbol = this.currentMap.get_symbol_at(newprojx, newprojy);
 
-      if (consts.walkable_symbols.indexOf(symbol) === -1) {
-        this.projectile2item(this.current_map_data, proj, i);
+      if (consts.walkableSymbols.indexOf(symbol) === -1) {
+        this.projectile2item(this.currentMapData, proj, i);
         continue;
       }
 
@@ -728,69 +716,69 @@ export class Labyrinth {
       i++;
     }
   }
-  move_targets_or_die(hero_pos: Pos) {
-    hero_pos = this.update_targets(hero_pos);
-    const lang = this.personal_info.lang;
-    const symbol = this.get_symbol_at(hero_pos);
+  move_targets_or_die(heroPos: Pos) {
+    heroPos = this.update_targets(heroPos);
+    const lang = this.personalInfo.lang;
+    const symbol = this.get_symbol_at(heroPos);
 
-    if (consts.walkable_symbols.indexOf(symbol) === -1) {
-      this.game_over_message = translations.symbol2gameover[lang][symbol];
+    if (consts.walkableSymbols.indexOf(symbol) === -1) {
+      this.gameOverMessage = translations.symbol2gameover[lang][symbol];
     } else {
-      this.persisted_data.hero_position = hero_pos;
+      this.persistedData.heroPosition = heroPos;
     }
 
   }
   update_menu() {
-    let current_menu: Array<any>;
+    let currentMenu: Array<any>;
 
-    if (this.is_main_menu) {
-      current_menu = this.main_menu;
+    if (this.isMainMenu) {
+      currentMenu = this.mainMenu;
     } else {
-      current_menu = this.game_menu;
+      currentMenu = this.gameMenu;
     }
 
     if (this.pressed.get('8')) {
-      let new_p = this.menu_position;
+      let newP = this.menuPosition;
 
-      if (new_p > 0) {
+      if (newP > 0) {
         do {
-          new_p--;
+          newP--;
         }
-        while (new_p !== -1 && !current_menu[new_p][2]);
+        while (newP !== -1 && !currentMenu[newP][2]);
       }
 
-      if (new_p !== -1) {
-        this.menu_position = new_p;
+      if (newP !== -1) {
+        this.menuPosition = newP;
       }
     }
 
     if (this.pressed.get('2')) {
-      let new_p = this.menu_position;
+      let newP = this.menuPosition;
 
-      if (new_p < current_menu.length) {
+      if (newP < currentMenu.length) {
         do {
-          new_p++;
+          newP++;
         }
-        while (new_p !== current_menu.length && !current_menu[new_p][2]);
+        while (newP !== currentMenu.length && !currentMenu[newP][2]);
       }
 
-      if (new_p !== current_menu.length) {
-        this.menu_position = new_p;
+      if (newP !== currentMenu.length) {
+        this.menuPosition = newP;
       }
     }
 
     if (this.pressed.get('5')) {
-      current_menu[this.menu_position][1](this);
+      currentMenu[this.menuPosition][1](this);
     }
 
-    if (!this.is_main_menu && this.pressed.get('Escape')) {
-      this.is_menu_open = false;
+    if (!this.isMainMenu && this.pressed.get('Escape')) {
+      this.isMenuOpen = false;
     }
   }
   update_on_map() {
-    if (this.game_over_message !== '') {
+    if (this.gameOverMessage !== '') {
       if (this.pressed.get(' ')) {
-        this.game_over_message = '';
+        this.gameOverMessage = '';
         this.load_last_save();
       }
 
@@ -805,92 +793,92 @@ export class Labyrinth {
       this.fps--;
     }
 
-    if (this.pressed.get('Shift') && this.persisted_data.rocks > 0) {
-      this.is_throwing = !this.is_throwing;
+    if (this.pressed.get('Shift') && this.persistedData.rocks > 0) {
+      this.isThrowing = !this.isThrowing;
       return;
     }
 
     if (this.pressed.get('Escape')) {
-      this.is_menu_open = true;
-      this.menu_position = 0;
+      this.isMenuOpen = true;
+      this.menuPosition = 0;
       this.refresh_menu(false); // This is to update the availability of Load()
       return;
     }
 
-    const future_pos = this.get_future_position(this.persisted_data.hero_position);
-    const lang = this.personal_info.lang;
+    const futurePos = this.get_future_position(this.persistedData.heroPosition);
+    const lang = this.personalInfo.lang;
 
-    const ret = this.try_enter_or_exit(future_pos[0]);
+    const ret = this.try_enter_or_exit(futurePos[0]);
 
     if (ret !== undefined) {
       if (ret[0]) {
         this.change_map(ret[2], true);
-        this.persisted_data.hero_position = ret[1];
+        this.persistedData.heroPosition = ret[1];
         this.save_to_memory();
         return;
       }
     }
 
-    if (this.try_pick_or_drop_item(this.persisted_data.hero_position)) {
+    if (this.try_pick_or_drop_item(this.persistedData.heroPosition)) {
       this.move_projectiles();
-      this.move_targets_or_die(this.persisted_data.hero_position);
+      this.move_targets_or_die(this.persistedData.heroPosition);
       return;
     }
 
-    if (this.is_throwing) {
-      if (this.persisted_data.rocks > 0) {
+    if (this.isThrowing) {
+      if (this.persistedData.rocks > 0) {
         const item = translations.item2description[lang]['*'];
 
-        this.current_status = '> ' + make_first_letter_upper(item.text + translations.lance[lang][item.genre]);
+        this.currentStatus = '> ' + make_first_letter_upper(item.text + translations.lance[lang][item.genre]);
 
         // TODO: REFACTOR
-        const x = this.persisted_data.hero_position.x;
-        const y = this.persisted_data.hero_position.y;
-        const vx = future_pos[1].x - x;
-        const vy = future_pos[1].y - y;
+        const x = this.persistedData.heroPosition.x;
+        const y = this.persistedData.heroPosition.y;
+        const vx = futurePos[1].x - x;
+        const vy = futurePos[1].y - y;
 
         if (vx !== 0 || vy !== 0) {
-          this.current_map_data.projectiles.push(new ProjPos(x, y, vx, vy, '*', 1));
-          this.persisted_data.rocks--;
+          this.currentMapData.projectiles.push(new ProjPos(x, y, vx, vy, '*', 1));
+          this.persistedData.rocks--;
 
-          this.is_throwing = false;
+          this.isThrowing = false;
           this.move_projectiles();
-          this.move_targets_or_die(this.persisted_data.hero_position);
+          this.move_targets_or_die(this.persistedData.heroPosition);
         }
 
         return;
       }
     }
 
-    if (future_pos[2] !== '') {
-      this.current_status = future_pos[2];
+    if (futurePos[2] !== '') {
+      this.currentStatus = futurePos[2];
       this.move_projectiles();
-      this.move_targets_or_die(this.persisted_data.hero_position);
+      this.move_targets_or_die(this.persistedData.heroPosition);
       return;
     }
 
-    if (this.collides_with_obstacle(future_pos[0])) {
+    if (this.collides_with_obstacle(futurePos[0])) {
       return;
     }
 
-    const [new_pos, map_changed] = this.move_hero(this.persisted_data.hero_position, future_pos[0], future_pos[1]);
-    this.persisted_data.hero_position = new_pos;
+    const [newPos, mapChanged] = this.move_hero(this.persistedData.heroPosition, futurePos[0], futurePos[1]);
+    this.persistedData.heroPosition = newPos;
 
-    if (!map_changed) {
+    if (!mapChanged) {
       this.move_projectiles();
     }
 
-    this.move_targets_or_die(this.persisted_data.hero_position);
+    this.move_targets_or_die(this.persistedData.heroPosition);
 
-    if (map_changed && this.game_over_message === '') {
+    if (mapChanged && this.gameOverMessage === '') {
       this.save_to_memory();
     }
   }
   draw_map() {
-    for (let y = 0; y < consts.map_lines; y++) {
-      for (let x = 0; x < consts.char_per_line;) {
+    for (let y = 0; y < consts.mapLines; y++) {
+      for (let x = 0; x < consts.charPerLine;) {
         let length = 0;
-        const val = this.current_map.get_symbol_at(x, y);
+        const val = this.currentMap.get_symbol_at(x, y);
 
         if (val === ' ' || val === '\n' || val === undefined) {
           x++;
@@ -900,19 +888,19 @@ export class Labyrinth {
         while (true) {
           length++;
 
-          const chr = this.current_map.get_symbol_at(x + length, y);
+          const chr = this.currentMap.get_symbol_at(x + length, y);
 
           if (chr !== val) {
             break;
           }
         }
 
-        const coord = this.to_screen_coord(x, y + consts.header_size);
+        const coord = this.to_screen_coord(x, y + consts.headerSize);
         const str = this.get_string_from(x, y, length);
         let color;
 
-        if (this.current_map.tile2color !== undefined) {
-          color = this.current_map.tile2color.get(val);
+        if (this.currentMap.tile2color !== undefined) {
+          color = this.currentMap.tile2color.get(val);
         }
 
         if (color === undefined) {
@@ -920,90 +908,90 @@ export class Labyrinth {
         }
 
         if (color === undefined) {
-          color = this.current_map.text_color;
+          color = this.currentMap.textColor;
         }
 
-        this.engine.rect(coord, str.length * this.char_width, 16, this.current_map.background_color);
+        this.engine.rect(coord, str.length * this.charWidth, 16, this.currentMap.backgroundColor);
         this.engine.text(str, coord, color);
         x += length;
       }
     }
 
-    if (this.current_map.texts !== undefined) {
-      const lang = this.personal_info.lang;
-      const texts = this.current_map.texts[lang];
+    if (this.currentMap.texts !== undefined) {
+      const lang = this.personalInfo.lang;
+      const texts = this.currentMap.texts[lang];
 
       for (const key in texts) {
         if (texts.hasOwnProperty(key)) {
           const pos = texts[key];
-          this.engine.text(key, this.to_screen_coord(pos.x, pos.y), this.current_map.text_color);
+          this.engine.text(key, this.to_screen_coord(pos.x, pos.y), this.currentMap.textColor);
         }
       }
     }
   }
   draw_projectiles() {
-    for (const proj of this.current_map_data.projectiles) {
-      const coord = this.to_screen_coord(proj.x, proj.y + consts.header_size);
+    for (const proj of this.currentMapData.projectiles) {
+      const coord = this.to_screen_coord(proj.x, proj.y + consts.headerSize);
 
-      this.engine.rect(coord, this.char_width, 16, this.current_map.background_color);
+      this.engine.rect(coord, this.charWidth, 16, this.currentMap.backgroundColor);
       this.engine.text(proj.symbol, coord, consts.projectile2color[proj.symbol]);
     }
   }
   draw_targets() {
-    if (this.current_map.target_spawner !== undefined) {
-      for (const target of this.current_map_data.spawner.targets) {
-        const coord = this.to_screen_coord(target.pos.x, target.pos.y + consts.header_size);
+    if (this.currentMap.targetSpawner !== undefined) {
+      for (const target of this.currentMapData.spawner.targets) {
+        const coord = this.to_screen_coord(target.pos.x, target.pos.y + consts.headerSize);
 
-        this.engine.rect(coord, this.char_width, 16, this.current_map.background_color);
-        this.engine.text(target.symbol, coord, this.current_map.target_spawner.pv2color(target.pv));
+        this.engine.rect(coord, this.charWidth, 16, this.currentMap.backgroundColor);
+        this.engine.text(target.symbol, coord, this.currentMap.targetSpawner.pv2color(target.pv));
       }
     }
   }
   draw_obstacles() {
-    if (this.current_map.obstacle_visible === undefined) {
+    if (this.currentMap.obstacleVisible === undefined) {
       return false;
     }
 
-    for (const [ chr, positions ] of this.current_map.obstacles) {
-      if (this.current_map.obstacle_visible(this, chr)) {
+    for (const [ chr, positions ] of this.currentMap.obstacles) {
+      if (this.currentMap.obstacleVisible(this, chr)) {
         for (const pos of positions) {
-          const coord = this.to_screen_coord(pos.x, pos.y + consts.header_size);
-          this.engine.rect(coord, this.char_width, 16, this.current_map.background_color);
-          this.engine.text(chr, coord, this.current_map.obstacle_color);
+          const coord = this.to_screen_coord(pos.x, pos.y + consts.headerSize);
+          this.engine.rect(coord, this.charWidth, 16, this.currentMap.backgroundColor);
+          this.engine.text(chr, coord, this.currentMap.obstacleColor);
         }
       }
     }
   }
   draw_character(chr: string, coord: Pos, color: string) {
-    this.engine.rect(coord, this.char_width, 16, this.current_map.background_color);
+    this.engine.rect(coord, this.charWidth, 16, this.currentMap.backgroundColor);
     this.engine.text(chr, coord, color);
   }
   draw_hero() {
     this.draw_character('@',
-      this.to_screen_coord(this.persisted_data.hero_position.x, this.persisted_data.hero_position.y + consts.header_size),
+      this.to_screen_coord(this.persistedData.heroPosition.x, this.persistedData.heroPosition.y + consts.headerSize),
       consts.pnj2color['@']);
   }
   draw_items() {
-    for (const [item, positions] of this.current_map_data.items) {
+    for (const [item, positions] of this.currentMapData.items) {
 
-      for (let i = 0; i < positions.length; i++) {
-        const coord = this.to_screen_coord(positions[i].x, positions[i].y + consts.header_size);
+      for (const pos of positions) {
+        const coord = this.to_screen_coord(pos.x, pos.y + consts.headerSize);
         const color = consts.item2color[item];
 
-        this.engine.rect(coord, this.char_width, 16, this.current_map.background_color);
+        this.engine.rect(coord, this.charWidth, 16, this.currentMap.backgroundColor);
         this.engine.text(item, coord, color);
       }
     }
   }
   get_weapon_damage() {
-    return consts.weapon2damage[this.persisted_data.weapon];
+    return consts.weapon2damage[this.persistedData.weapon];
   }
   get_symbol_at(pos: Pos): string {
-    return this.current_map.get_symbol_at(pos.x, pos.y);
+    return this.currentMap.get_symbol_at(pos.x, pos.y);
   }
   hits_projectile(pos: Pos): [number, number] {
-    for (let i = 0; i < this.current_map_data.projectiles.length; i++) {
-      const proj = this.current_map_data.projectiles[i];
+    for (let i = 0; i < this.currentMapData.projectiles.length; i++) {
+      const proj = this.currentMapData.projectiles[i];
 
       if (proj.equals(pos)) {
         return [i, proj.power];
@@ -1012,49 +1000,49 @@ export class Labyrinth {
 
     return [-1, 0];
   }
-  projectile2item(map_data: PersistedMapData, where: Pos, projectile_position: number) {
-    const proj = this.current_map_data.projectiles[projectile_position];
+  projectile2item(mapData: PersistedMapData, where: Pos, projectilePosition: number) {
+    const proj = this.currentMapData.projectiles[projectilePosition];
 
-    if (!map_data.items.has(proj.symbol)) {
-      map_data.items.set(proj.symbol, []);
+    if (!mapData.items.has(proj.symbol)) {
+      mapData.items.set(proj.symbol, []);
     }
 
-    const items = map_data.items.get(proj.symbol);
-    let found_item = false;
+    const items = mapData.items.get(proj.symbol);
+    let foundItem = false;
 
-    for (let i = 0; i  < items.length; i++) {
-      if (items[i].equals(proj)) {
-        items[i].usage++;
-        found_item = true;
+    for (const item of items) {
+      if (item.equals(proj)) {
+        item.usage++;
+        foundItem = true;
         break;
       }
     }
 
-    if (!found_item) {
+    if (!foundItem) {
       items.push(new ObjPos(where.x, where.y, 1));
     }
 
-    this.current_map_data.projectiles.splice(projectile_position, 1);
+    this.currentMapData.projectiles.splice(projectilePosition, 1);
   }
   draw_overlay() {
-    const lang = this.personal_info.lang;
+    const lang = this.personalInfo.lang;
 
-    this.engine.text(this.current_status, this.to_screen_coord(2, 1), consts.White);
+    this.engine.text(this.currentStatus, this.to_screen_coord(2, 1), consts.White);
 
     const speed = 'FPS: ' + this.fps;
 
-    const money = currencyFormatter.format(this.persisted_data.coins) + ' $';
-    this.engine.text(money, this.to_screen_coord(consts.char_per_line - money.length - 7, 1), item2color['$']);
-    this.engine.text('[esc]', this.to_screen_coord(consts.char_per_line - 6, 1), consts.OverlayNormal);
+    const money = currencyFormatter.format(this.persistedData.coins) + ' $';
+    this.engine.text(money, this.to_screen_coord(consts.charPerLine - money.length - 7, 1), item2color.$);
+    this.engine.text('[esc]', this.to_screen_coord(consts.charPerLine - 6, 1), consts.OverlayNormal);
 
-    if (this.persisted_data.is_rt) {
-      this.engine.text(speed, this.to_screen_coord(consts.char_per_line - speed.length, 0), consts.OverlayNormal);
+    if (this.persistedData.isRt) {
+      this.engine.text(speed, this.to_screen_coord(consts.charPerLine - speed.length, 0), consts.OverlayNormal);
     }
 
-    const h = consts.map_lines + consts.header_size + 1;
+    const h = consts.mapLines + consts.headerSize + 1;
 
     for (const [chr, pos] of charToCommand) {
-      if (this.is_throwing) {
+      if (this.isThrowing) {
         this.engine.text(chr, this.to_screen_coord(pos.x, pos.y + h), consts.OverlaySelected);
       } else if (this.pressed.get(chr)) {
         this.engine.text(chr, this.to_screen_coord(pos.x, pos.y + h), consts.OverlayHighlight);
@@ -1063,22 +1051,22 @@ export class Labyrinth {
       }
     }
 
-    if (this.persisted_data.weapon !== '') {
+    if (this.persistedData.weapon !== '') {
       this.engine.text('- ' +
-        make_first_letter_upper(translations.item2description[lang][this.persisted_data.weapon].text),
+        make_first_letter_upper(translations.item2description[lang][this.persistedData.weapon].text),
         this.to_screen_coord(3, h), consts.OverlayHighlight);
     }
 
-    if (this.persisted_data.rocks !== 0) {
+    if (this.persistedData.rocks !== 0) {
       this.engine.text('- ' +
-        make_first_letter_upper(translations.item2description[lang]['*'].text) + ' (x' + this.persisted_data.rocks + ')',
+        make_first_letter_upper(translations.item2description[lang]['*'].text) + ' (x' + this.persistedData.rocks + ')',
         this.to_screen_coord(3, h + 1), consts.OverlayHighlight);
     }
 
-    if (this.persisted_data.rocks > 0) {
+    if (this.persistedData.rocks > 0) {
       const txt = '⇧ ' + translations.lancer[lang];
 
-      if (this.is_throwing) {
+      if (this.isThrowing) {
         this.engine.text(txt, this.to_screen_coord(29, h + 1, -2), consts.OverlaySelected);
       } else {
         this.engine.text(txt, this.to_screen_coord(29, h + 1, -2), consts.OverlayHighlight);
@@ -1086,37 +1074,37 @@ export class Labyrinth {
     }
   }
   draw_message(): void {
-    if (this.game_over_message !== '') {
-      const lang = this.personal_info.lang;
+    if (this.gameOverMessage !== '') {
+      const lang = this.personalInfo.lang;
       const retry = translations.retry[lang];
 
-      this.engine.rect(this.to_screen_coord(consts.char_per_line / 2 - 15, 10),
-        30 * this.char_width, 16 * 7, this.current_map.background_color);
+      this.engine.rect(this.to_screen_coord(consts.charPerLine / 2 - 15, 10),
+        30 * this.charWidth, 16 * 7, this.currentMap.backgroundColor);
       this.engine.text(' **************************** ',
-        this.to_screen_coord(consts.char_per_line / 2 - 15, 10), consts.OverlayHighlight);
+        this.to_screen_coord(consts.charPerLine / 2 - 15, 10), consts.OverlayHighlight);
 
       for (let i = 11; i < 16; i++) {
         this.engine.text('*                            *',
-           this.to_screen_coord(consts.char_per_line / 2 - 15, i), consts.OverlayHighlight);
+           this.to_screen_coord(consts.charPerLine / 2 - 15, i), consts.OverlayHighlight);
       }
 
       this.engine.text(' **************************** ',
-        this.to_screen_coord(consts.char_per_line / 2 - 15, 16), consts.OverlayHighlight);
+        this.to_screen_coord(consts.charPerLine / 2 - 15, 16), consts.OverlayHighlight);
 
-      this.engine.text(this.game_over_message,
-        this.to_screen_coord(consts.char_per_line / 2 - this.game_over_message.length / 2, 12), consts.OverlayHighlight);
-      this.engine.text(retry, this.to_screen_coord(consts.char_per_line / 2 - retry.length / 2, 14), consts.OverlayHighlight);
+      this.engine.text(this.gameOverMessage,
+        this.to_screen_coord(consts.charPerLine / 2 - this.gameOverMessage.length / 2, 12), consts.OverlayHighlight);
+      this.engine.text(retry, this.to_screen_coord(consts.charPerLine / 2 - retry.length / 2, 14), consts.OverlayHighlight);
     }
   }
   draw_main_menu(): void {
     let i = 0;
 
-    for (const [text, func, enabled] of this.main_menu) {
+    for (const [text, func, enabled] of this.mainMenu) {
       let txt: string;
-      let x = consts.char_per_line / 2 - 18;
+      let x = consts.charPerLine / 2 - 18;
       let color: string;
 
-      if (this.menu_position === i) {
+      if (this.menuPosition === i) {
         txt = '> ' + text;
       } else {
         txt = text;
@@ -1134,30 +1122,30 @@ export class Labyrinth {
     }
   }
   draw_menu(): void {
-    if (this.is_menu_open) {
+    if (this.isMenuOpen) {
       let i;
 
-      this.engine.rect(this.to_screen_coord(consts.char_per_line / 2 - 15, 10),
-        30 * this.char_width, 16 * 7, this.current_map.background_color);
+      this.engine.rect(this.to_screen_coord(consts.charPerLine / 2 - 15, 10),
+        30 * this.charWidth, 16 * 7, this.currentMap.backgroundColor);
       this.engine.text(' **************************** ',
-        this.to_screen_coord(consts.char_per_line / 2 - 15, 10), consts.OverlayHighlight);
+        this.to_screen_coord(consts.charPerLine / 2 - 15, 10), consts.OverlayHighlight);
 
       for (i = 11; i < 16; i++) {
         this.engine.text('*                            *',
-          this.to_screen_coord(consts.char_per_line / 2 - 15, i), consts.OverlayHighlight);
+          this.to_screen_coord(consts.charPerLine / 2 - 15, i), consts.OverlayHighlight);
       }
 
       this.engine.text(' **************************** ',
-        this.to_screen_coord(consts.char_per_line / 2 - 15, 16), consts.OverlayHighlight);
+        this.to_screen_coord(consts.charPerLine / 2 - 15, 16), consts.OverlayHighlight);
 
       i = 0;
 
-      for (const [text, func, enabled] of this.game_menu) {
+      for (const [text, func, enabled] of this.gameMenu) {
         let txt: string;
-        let x = consts.char_per_line / 2 - 5;
+        let x = consts.charPerLine / 2 - 5;
         let color: string;
 
-        if (this.menu_position === i) {
+        if (this.menuPosition === i) {
           txt = '> ' + text;
         } else {
           txt = text;
@@ -1190,46 +1178,46 @@ export class Labyrinth {
     this.engine.resize(width, height);
     this.draw();
   }
-  refresh_menu(reset_position: boolean): void {
+  refresh_menu(resetPosition: boolean): void {
     let save = Labyrinth.get_from_storage();
-    const lang = this.personal_info.lang;
+    const lang = this.personalInfo.lang;
 
     // Throw away incompatible saves :)
-    if (save !== null && save.is_rt === undefined) {
+    if (save !== null && save.isRt === undefined) {
       save = null;
     }
 
-    this.main_menu = [
+    this.mainMenu = [
       [ translations.new_game_tt[lang], (l: Labyrinth) => Labyrinth.clear_and_start_tt(l), true ],
       [ translations.new_game_rt[lang], (l: Labyrinth) => Labyrinth.clear_and_start_rt(l), true ],
       [ translations.load[lang], (l: Labyrinth) => Labyrinth.load_save(l, save), save !== null ],
       // [ translations.lang[lang], (l: Labyrinth) => Labyrinth.toggle_language(l), true ],
     ];
 
-    this.game_menu = [
+    this.gameMenu = [
       [ translations.save[lang], (l: Labyrinth) => Labyrinth.save_to_storage(l), true ],
       [ translations.load[lang], (l: Labyrinth) => Labyrinth.load_from_storage(l), save !== null ],
       [ translations.exit[lang], (l: Labyrinth) => Labyrinth.open_main_menu(l), true],
     ];
 
-    if (reset_position) {
-      if (this.main_menu[1][2]) {
-        this.menu_position = 2;
+    if (resetPosition) {
+      if (this.mainMenu[1][2]) {
+        this.menuPosition = 2;
       } else {
-        this.menu_position = 0;
+        this.menuPosition = 0;
       }
     }
   }
   load_personal_infos() {
-    this.personal_info = JSON.parse(window.localStorage.getItem('personal'));
+    this.personalInfo = JSON.parse(window.localStorage.getItem('personal'));
 
-    if (this.personal_info === null) {
-      this.personal_info = new PersonalInfos();
-      this.personal_info.lang = 'fr';
+    if (this.personalInfo === null) {
+      this.personalInfo = new PersonalInfos();
+      this.personalInfo.lang = 'fr';
     }
   }
   save_personal_infos() {
-    window.localStorage.setItem('personal', JSON.stringify(this.personal_info));
+    window.localStorage.setItem('personal', JSON.stringify(this.personalInfo));
   }
   constructor() {
     this.engine = new Engine(
@@ -1256,12 +1244,12 @@ export class Labyrinth {
       [ '-', false],
     ]);
 
-    this.current_status = '';
-    this.char_width = this.engine.get_char_width();
-    this.is_throwing = false;
-    this.game_over_message = '';
-    this.is_menu_open = false;
-    this.is_main_menu = true;
+    this.currentStatus = '';
+    this.charWidth = this.engine.get_char_width();
+    this.isThrowing = false;
+    this.gameOverMessage = '';
+    this.isMenuOpen = false;
+    this.isMainMenu = true;
     this.fps = 6;
 
     this.load_personal_infos();

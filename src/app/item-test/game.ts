@@ -17,7 +17,7 @@ export class Game {
   fps: number;
 
   constructor(enableEditor: boolean) {
-    let width = 448;
+    let width = 256;
 
     if (enableEditor) {
       this.editor = new Editor();
@@ -31,7 +31,7 @@ export class Game {
     this.engine = new Engine(
       'canvas',
       width,
-      480,
+      224,
       16,
       'monospace');
 
