@@ -24,13 +24,13 @@ export class ItemTestComponent implements OnInit {
 
   onKeydown(event) {
     if (this.game.pressed.has(event.key)) {
-      this.game.pressed.set(event.key, true);
+      this.game.pressed.set(event.key, {pressed: true, prevPressed: this.game.pressed.get(event.key).pressed});
     }
   }
 
   onKeyup(event) {
     if (this.game.pressed.has(event.key)) {
-      this.game.pressed.set(event.key, false);
+      this.game.pressed.set(event.key, {pressed: false, prevPressed: this.game.pressed.get(event.key).pressed});
     }
   }
 

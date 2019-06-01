@@ -4,8 +4,13 @@ import {TextureLoader} from './textureloader';
 import {Level} from './level';
 import {Editor} from './editor';
 
+class KeyPress {
+  public pressed: boolean;
+  public prevPressed: boolean;
+}
+
 export class Game {
-  public pressed: Map<string, boolean>;
+  public pressed: Map<string, KeyPress>;
   public tilesize = 16;
 
   public readonly engine: Engine;
@@ -40,16 +45,11 @@ export class Game {
       true,
       this.tilesize);
 
-    this.pressed = new Map([
-      ['ArrowUp', false],
-      ['ArrowDown', false],
-      ['ArrowLeft', false],
-      ['ArrowRight', false],
-      ['Enter', false],
-      [' ', false],
-      ['Shift', false],
-      ['Escape', false],
-    ]);
+    this.pressed = new Map();
+    this.pressed.set('ArrowUp', {pressed: false, prevPressed: false});
+    this.pressed.set('ArrowDown', {pressed: false, prevPressed: false});
+    this.pressed.set('ArrowLeft', {pressed: false, prevPressed: false});
+    this.pressed.set('ArrowRight', {pressed: false, prevPressed: false});
 
     this.textureLoader = new TextureLoader();
     this.fps = 30;
@@ -93,20 +93,32 @@ export class Game {
     }
   }
   doUpdate(): void {
-    if (this.pressed.get('ArrowUp')) {
-      this.level.shiftTop--;
-    }
+    let key = this.pressed.get('ArrowUp');
 
-    if (this.pressed.get('ArrowDown')) {
+    if (key.pressed && !key.prevPressed) {
       this.level.shiftTop++;
+      key.prevPressed = key.pressed;
     }
 
-    if (this.pressed.get('ArrowLeft')) {
-      this.level.shiftLeft--;
+    key = this.pressed.get('ArrowDown');
+
+    if (key.pressed && !key.prevPressed) {
+      this.level.shiftTop--;
+      key.prevPressed = key.pressed;
     }
 
-    if (this.pressed.get('ArrowRight')) {
+    key = this.pressed.get('ArrowLeft');
+
+    if (key.pressed && !key.prevPressed) {
       this.level.shiftLeft++;
+      key.prevPressed = key.pressed;
+    }
+
+    key = this.pressed.get('ArrowRight');
+
+    if (key.pressed && !key.prevPressed) {
+      this.level.shiftLeft--;
+      key.prevPressed = key.pressed;
     }
   }
   resize(width, height): void {

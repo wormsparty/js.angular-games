@@ -88,7 +88,7 @@ export class Level {
     const vertTiles = (this.engine.referenceHeight - topBarHeight) / this.tilesize;
 
     if (xx >= 0 && yy >= 0 && xx < horizTiles && yy < vertTiles) {
-      this.cells.set({x: xx, y: yy}, {tileset: editor.currentMenu, tileX: editor.currentTileIndexX, tileY: editor.currentTileIndexY});
+      this.cells.set({x: xx - this.shiftLeft, y: yy - this.shiftTop}, {tileset: editor.currentMenu, tileX: editor.currentTileIndexX, tileY: editor.currentTileIndexY});
     }
   }
 
