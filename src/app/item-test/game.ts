@@ -18,10 +18,12 @@ export class Game {
 
   constructor(enableEditor: boolean) {
     let width = 256;
+    let height = 224;
 
     if (enableEditor) {
       this.editor = new Editor();
       width += this.editor.outerWidth();
+      height += this.editor.outerHeight();
     } else {
       this.editor = null;
     }
@@ -31,9 +33,9 @@ export class Game {
     this.engine = new Engine(
       'canvas',
       width,
-      224,
-      16,
-      'monospace',
+      height,
+      6,
+      'wonder',
       true);
 
     this.pressed = new Map([

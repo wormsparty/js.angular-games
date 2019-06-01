@@ -61,3 +61,8 @@ app-root {
   left: 0;
   top: 0;
 }
+
+@font-face {
+  font-family: "wonder";
+  src: url("assets/8-BIT WONDER.TTF")
+}

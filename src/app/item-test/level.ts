@@ -15,13 +15,15 @@ export class Level {
     this.pos2tile = [];
 
     let editorOuterWidth = 0;
+    let topBarHeight = 0;
 
     if (editor != null) {
       editorOuterWidth = editor.outerWidth();
+      topBarHeight = editor.outerHeight();
     }
 
     const width = this.engine.referenceWidth - editorOuterWidth;
-    const height = this.engine.referenceHeight;
+    const height = this.engine.referenceHeight - topBarHeight;
 
     const tileSizeX = this.tileset.tilesizeX;
     const tileSizeY = this.tileset.tilesizeY;
@@ -39,10 +41,12 @@ export class Level {
   draw(editor: Editor) {
     let editorInnerWidth = 0;
     let editorOuterWidth = 0;
+    let editorTopHeight = 0;
 
     if (editor != null) {
       editorInnerWidth = editor.innerWidth();
       editorOuterWidth = editor.outerWidth();
+      editorTopHeight = editor.outerHeight();
     }
 
     const width = this.engine.referenceWidth - editorOuterWidth;
@@ -54,12 +58,10 @@ export class Level {
     const maxX = Math.floor(width / tileSizeX);
     const maxY = Math.floor(height / tileSizeY);
 
-    const deltaX = editorOuterWidth;
-
     for (let x = 0; x < maxX; x++) {
       for (let y = 0; y < maxY; y++) {
-        const xx = x * tileSizeX + deltaX;
-        const yy = y * tileSizeY;
+        const xx = x * tileSizeX + editorOuterWidth;
+        const yy = y * tileSizeY + editorTopHeight;
 
         const index = x + y * maxX;
         const tileIndex = this.pos2tile[index];
@@ -88,12 +90,13 @@ export class Level {
     }
 
     const editorWidth = editor.outerWidth();
+    const topBarHeight = editor.outerHeight();
 
     const xx = Math.floor((this.engine.mousePosX - editorWidth) / this.tileset.tilesizeX);
-    const yy = Math.floor(this.engine.mousePosY / this.tileset.tilesizeY);
+    const yy = Math.floor((this.engine.mousePosY - topBarHeight) / this.tileset.tilesizeY);
 
     const horizTiles = (this.engine.referenceWidth - editorWidth) / this.tileset.tilesizeX;
-    const vertTiles = this.engine.referenceHeight / this.tileset.tilesizeY;
+    const vertTiles = (this.engine.referenceHeight - topBarHeight) / this.tileset.tilesizeY;
 
     if (xx >= 0 && yy >= 0 && xx < horizTiles && yy < vertTiles) {
       const tilesetWidth = this.tileset.image.width;

@@ -6,7 +6,8 @@ export class Editor {
   public currentTileIndexY = 0;
 
   private readonly leftPanelWidth = 110;
-  private readonly panelMargin = 10;
+  private readonly topBarHeight = 10;
+  private readonly margin = 6;
 
   private engine: Engine;
   private tileset: Tileset;
@@ -19,7 +20,10 @@ export class Editor {
     return this.leftPanelWidth;
   }
   outerWidth() {
-    return this.leftPanelWidth + this.panelMargin;
+    return this.leftPanelWidth + this.margin;
+  }
+  outerHeight() {
+    return this.topBarHeight + this.margin;
   }
   draw() {
     const width = this.tileset.image.width;
@@ -34,7 +38,7 @@ export class Editor {
     for (let x = 0; x < maxX; x++) {
       for (let y = 0; y < maxY; y++) {
         const xx = x * tileSizeX;
-        const yy = y * tileSizeY;
+        const yy = y * tileSizeY + this.outerHeight();
 
         this.engine.img(this.tileset, {x: xx, y: yy}, x, y);
 
@@ -47,13 +51,17 @@ export class Editor {
       }
     }
 
-    this.engine.rect({x: this.leftPanelWidth, y: 0}, this.panelMargin, 480, '#000000');
+    this.engine.rect({x: this.leftPanelWidth, y: 0}, this.margin, this.engine.referenceHeight, '#000000');
+
+    this.engine.text('tiles', {x: 4, y: 8}, '#000');
+    this.engine.text('foes', {x: 37, y: 8}, '#000');
+    this.engine.text('goodies', {x: 68, y: 8}, '#000');
   }
 
   onClick(): boolean {
     if (this.engine.mousePosX < this.leftPanelWidth) {
       const xx = Math.floor(this.engine.mousePosX / this.tileset.tilesizeX);
-      const yy = Math.floor(this.engine.mousePosY / this.tileset.tilesizeY);
+      const yy = Math.floor((this.engine.mousePosY - this.outerHeight()) / this.tileset.tilesizeY);
 
       const horizTiles = this.tileset.image.width / this.tileset.tilesizeX;
       const vertTiles = this.tileset.image.height / this.tileset.tilesizeY;
