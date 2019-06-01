@@ -14,8 +14,9 @@ export class Canvas2D {
   public marginTop: number;
   public marginBottom: number;
   public scaleFactor: number;
+  public tilesize: number;
 
-  constructor(canvas, referenceWidth, referenceHeight, fontSize, fontFamily) {
+  constructor(canvas, referenceWidth, referenceHeight, fontSize, fontFamily, tilesize) {
     this.ctx = canvas.getContext('2d');
     this.scaleFactor = 1;
     this.marginLeft = 0;
@@ -29,6 +30,7 @@ export class Canvas2D {
     this.fontSize = fontSize;
     this.fontFamily = fontFamily;
     this.font = fontSize + 'px ' + fontFamily;
+    this.tilesize = tilesize;
   }
   resize(scaleFactor, marginLeft, marginRight, marginTop, marginBottom, windowWidth, windowHeight) {
     this.scaleFactor = scaleFactor;
@@ -46,11 +48,8 @@ export class Canvas2D {
     this.ctx.oImageSmoothingEnabled = false;
   }
   img(tileset: Tileset, pos, i: number, j: number) {
-    const w = tileset.tilesizeX;
-    const h = tileset.tilesizeY;
-
-    const sx = w * i;
-    const sy = h * j;
+    const sx = this.tilesize * i;
+    const sy = this.tilesize * j;
 
     let cutLeft = 0;
     let cutRight = 0;
@@ -65,18 +64,18 @@ export class Canvas2D {
       cutTop = -pos.y;
     }
 
-    if (pos.x + w > this.referenceWidth) {
-      cutRight = pos.x + w - this.referenceWidth;
+    if (pos.x + this.tilesize > this.referenceWidth) {
+      cutRight = pos.x + this.tilesize - this.referenceWidth;
     }
 
-    if (pos.y + h > this.referenceHeight) {
-      cutBottom = pos.y + h - this.referenceHeight;
+    if (pos.y + this.tilesize > this.referenceHeight) {
+      cutBottom = pos.y + this.tilesize - this.referenceHeight;
     }
 
-    if (cutLeft < w
-      && cutRight < w
-      && cutTop < h
-      && cutBottom < h) {
+    if (cutLeft < this.tilesize
+      && cutRight < this.tilesize
+      && cutTop < this.tilesize
+      && cutBottom < this.tilesize) {
       const targetX = (pos.x + cutLeft) * this.scaleFactor + this.marginLeft;
       const targetY = (pos.y + cutTop) * this.scaleFactor + this.marginTop;
 
@@ -89,12 +88,12 @@ export class Canvas2D {
         tileset.image,
         sx + cutLeft,
         sy + cutTop,
-        w - cutLeft - cutRight,
-        h - cutTop - cutBottom,
+        this.tilesize - cutLeft - cutRight,
+        this.tilesize - cutTop - cutBottom,
         targetX,
         targetY,
-        (w - cutLeft - cutRight) * this.scaleFactor,
-        (h - cutTop - cutBottom) * this.scaleFactor);
+        (this.tilesize - cutLeft - cutRight) * this.scaleFactor,
+        (this.tilesize - cutTop - cutBottom) * this.scaleFactor);
     }
   }
   rect(pos, w, h, color) {

@@ -1226,7 +1226,8 @@ export class Labyrinth {
       480,
       16,
       'Inconsolata, monospace',
-      false);
+      false,
+      0);
 
     this.pressed = new Map([
       [ '1', false ],

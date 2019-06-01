@@ -6,12 +6,13 @@ import {Editor} from './editor';
 
 export class Game {
   public pressed: Map<string, boolean>;
+  public tilesize = 16;
 
   public readonly engine: Engine;
-  private textureLoader: TextureLoader;
-  private tileset: Tileset;
+  private readonly textureLoader: TextureLoader;
+  private tilesets: Map<string, Tileset>;
 
-  private editor: Editor;
+  private readonly editor: Editor;
   private level: Level;
 
   fps: number;
@@ -36,7 +37,8 @@ export class Game {
       height,
       6,
       'wonder',
-      true);
+      true,
+      this.tilesize);
 
     this.pressed = new Map([
       ['ArrowUp', false],
@@ -58,13 +60,16 @@ export class Game {
     };
 
     this.textureLoader.setLoadedFunction(allTilesetsLoaded);
-    this.tileset = new Tileset('../../assets/tileset.png', 16, 16, this.textureLoader);
+
+    this.tilesets = new Map<string, Tileset>();
+    this.tilesets.set('tiles', new Tileset('../../assets/tileset.png', this.textureLoader));
+    this.tilesets.set('foes', new Tileset('../../assets/foes.png', this.textureLoader));
 
     if (this.editor != null) {
-      this.editor.setHandles(this.engine, this.tileset);
+      this.editor.setHandles(this.engine, this.tilesets, this.tilesize);
     }
 
-    this.level.setHandles(this.engine, this.tileset, this.editor);
+    this.level.setHandles(this.engine, this.tilesets, this.tilesize);
 
     this.textureLoader.waitLoaded();
   }
@@ -88,7 +93,21 @@ export class Game {
     }
   }
   doUpdate(): void {
-    // TODO
+    if (this.pressed.get('ArrowUp')) {
+      this.level.shiftTop--;
+    }
+
+    if (this.pressed.get('ArrowDown')) {
+      this.level.shiftTop++;
+    }
+
+    if (this.pressed.get('ArrowLeft')) {
+      this.level.shiftLeft--;
+    }
+
+    if (this.pressed.get('ArrowRight')) {
+      this.level.shiftLeft++;
+    }
   }
   resize(width, height): void {
     this.engine.resize(width, height);

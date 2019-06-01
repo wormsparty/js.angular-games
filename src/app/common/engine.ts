@@ -81,9 +81,9 @@ export class Engine {
 
     this.graphics.resize(zoom, borderx + ajustementx, borderx, bordery + ajustementy, bordery, width, height);
   }
-  constructor(canvasId, width, height, fontSize, fontFamily, integerZoom) {
+  constructor(canvasId, width, height, fontSize, fontFamily, integerZoom, tilesize) {
     this.canvas = document.getElementById(canvasId);
-    this.graphics = new Canvas2D(this.canvas, width, height, fontSize, fontFamily);
+    this.graphics = new Canvas2D(this.canvas, width, height, fontSize, fontFamily, tilesize);
     /*this.audio = new WebAudio();
 
     if (!this.audio) {
