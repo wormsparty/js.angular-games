@@ -33,7 +33,8 @@ export class Game {
       width,
       224,
       16,
-      'monospace');
+      'monospace',
+      true);
 
     this.pressed = new Map([
       ['ArrowUp', false],

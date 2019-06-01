@@ -2,32 +2,22 @@ import { Canvas2D } from './canvas2d';
 import {Tileset} from '../item-test/tileset';
 // import { WebAudio } from './webaudio';
 
-function get_zoom(width, height, reference_width, reference_height) {
-  const zoom_x = width / reference_width;
-  const zoom_y = height / reference_height;
-  let zoom = zoom_x;
-
-  if (zoom_y < zoom) {
-    zoom = zoom_y;
-  }
-
-  return zoom;
-}
-
 export class Engine {
   private readonly canvas;
   private readonly graphics: Canvas2D;
   // private readonly audio: WebAudio;
 
-  readonly reference_width: number;
-  readonly reference_height: number;
+  readonly referenceWidth: number;
+  readonly referenceHeight: number;
+
+  public integerZoom: boolean;
 
   public mousePosX: number;
   public mousePosY: number;
 
   setMousePos(x, y) {
-    this.mousePosX = Math.floor((x - this.graphics.margin_left) / this.graphics.scaleFactor);
-    this.mousePosY = Math.floor((y - this.graphics.margin_top) / this.graphics.scaleFactor);
+    this.mousePosX = Math.floor((x - this.graphics.marginLeft) / this.graphics.scaleFactor);
+    this.mousePosY = Math.floor((y - this.graphics.marginTop) / this.graphics.scaleFactor);
   }
   click(x, y) {
     this.setMousePos(x, y);
@@ -41,8 +31,8 @@ export class Engine {
   text(str, coord, color) {
     this.graphics.text(str, coord, color);
   }
-  textCentered(text: string, y: number, color: string) {
-    const coord = {x: this.reference_width / 2 - this.get_char_width() * text.length / 2, y: y};
+  textCentered(text: string, yy: number, color: string) {
+    const coord = {x: this.referenceWidth / 2 - this.get_char_width() * text.length / 2, y: yy};
     this.text(text, coord, color);
   }
   get_char_width() {
@@ -57,22 +47,37 @@ export class Engine {
   play(filename) {
     this.audio.play(filename);
   }*/
-  resize(width, height) {
-    const zoom = get_zoom(width, height, this.reference_width, this.reference_height);
+  getZoom(width, height, referenceWidth, referenceHeight) {
+    const zoomX = width / referenceWidth;
+    const zoomY = height / referenceHeight;
+    let zoom = zoomX;
 
-    const borderx = Math.floor((width - this.reference_width * zoom) / 2);
-    const bordery = Math.floor((height - this.reference_height * zoom) / 2);
-    const ajustementx = Math.floor(width - this.reference_width * zoom - borderx * 2);
-    const ajustementy = Math.floor(height - this.reference_height * zoom - bordery * 2);
+    if (zoomY < zoom) {
+      zoom = zoomY;
+    }
+
+    if (this.integerZoom) {
+      return Math.floor(zoom);
+    } else {
+      return zoom;
+    }
+  }
+  resize(width, height) {
+    const zoom = this.getZoom(width, height, this.referenceWidth, this.referenceHeight);
+
+    const borderx = Math.floor((width - this.referenceWidth * zoom) / 2);
+    const bordery = Math.floor((height - this.referenceHeight * zoom) / 2);
+    const ajustementx = Math.floor(width - this.referenceWidth * zoom - borderx * 2);
+    const ajustementy = Math.floor(height - this.referenceHeight * zoom - bordery * 2);
 
     this.canvas.width = width;
     this.canvas.height = height;
 
     this.graphics.resize(zoom, borderx + ajustementx, borderx, bordery + ajustementy, bordery, width, height);
   }
-  constructor(canvasId, width, height, font_size, font_family) {
+  constructor(canvasId, width, height, fontSize, fontFamily, integerZoom) {
     this.canvas = document.getElementById(canvasId);
-    this.graphics = new Canvas2D(this.canvas, width, height, font_size, font_family);
+    this.graphics = new Canvas2D(this.canvas, width, height, fontSize, fontFamily);
     /*this.audio = new WebAudio();
 
     if (!this.audio) {
@@ -85,8 +90,9 @@ export class Engine {
       return;
     }
 
-    this.reference_width = width;
-    this.reference_height = height;
+    this.referenceWidth = width;
+    this.referenceHeight = height;
+    this.integerZoom = integerZoom;
 
     this.canvas.focus();
   }

@@ -20,8 +20,8 @@ export class Level {
       editorOuterWidth = editor.outerWidth();
     }
 
-    const width = this.engine.reference_width - editorOuterWidth;
-    const height = this.engine.reference_height;
+    const width = this.engine.referenceWidth - editorOuterWidth;
+    const height = this.engine.referenceHeight;
 
     const tileSizeX = this.tileset.tilesizeX;
     const tileSizeY = this.tileset.tilesizeY;
@@ -45,8 +45,8 @@ export class Level {
       editorOuterWidth = editor.outerWidth();
     }
 
-    const width = this.engine.reference_width - editorOuterWidth;
-    const height = this.engine.reference_height;
+    const width = this.engine.referenceWidth - editorOuterWidth;
+    const height = this.engine.referenceHeight;
 
     const tileSizeX = this.tileset.tilesizeX;
     const tileSizeY = this.tileset.tilesizeY;
@@ -75,7 +75,7 @@ export class Level {
 
         if (this.engine.mousePosX >= xx && this.engine.mousePosX < xx + tileSizeX
           && this.engine.mousePosY >= yy && this.engine.mousePosY < yy + tileSizeY
-          && xx < this.engine.reference_width) {
+          && xx < this.engine.referenceWidth) {
           this.engine.rect({x: xx, y: yy}, 16, 16, 'rgba(55, 55, 55, 0.5)');
         }
       }
@@ -92,12 +92,12 @@ export class Level {
     const xx = Math.floor((this.engine.mousePosX - editorWidth) / this.tileset.tilesizeX);
     const yy = Math.floor(this.engine.mousePosY / this.tileset.tilesizeY);
 
-    const horizTiles = (this.engine.reference_width - editorWidth) / this.tileset.tilesizeX;
-    const vertTiles = this.engine.reference_height / this.tileset.tilesizeY;
+    const horizTiles = (this.engine.referenceWidth - editorWidth) / this.tileset.tilesizeX;
+    const vertTiles = this.engine.referenceHeight / this.tileset.tilesizeY;
 
     if (xx >= 0 && yy >= 0 && xx < horizTiles && yy < vertTiles) {
       const tilesetWidth = this.tileset.image.width;
-      const referenceWidth = this.engine.reference_width - editorWidth;
+      const referenceWidth = this.engine.referenceWidth - editorWidth;
 
       const tileSizeX = this.tileset.tilesizeX;
       const maxX1 = tilesetWidth / tileSizeX;
