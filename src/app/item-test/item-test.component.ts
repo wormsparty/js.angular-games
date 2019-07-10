@@ -1,5 +1,4 @@
 import { Component, OnInit} from '@angular/core';
-import * as $ from 'jquery';
 import {Game} from './game';
 
 @Component({
@@ -13,27 +12,37 @@ export class ItemTestComponent implements OnInit {
   ngOnInit() {
     document.body.style.overflow = 'hidden';
 
-    const game = new Game();
+    const game = new Game(true);
     this.game = game;
-
-    $(window).on('resize', () => {
-      game.resize($(window).width(), $(window).height());
-    });
-
-    this.game.resize($(window).width(), $(window).height());
-
-    $(document).on('keydown', function (event) {
-      if (game.pressed.has(event.key)) {
-        game.pressed.set(event.key, true);
-      }
-    });
-
-    $(document).on('keyup', function (event) {
-      if (game.pressed.has(event.key)) {
-        game.pressed.set(event.key, false);
-      }
-    });
-
+    this.game.resize(window.innerWidth, window.innerHeight);
     game.loop();
+  }
+
+  onResize(event) {
+    this.game.resize(event.target.innerWidth, event.target.innerHeight);
+  }
+
+  onKeydown(event) {
+    if (this.game.pressed.has(event.key)) {
+      this.game.pressed.set(event.key, {pressed: true, prevPressed: this.game.pressed.get(event.key).pressed});
+    }
+  }
+
+  onKeyup(event) {
+    if (this.game.pressed.has(event.key)) {
+      this.game.pressed.set(event.key, {pressed: false, prevPressed: this.game.pressed.get(event.key).pressed});
+    }
+  }
+
+  onMouseMove(event) {
+    this.game.setMousePos(event.pageX, event.pageY);
+  }
+
+  mouseDown(event) {
+    this.game.mouseDown(event.pageX, event.pageY);
+  }
+
+  mouseUp(event) {
+    this.game.mouseUp();
   }
 }

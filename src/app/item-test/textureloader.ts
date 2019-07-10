@@ -11,19 +11,15 @@ export class TextureLoader {
   load(filename: string): HTMLImageElement {
     this.totalTextures++;
 
-    const texture_loaded = () => {
+    const img: HTMLImageElement = new Image();
+
+    img.onload = () => {
       this.loadedTextures++;
 
       if (this.allTexturesLoaded && this.loadedTextures === this.totalTextures) {
         this.isInitialized = true;
         this.loadedFunction();
       }
-    };
-
-    const img: HTMLImageElement = new Image();
-
-    img.onload = () => {
-      texture_loaded();
     };
 
     img.src = filename;

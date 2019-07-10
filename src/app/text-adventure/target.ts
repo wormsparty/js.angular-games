@@ -7,17 +7,17 @@ export class Target {
   pos: Pos;
   symbol: string;
   pv: number;
-  pv_max: number;
+  pvMax: number;
 
-  constructor(pos: Pos, symbol: string, pv: number, pv_max: number) {
+  constructor(pos: Pos, symbol: string, pv: number, pvMax: number) {
     this.pos = pos;
     this.symbol = symbol;
     this.pv = pv;
-    this.pv_max = pv_max;
+    this.pvMax = pvMax;
   }
 
   copy(): Target {
-    return new Target(this.pos.copy(), this.symbol, this.pv, this.pv_max);
+    return new Target(this.pos.copy(), this.symbol, this.pv, this.pvMax);
   }
 }
 
@@ -37,9 +37,8 @@ export class SpawnerState {
 
     const p = new SpawnerState([], json.tick);
 
-    for (let i = 0; i < json.targets.length; i++) {
-      const target = json.targets[i];
-      p.targets.push(new Target(new Pos(target.pos.x, target.pos.y), target.symbol, target.pv, target.pv_max));
+    for (const target of json.targets) {
+      p.targets.push(new Target(new Pos(target.pos.x, target.pos.y), target.symbol, target.pv, target.pvMax));
     }
 
     return p;
@@ -58,7 +57,7 @@ export class SpawnerState {
         },
         symbol: this.targets[i].symbol,
         pv: this.targets[i].pv,
-        pv_max: this.targets[i].pv_max,
+        pv_max: this.targets[i].pvMax,
       };
     }
 
@@ -80,22 +79,22 @@ export class SpawnerState {
 }
 
 export class TargetSpawner {
-  private readonly spawner_update: (SpawnerState) => void;
-  private readonly target_update: (string) => Pos;
-  pv2color: (number) => string;
+  private readonly spawnerUpdate: (SpawnerState) => void;
+  private readonly targetUpdate: (str: string) => Pos;
+  pv2color: (nb: number) => string;
 
-  constructor(spawner_update: (SpawnerState) => void, target_update: (string) => Pos, pv2color: (number) => string) {
-    this.spawner_update = spawner_update;
-    this.target_update = target_update;
+  constructor(spawnerUpdate: (SpawnerState) => void, targetUpdate: (str: string) => Pos, pv2color: (nb: number) => string) {
+    this.spawnerUpdate = spawnerUpdate;
+    this.targetUpdate = targetUpdate;
     this.pv2color = pv2color;
   }
 
-  inner_update(l: Labyrinth, i: number, target: Target, stateHolder: SpawnerState, hero_pos: Pos, dp: Pos): [boolean, Pos] {
+  inner_update(l: Labyrinth, i: number, target: Target, stateHolder: SpawnerState, heroPos: Pos, dp: Pos): [boolean, Pos] {
     const [hit, power] = l.hits_projectile(target.pos);
-    const lang = l.personal_info.lang;
+    const lang = l.personalInfo.lang;
 
     if (hit !== -1) {
-      l.projectile2item(l.current_map_data, target.pos, hit);
+      l.projectile2item(l.currentMapData, target.pos, hit);
       target.pv -= power;
 
       if (target.pv <= 0) {
@@ -104,64 +103,64 @@ export class TargetSpawner {
       }
     }
 
-    if (target.pos.equals(hero_pos)) {
+    if (target.pos.equals(heroPos)) {
       if (target.symbol === 'O') {
         // TODO: Check for teleports here??
-        hero_pos.x += dp.x;
-        hero_pos.y += dp.y;
+        heroPos.x += dp.x;
+        heroPos.y += dp.y;
       } else {
-        l.game_over_message = translations.symbol2gameover[lang][target.symbol];
-        return [ true, hero_pos ];
+        l.gameOverMessage = translations.symbol2gameover[lang][target.symbol];
+        return [ true, heroPos ];
       }
     }
 
     return [ true, null ];
   }
-  update(l: Labyrinth, stateHolder: SpawnerState, hero_pos: Pos): Pos {
-    this.spawner_update(stateHolder);
+  update(l: Labyrinth, stateHolder: SpawnerState, heroPos: Pos): Pos {
+    this.spawnerUpdate(stateHolder);
 
     for (let i = 0; i < stateHolder.targets.length;) {
       const target = stateHolder.targets[i];
-      const dp = this.target_update(target.symbol);
+      const dp = this.targetUpdate(target.symbol);
 
       // We need to make the test twice (see below).
       // This case is if the projectile hits directly
       // The case below is if the two are separated by 1:
       // the target gets at the same position as the projectile
       // -> It needs to count as a hit too
-      let [cont, new_pos] = this.inner_update(l, i, target, stateHolder, hero_pos, dp);
+      let [cont, newPos] = this.inner_update(l, i, target, stateHolder, heroPos, dp);
 
       if (!cont) {
         continue;
       }
 
-      if (new_pos !== null) {
-        return new_pos;
+      if (newPos !== null) {
+        return newPos;
       }
 
       target.pos.x += dp.x;
       target.pos.y += dp.y;
 
-      if (target.pos.y >= consts.map_lines || target.pos.y < 0
-        || target.pos.x < 0 || target.pos.x >= consts.char_per_line
+      if (target.pos.y >= consts.mapLines || target.pos.y < 0
+        || target.pos.x < 0 || target.pos.x >= consts.charPerLine
         || l.get_symbol_at(target.pos) === '#') {
         stateHolder.targets.splice(i, 1);
         continue;
       }
 
-      [cont, new_pos] = this.inner_update(l, i, target, stateHolder, hero_pos, dp);
+      [cont, newPos] = this.inner_update(l, i, target, stateHolder, heroPos, dp);
 
       if (!cont) {
         continue;
       }
 
-      if (new_pos !== null) {
-        return new_pos;
+      if (newPos !== null) {
+        return newPos;
       }
 
       i++;
     }
 
-    return hero_pos;
+    return heroPos;
   }
 }

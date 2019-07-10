@@ -17,10 +17,10 @@ export class WebAudio {
       request.open('GET', file, true);
       request.responseType = 'arraybuffer';
 
-      request.onload = function() {
+      request.onload = () => {
         context.decodeAudioData(
           request.response,
-          function(buffer) {
+          (buffer) => {
             if (!buffer) {
               console.error('error decoding file data: ' + file);
               onfailure();
@@ -30,14 +30,14 @@ export class WebAudio {
             data[file] = buffer;
             onload(file);
           },
-          function(error) {
+          (error) => {
             console.error('decodeAudioData error', error);
             onfailure();
           }
         );
       };
 
-      request.onerror = function() {
+      request.onerror = () => {
         console.error('BufferLoader: XHR error');
         onfailure();
       };
