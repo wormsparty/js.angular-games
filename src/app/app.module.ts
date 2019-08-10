@@ -6,18 +6,21 @@ import { MatMenuModule, MatIconModule } from '@angular/material';
 import { AppComponent } from './app.component';
 import { TextAdventureComponent } from './text-adventure/text-adventure.component';
 import { ItemTestComponent } from './item-test/item-test.component';
+import {CardsComponent} from './cards/cards.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     TextAdventureComponent,
     ItemTestComponent,
+    CardsComponent,
   ],
   imports: [
     RouterModule.forRoot([
+        { path: 'cards', component: CardsComponent },
         { path: 'item-test', component: ItemTestComponent },
         { path: 'text-adventure', component: TextAdventureComponent },
-        { path: '**', component: ItemTestComponent }
+        { path: '**', component: CardsComponent }
       ],
     ),
     BrowserModule,
