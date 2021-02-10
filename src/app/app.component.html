@@ -1,15 +1,23 @@
 <div style="position: absolute; top: 10px; left: 10px">
-  <button mat-icon-button [matMenuTriggerFor]="menu">
+  <button [matMenuTriggerFor]="menu">
     <mat-icon>more_vert</mat-icon>
   </button>
   <mat-menu #menu="matMenu">
     <a mat-menu-item routerLink="text-adventure">
       <mat-icon>create</mat-icon>
-      <span>text-adventure</span>
+      <span>{{ 'HOME.TEXT' | translate }}</span>
     </a>
     <a mat-menu-item routerLink="item-test">
       <mat-icon>android</mat-icon>
-      <span>item-test</span>
+      <span>{{ 'HOME.ITEM' | translate }}</span>
+    </a>
+    <a mat-menu-item (click)="translate.use('fr')">
+      <fa-icon [icon]="faFlag"></fa-icon>
+      <span style="margin-left: 15px">Français</span>
+    </a>
+    <a mat-menu-item (click)="translate.use('en')">
+      <fa-icon [icon]="faFlagUsa"></fa-icon>
+      <span style="margin-left: 15px">English</span>
     </a>
   </mat-menu>
 </div>
