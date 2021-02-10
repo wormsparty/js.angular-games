@@ -22,7 +22,7 @@ export class TextAdventureComponent implements OnInit {
   ngOnInit() {
     document.body.style.overflow = 'hidden';
 
-    const labyrinth = new Labyrinth();
+    const labyrinth = new Labyrinth('canvas-text');
     this.labyrinth = labyrinth;
     this.labyrinth.resize(window.innerWidth, window.innerHeight);
 

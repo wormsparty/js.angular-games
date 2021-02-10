@@ -12,7 +12,7 @@ export class ItemTestComponent implements OnInit {
   ngOnInit() {
     document.body.style.overflow = 'hidden';
 
-    const game = new Game(true);
+    const game = new Game(true, 'canvas-item');
     this.game = game;
     this.game.resize(window.innerWidth, window.innerHeight);
     game.loop();

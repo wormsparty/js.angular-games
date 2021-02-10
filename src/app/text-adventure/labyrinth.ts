@@ -1219,9 +1219,9 @@ export class Labyrinth {
   save_personal_infos() {
     window.localStorage.setItem('personal', JSON.stringify(this.personalInfo));
   }
-  constructor() {
+  constructor(canvasId: string) {
     this.engine = new Engine(
-      'canvas',
+      canvasId,
       460,
       480,
       16,

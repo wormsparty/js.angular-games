@@ -22,7 +22,7 @@ export class Game {
 
   fps: number;
 
-  constructor(enableEditor: boolean) {
+  constructor(enableEditor: boolean, canvasId: string) {
     let width = 256;
     let height = 224;
 
@@ -37,7 +37,7 @@ export class Game {
     this.level = new Level();
 
     this.engine = new Engine(
-      'canvas',
+      canvasId,
       width,
       height,
       6,
