@@ -7,23 +7,30 @@ import { MatMenuModule } from '@angular/material/menu';
 import { AppComponent } from './app.component';
 import { TextAdventureComponent } from './text-adventure/text-adventure.component';
 import { ItemTestComponent } from './item-test/item-test.component';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { DebugComponent } from './debug/debug.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     TextAdventureComponent,
     ItemTestComponent,
+    DebugComponent,
   ],
   imports: [
     RouterModule.forRoot([
       { path: 'item-test', component: ItemTestComponent },
       { path: 'text-adventure', component: TextAdventureComponent },
-      { path: '', redirectTo: 'item-test', pathMatch: 'full' }
+      { path: 'debug', component: DebugComponent },
+      { path: '', redirectTo: 'debug', pathMatch: 'full' }
     ]),
     BrowserModule,
     BrowserAnimationsModule,
     MatMenuModule,
-    MatIconModule
+    MatIconModule,
+    FontAwesomeModule,
+    NgbModule
   ],
   providers: [],
   bootstrap: [AppComponent]
