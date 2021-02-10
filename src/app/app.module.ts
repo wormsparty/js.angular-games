@@ -16,10 +16,10 @@ import { ItemTestComponent } from './item-test/item-test.component';
   ],
   imports: [
     RouterModule.forRoot([
-    { path: 'item-test', component: ItemTestComponent },
-    { path: 'text-adventure', component: TextAdventureComponent },
-    { path: '**', component: ItemTestComponent }
-], { relativeLinkResolution: 'legacy',  enableTracing: true }),
+      { path: 'item-test', component: ItemTestComponent },
+      { path: 'text-adventure', component: TextAdventureComponent },
+      { path: '', redirectTo: 'item-test', pathMatch: 'full' }
+    ]),
     BrowserModule,
     BrowserAnimationsModule,
     MatMenuModule,
