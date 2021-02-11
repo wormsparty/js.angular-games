@@ -66,8 +66,8 @@ export class Level {
     }
 
     if (!cellHighlighted && this.engine.mousePosX >= editorOuterWidth) {
-      const xx = this.engine.mousePosX - (this.engine.mousePosX - editorOuterWidth) % this.tilesize;
-      const yy = this.engine.mousePosY - (this.engine.mousePosY - editorTopHeight) % this.tilesize;
+      const xx = Math.floor((this.engine.mousePosX - editorOuterWidth) / this.tilesize) * this.tilesize + editorOuterWidth;
+      const yy = Math.floor((this.engine.mousePosY - editorTopHeight) / this.tilesize) * this.tilesize + editorTopHeight;
 
       this.engine.rect({x: xx, y: yy}, this.tilesize, this.tilesize, 'rgba(55, 55, 55, 0.5)');
     }
