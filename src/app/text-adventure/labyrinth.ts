@@ -1189,7 +1189,7 @@ export class Labyrinth {
 
     this.mainMenu = [
       [ translations.new_game_tt[lang], (l: Labyrinth) => Labyrinth.clear_and_start_tt(l), true ],
-      [ translations.new_game_rt[lang], (l: Labyrinth) => Labyrinth.clear_and_start_rt(l), true ],
+      //[ translations.new_game_rt[lang], (l: Labyrinth) => Labyrinth.clear_and_start_rt(l), true ],
       [ translations.load[lang], (l: Labyrinth) => Labyrinth.load_save(l, save), save !== null ],
       // [ translations.lang[lang], (l: Labyrinth) => Labyrinth.toggle_language(l), true ],
     ];

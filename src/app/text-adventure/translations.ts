@@ -80,8 +80,8 @@ export const retry = {
 };
 
 export const new_game_tt = {
-  'en': 'New game (turn by turn)',
-  'fr': 'Nouvelle partie (tour par tour)'
+  'en': 'New game', // (turn by turn)',
+  'fr': 'Nouvelle partie', // (tour par tour)'
 };
 
 export const new_game_rt = {

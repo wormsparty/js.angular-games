@@ -29,8 +29,6 @@ export class TeleportPos extends Pos {
 }
 
 export class ObjPos extends Pos {
-  x: number;
-  y: number;
   usage: number;
 
   constructor(x: number, y: number, usage: number) {
@@ -44,8 +42,6 @@ export class ObjPos extends Pos {
 }
 
 export class ProjPos extends Pos {
-  x: number;
-  y: number;
   vx: number;
   vy: number;
   symbol: string;

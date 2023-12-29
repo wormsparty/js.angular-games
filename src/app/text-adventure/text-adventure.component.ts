@@ -1,6 +1,5 @@
 import { Component, OnInit} from '@angular/core';
 import { Labyrinth } from './labyrinth';
-import * as FontFaceObserver from 'fontfaceobserver';
 
 @Component({
   selector: 'app-text-adventure',
@@ -32,9 +31,10 @@ export class TextAdventureComponent implements OnInit {
       }
     }, 1000 / labyrinth.fps);
 
-    const font = new FontFaceObserver('Inconsolata');
+    const font = new FontFace('Inconsolata', `url(../../assets/Inconsolata.ttf)`);
 
-    font.load().then(() => {
+    font.load().then((font) => {
+      (<any>document).fonts.add(font);
       labyrinth.draw();
     });
   }
