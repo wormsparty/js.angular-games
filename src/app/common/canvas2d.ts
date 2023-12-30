@@ -1,5 +1,3 @@
-import {Tileset} from '../item-test/tileset';
-
 export class Canvas2D {
   private readonly ctx;
   private readonly referenceWidth: number;
@@ -46,55 +44,6 @@ export class Canvas2D {
     this.ctx.webkitImageSmoothingEnabled = false;
     this.ctx.msImageSmoothingEnabled = false;
     this.ctx.oImageSmoothingEnabled = false;
-  }
-  img(tileset: Tileset, pos, i: number, j: number) {
-    const sx = this.tilesize * i;
-    const sy = this.tilesize * j;
-
-    let cutLeft = 0;
-    let cutRight = 0;
-    let cutTop = 0;
-    let cutBottom = 0;
-
-    if (pos.x < 0) {
-      cutLeft = -pos.x;
-    }
-
-    if (pos.y < 0) {
-      cutTop = -pos.y;
-    }
-
-    if (pos.x + this.tilesize > this.referenceWidth) {
-      cutRight = pos.x + this.tilesize - this.referenceWidth;
-    }
-
-    if (pos.y + this.tilesize > this.referenceHeight) {
-      cutBottom = pos.y + this.tilesize - this.referenceHeight;
-    }
-
-    if (cutLeft < this.tilesize
-      && cutRight < this.tilesize
-      && cutTop < this.tilesize
-      && cutBottom < this.tilesize) {
-      const targetX = (pos.x + cutLeft) * this.scaleFactor + this.marginLeft;
-      const targetY = (pos.y + cutTop) * this.scaleFactor + this.marginTop;
-
-      /*console.log('s = ' + sx + ', ' + sy);
-      console.log('w = ' + w + ', h = ' + h);
-      console.log('cut = ' + cutLeft + ', ' + cutRight + ', ' + cutTop + ', ' + cutBottom);
-      console.log('target = ' + targetX + ',' + targetY);*/
-
-      this.ctx.drawImage(
-        tileset.image,
-        sx + cutLeft,
-        sy + cutTop,
-        this.tilesize - cutLeft - cutRight,
-        this.tilesize - cutTop - cutBottom,
-        targetX,
-        targetY,
-        (this.tilesize - cutLeft - cutRight) * this.scaleFactor,
-        (this.tilesize - cutTop - cutBottom) * this.scaleFactor);
-    }
   }
   rect(pos, w, h, color) {
     this.ctx.fillStyle = color;

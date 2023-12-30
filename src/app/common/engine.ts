@@ -1,5 +1,4 @@
 import { Canvas2D } from './canvas2d';
-import {Tileset} from '../item-test/tileset';
 // import { WebAudio } from './webaudio';
 
 export class Engine {
@@ -37,9 +36,6 @@ export class Engine {
   }
   get_char_width() {
     return this.graphics.get_char_width();
-  }
-  img(tileset: Tileset, pos, x: number, y: number) {
-    this.graphics.img(tileset, pos, x, y);
   }
   /*load_sound(file, onload, onfailure) {
     this.audio.load(file, onload, onfailure);
