@@ -14,16 +14,16 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have the 'js-new' title`, () => {
+  it(`should have the 'Angular-games' title`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('js-new');
+    expect(app.title).toEqual('Angular-games');
   });
 
   it('should render title', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, js-new');
+    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, Angular-games');
   });
 });
