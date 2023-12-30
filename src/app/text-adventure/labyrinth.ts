@@ -211,7 +211,6 @@ class PersistedData {
 
 class PersonalInfos {
   lang: string;
-  // visa?
 }
 
 export class Labyrinth {
